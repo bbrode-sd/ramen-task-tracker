@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ramen Task Tracker 🍜
 
-## Getting Started
+A bilingual Kanban board with English/Japanese support, powered by LLM translation.
 
-First, run the development server:
+## Features
+
+- **Trello-like Kanban board** with drag-and-drop
+- **Bilingual cards** - English and Japanese side by side
+- **LLM Translation** - Type in one language, auto-translate to the other
+- **Comments** with user profiles
+- **Attachments** - Upload images, files, or add links
+- **Paste images** directly into cards
+- **Archive** cards and columns
+- **Google Authentication** via Firebase
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
+- **Backend**: Firebase (Auth, Firestore, Storage)
+- **Drag & Drop**: @hello-pangea/dnd
+- **Translation**: OpenAI GPT-4o-mini
+- **Deployment**: Vercel
+
+## Setup
+
+### 1. Clone and Install
+
+```bash
+git clone https://github.com/YOUR_USERNAME/ramen-task-tracker.git
+cd ramen-task-tracker
+npm install
+```
+
+### 2. Firebase Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/project/ramen-task-tracker)
+2. Enable **Authentication** > **Google** sign-in provider
+3. Enable **Cloud Storage** > Click "Get Started"
+4. Your Firestore database is already configured
+
+### 3. Environment Variables
+
+Create a `.env.local` file (or configure in Vercel):
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=ramen-task-tracker.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=ramen-task-tracker
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=ramen-task-tracker.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+OPENAI_API_KEY=your-openai-api-key
+```
+
+### 4. Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Vercel
 
-## Learn More
+1. Push to GitHub
+2. Connect to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy!
 
-To learn more about Next.js, take a look at the following resources:
+## Firebase Console Links
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Authentication](https://console.firebase.google.com/project/ramen-task-tracker/authentication)
+- [Firestore](https://console.firebase.google.com/project/ramen-task-tracker/firestore)
+- [Storage](https://console.firebase.google.com/project/ramen-task-tracker/storage)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
