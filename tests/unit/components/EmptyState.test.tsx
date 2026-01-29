@@ -102,15 +102,16 @@ describe('EmptyState Component', () => {
     });
 
     it('should apply variant styles', () => {
-      render(
+      const { container } = render(
         <EmptyState
           variant="boards"
           title="No boards"
         />
       );
 
-      // Should show the boards emoji icon
-      expect(screen.getByText('📋')).toBeInTheDocument();
+      // Should render an SVG-based illustration for the boards variant
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBeGreaterThan(0);
     });
   });
 
@@ -124,20 +125,22 @@ describe('EmptyState Component', () => {
     it('should show tip by default', () => {
       render(<ColumnEmptyState />);
 
-      expect(screen.getByText(/Drag cards here to organize/)).toBeInTheDocument();
+      expect(screen.getByText(/Drag cards here or click/)).toBeInTheDocument();
     });
 
     it('should hide tip when showTip is false', () => {
       render(<ColumnEmptyState showTip={false} />);
 
-      expect(screen.queryByText(/Drag cards here to organize/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Drag cards here or click/)).not.toBeInTheDocument();
     });
 
     it('should show drop state when isDraggingOver is true', () => {
-      render(<ColumnEmptyState isDraggingOver={true} />);
+      const { container } = render(<ColumnEmptyState isDraggingOver={true} />);
 
       expect(screen.getByText('Drop card here')).toBeInTheDocument();
-      expect(screen.getByText('📥')).toBeInTheDocument();
+      // Should have an SVG icon for the drop indicator
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBeGreaterThan(0);
     });
 
     it('should apply dragging over styles', () => {
@@ -145,7 +148,7 @@ describe('EmptyState Component', () => {
 
       const emptyState = container.firstChild;
       expect(emptyState).toHaveClass('border-orange-400');
-      expect(emptyState).toHaveClass('bg-orange-50/50');
+      expect(emptyState).toHaveClass('bg-orange-50/60');
     });
   });
 
@@ -184,10 +187,12 @@ describe('EmptyState Component', () => {
       expect(screen.getByText('Be the first to start the conversation')).toBeInTheDocument();
     });
 
-    it('should show comment emoji', () => {
-      render(<CommentsEmptyState />);
+    it('should show comments SVG icon', () => {
+      const { container } = render(<CommentsEmptyState />);
 
-      expect(screen.getByText('💬')).toBeInTheDocument();
+      // Should render an SVG-based comments icon
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBeGreaterThan(0);
     });
   });
 });

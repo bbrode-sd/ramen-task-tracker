@@ -7,6 +7,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 interface TooltipProps {
   children: ReactNode;
   content: string;
+  shortcut?: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
   delay?: number;
   className?: string;
@@ -15,6 +16,7 @@ interface TooltipProps {
 export function Tooltip({
   children,
   content,
+  shortcut,
   position = 'top',
   delay = 300,
   className = '',
@@ -112,7 +114,14 @@ export function Tooltip({
               left: coords.left,
             }}
           >
-            {content}
+            <span className="flex items-center gap-2">
+              {content}
+              {shortcut && (
+                <kbd className="px-1.5 py-0.5 bg-slate-600 text-slate-200 rounded text-[10px] font-mono">
+                  {shortcut}
+                </kbd>
+              )}
+            </span>
             <div className={`absolute w-0 h-0 border-4 ${arrowClasses[position]}`} />
           </div>,
           document.body

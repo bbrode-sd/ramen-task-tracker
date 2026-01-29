@@ -13,6 +13,9 @@ import {
   restoreCards,
   createCard,
   updateCard,
+  archiveCard,
+  restoreCard,
+  getCard,
   logActivity,
   getCardTemplates,
   createCardFromTemplate,
@@ -264,6 +267,108 @@ function ColumnComponent({
     }
   };
 
+  // Handler for archiving a single card
+  const handleArchiveCard = useCallback(async (cardId: string) => {
+    const cardToArchive = cards.find(c => c.id === cardId);
+    if (!cardToArchive) return;
+    
+    try {
+      await archiveCard(boardId, cardId);
+      showToast('success', `Card archived`, {
+        undoAction: async () => {
+          await restoreCard(boardId, cardId);
+        },
+      });
+      
+      // Log activity
+      if (user) {
+        await logActivity(boardId, {
+          cardId,
+          cardTitle: cardToArchive.titleEn || 'Untitled',
+          type: 'card_archived',
+          userId: user.uid,
+          userName: user.displayName || 'Anonymous',
+          userPhoto: user.photoURL,
+          metadata: { columnName: column.name },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to archive card:', error);
+      showToast('error', 'Failed to archive card');
+    }
+  }, [boardId, cards, column.name, showToast, user]);
+
+  // Handler for duplicating a card
+  const handleDuplicateCard = useCallback(async (cardId: string) => {
+    const cardToDuplicate = cards.find(c => c.id === cardId);
+    if (!cardToDuplicate || !user) return;
+    
+    try {
+      // Get the full card data
+      const fullCard = await getCard(boardId, cardId);
+      if (!fullCard) {
+        showToast('error', 'Card not found');
+        return;
+      }
+      
+      // Calculate the new order (insert right after the original card)
+      const originalIndex = cards.findIndex(c => c.id === cardId);
+      const newOrder = cardToDuplicate.order + 0.5; // Will be normalized on save
+      
+      // Create a new card with the same content
+      const newCardId = await createCard(
+        boardId,
+        column.id,
+        fullCard.titleEn ? `${fullCard.titleEn} (copy)` : '',
+        fullCard.titleJa ? `${fullCard.titleJa} (コピー)` : '',
+        user.uid,
+        newOrder
+      );
+      
+      // Update with additional properties if present
+      if (newCardId) {
+        const updates: Partial<CardType> = {};
+        
+        if (fullCard.descriptionEn) updates.descriptionEn = fullCard.descriptionEn;
+        if (fullCard.descriptionJa) updates.descriptionJa = fullCard.descriptionJa;
+        if (fullCard.labels && fullCard.labels.length > 0) updates.labels = fullCard.labels;
+        if (fullCard.priority) updates.priority = fullCard.priority;
+        if (fullCard.checklists && fullCard.checklists.length > 0) {
+          // Reset checklist items completion status
+          updates.checklists = fullCard.checklists.map(checklist => ({
+            ...checklist,
+            id: `checklist-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            items: checklist.items.map(item => ({
+              ...item,
+              id: `item-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+              isCompleted: false,
+            })),
+          }));
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          await updateCard(boardId, newCardId, updates);
+        }
+        
+        // Log activity
+        await logActivity(boardId, {
+          cardId: newCardId,
+          cardTitle: fullCard.titleEn ? `${fullCard.titleEn} (copy)` : 'Untitled',
+          type: 'card_created',
+          userId: user.uid,
+          userName: user.displayName || 'Anonymous',
+          userPhoto: user.photoURL,
+          metadata: { columnName: column.name, duplicatedFrom: cardId },
+        });
+        
+        showToast('success', 'Card duplicated');
+      }
+    } catch (error) {
+      console.error('Failed to duplicate card:', error);
+      showToast('error', 'Failed to duplicate card');
+    }
+  }, [boardId, cards, column.id, column.name, showToast, user]);
+
   return (
     <Draggable draggableId={column.id} index={index}>
       {(provided, snapshot) => (
@@ -283,7 +388,7 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[300px] bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col max-h-[calc(100vh-130px)] border ${
+          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-130px)] border ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
               : 'shadow-sm transition-all duration-200'
@@ -335,7 +440,7 @@ function ColumnComponent({
                 aria-expanded={showMenu}
                 aria-haspopup="menu"
                 aria-label={`${column.name} list actions menu`}
-                className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors"
+                className="p-2.5 sm:p-1.5 hover:bg-slate-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
               >
                 <svg
                   className="w-5 h-5 text-slate-400"
@@ -365,7 +470,7 @@ function ColumnComponent({
                       setIsEditing(true);
                       setShowMenu(false);
                     }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
                   >
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -375,7 +480,7 @@ function ColumnComponent({
                   <button
                     role="menuitem"
                     onClick={handleArchiveAllCards}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
                   >
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -386,7 +491,7 @@ function ColumnComponent({
                   <button
                     role="menuitem"
                     onClick={handleArchive}
-                    className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -433,6 +538,8 @@ function ColumnComponent({
                       isSelected={selectedCards.has(card.id)}
                       selectedCount={selectedCards.size}
                       onSelectToggle={onCardSelectToggle}
+                      onArchive={handleArchiveCard}
+                      onDuplicate={handleDuplicateCard}
                       data-onboarding={cardIndex === 0 ? "card" : undefined}
                     />
                   ))
@@ -478,7 +585,7 @@ function ColumnComponent({
                     onClick={handleAddCard}
                     disabled={!newCardTitleEn.trim()}
                     aria-label="Add card to list"
-                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
+                    className="px-4 py-2.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98] touch-manipulation min-h-[44px] sm:min-h-0"
                   >
                     Add card
                   </button>
@@ -488,7 +595,7 @@ function ColumnComponent({
                       setNewCardTitleEn('');
                     }}
                     aria-label="Cancel adding card"
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                   >
                     <svg
                       className="w-5 h-5"
@@ -513,7 +620,7 @@ function ColumnComponent({
                   onClick={() => setIsAddingCard(true)}
                   data-onboarding="add-card"
                   aria-label={`Add a card to ${column.name}`}
-                  className="w-full px-3 py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl flex items-center gap-2 transition-all group"
+                  className="w-full px-3 py-3 sm:py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
                 >
                   <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 group-hover:bg-orange-100 rounded-lg transition-colors" aria-hidden="true">
                     <svg
@@ -541,7 +648,7 @@ function ColumnComponent({
                     aria-expanded={showTemplateDropdown}
                     aria-haspopup="menu"
                     aria-label="Create card from template"
-                    className="w-full px-3 py-2 text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-200/40 rounded-xl flex items-center gap-2 transition-all group"
+                    className="w-full px-3 py-2.5 sm:py-2 text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-200/40 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[44px] sm:min-h-0"
                   >
                     <span className="w-6 h-6 flex items-center justify-center bg-slate-200/60 group-hover:bg-purple-100 rounded-lg transition-colors">
                       <svg
@@ -586,7 +693,7 @@ function ColumnComponent({
                               key={template.id}
                               onClick={() => handleCreateFromTemplate(template)}
                               disabled={isCreatingFromTemplate}
-                              className="w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors disabled:opacity-50 border-b border-slate-50 last:border-0"
+                              className="w-full px-4 py-3 sm:py-2.5 text-left hover:bg-slate-50 transition-colors disabled:opacity-50 border-b border-slate-50 last:border-0 min-h-[48px] sm:min-h-0"
                             >
                               <p className="text-sm font-medium text-slate-700 truncate">{template.name}</p>
                               <p className="text-xs text-slate-400 truncate">{template.titleEn}</p>

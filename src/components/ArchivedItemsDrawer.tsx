@@ -68,8 +68,20 @@ export function ArchivedItemsDrawer({ boardId, isOpen, onClose }: ArchivedItemsD
   useEffect(() => {
     if (!isOpen || !boardId) return;
 
-    const unsubCards = subscribeToArchivedCards(boardId, setArchivedCards);
-    const unsubColumns = subscribeToArchivedColumns(boardId, setArchivedColumns);
+    const unsubCards = subscribeToArchivedCards(
+      boardId,
+      setArchivedCards,
+      (error) => {
+        console.error('Error subscribing to archived cards:', error);
+      }
+    );
+    const unsubColumns = subscribeToArchivedColumns(
+      boardId,
+      setArchivedColumns,
+      (error) => {
+        console.error('Error subscribing to archived columns:', error);
+      }
+    );
 
     return () => {
       unsubCards();

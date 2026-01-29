@@ -16,6 +16,8 @@ interface VirtualizedCardListProps {
   matchesFilter?: (card: CardType) => boolean;
   focusedCardIndex: number | null;
   isDraggingOver?: boolean;
+  onArchive?: (cardId: string) => void;
+  onDuplicate?: (cardId: string) => void;
 }
 
 // Estimated card height for virtualization (adjust based on actual card sizes)
@@ -33,6 +35,8 @@ function VirtualizedCardListComponent({
   matchesFilter,
   focusedCardIndex,
   isDraggingOver = false,
+  onArchive,
+  onDuplicate,
 }: VirtualizedCardListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +95,8 @@ function VirtualizedCardListComponent({
                 onClick={handleCardClick(card.id)}
                 isDimmed={hasActiveFilters && matchesFilter ? !matchesFilter(card) : false}
                 isFocused={focusedCardIndex === cardIndex}
+                onArchive={onArchive}
+                onDuplicate={onDuplicate}
                 data-onboarding={cardIndex === 0 ? "card" : undefined}
               />
             ))}
@@ -166,6 +172,8 @@ function VirtualizedCardListComponent({
                     onClick={handleCardClick(card.id)}
                     isDimmed={hasActiveFilters && matchesFilter ? !matchesFilter(card) : false}
                     isFocused={focusedCardIndex === virtualItem.index}
+                    onArchive={onArchive}
+                    onDuplicate={onDuplicate}
                     data-onboarding={virtualItem.index === 0 ? "card" : undefined}
                   />
                 </div>

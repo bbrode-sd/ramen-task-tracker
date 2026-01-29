@@ -5,6 +5,7 @@ import { Draggable, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Card as CardType } from '@/types';
 import { useFilter } from '@/contexts/FilterContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
+import { Tooltip } from './Tooltip';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
 import { getUserProfiles } from '@/lib/firestore';
@@ -101,6 +102,58 @@ const HighlightedText = memo(function HighlightedText({ text, searchQuery }: { t
   );
 });
 
+// Priority badge component with colored indicator
+const PriorityBadge = memo(function PriorityBadge({ 
+  priority 
+}: { 
+  priority: 'low' | 'medium' | 'high' | 'urgent' | null | undefined;
+}) {
+  if (!priority) return null;
+  
+  const priorityConfig = {
+    low: {
+      bg: 'bg-slate-100',
+      text: 'text-slate-600',
+      border: 'border-slate-200',
+      dot: 'bg-slate-400',
+      label: 'Low',
+    },
+    medium: {
+      bg: 'bg-yellow-50',
+      text: 'text-yellow-700',
+      border: 'border-yellow-200',
+      dot: 'bg-yellow-500',
+      label: 'Medium',
+    },
+    high: {
+      bg: 'bg-orange-50',
+      text: 'text-orange-700',
+      border: 'border-orange-200',
+      dot: 'bg-orange-500',
+      label: 'High',
+    },
+    urgent: {
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      border: 'border-red-200',
+      dot: 'bg-red-500 animate-pulse',
+      label: 'Urgent',
+    },
+  };
+  
+  const config = priorityConfig[priority];
+  
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}
+      title={`Priority: ${config.label}`}
+    >
+      <span className={`w-2 h-2 rounded-full ${config.dot}`} aria-hidden="true" />
+      <span>{config.label}</span>
+    </div>
+  );
+});
+
 // Translation status indicator for cards - shows when one language is missing
 const TranslationStatusBadge = memo(function TranslationStatusBadge({ 
   hasEn, 
@@ -166,24 +219,189 @@ function formatDueDate(dueDate: Timestamp): string {
   return `${months[date.getMonth()]} ${date.getDate()}`;
 }
 
-// Helper function to get due date status
-function getDueDateStatus(dueDate: Timestamp): 'overdue' | 'soon' | 'future' {
+// Due date status type with more granular levels
+type DueDateStatus = 'overdue' | 'today' | 'tomorrow' | 'thisWeek' | 'future';
+
+// Helper function to get due date status with more granular levels
+function getDueDateStatus(dueDate: Timestamp): DueDateStatus {
   const date = dueDate.toDate();
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const dueDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   
   const diffMs = dueDateOnly.getTime() - today.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
   
   if (diffMs < 0) {
     return 'overdue';
   }
-  if (diffHours <= 24) {
-    return 'soon';
+  if (diffDays === 0) {
+    return 'today';
+  }
+  if (diffDays === 1) {
+    return 'tomorrow';
+  }
+  if (diffDays <= 7) {
+    return 'thisWeek';
   }
   return 'future';
 }
+
+// Due date badge configuration
+const dueDateConfig: Record<DueDateStatus, {
+  bg: string;
+  text: string;
+  border: string;
+  icon: 'clock' | 'calendar' | 'alert';
+  label: string;
+  pulse?: boolean;
+}> = {
+  overdue: {
+    bg: 'bg-red-100',
+    text: 'text-red-700',
+    border: 'border-red-200',
+    icon: 'alert',
+    label: 'Overdue',
+    pulse: true,
+  },
+  today: {
+    bg: 'bg-red-50',
+    text: 'text-red-600',
+    border: 'border-red-200',
+    icon: 'clock',
+    label: 'Due today',
+  },
+  tomorrow: {
+    bg: 'bg-orange-100',
+    text: 'text-orange-700',
+    border: 'border-orange-200',
+    icon: 'clock',
+    label: 'Due tomorrow',
+  },
+  thisWeek: {
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-700',
+    border: 'border-yellow-200',
+    icon: 'calendar',
+    label: 'Due this week',
+  },
+  future: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    border: 'border-slate-200',
+    icon: 'calendar',
+    label: 'Due',
+  },
+};
+
+// Due date badge component with enhanced styling
+const DueDateBadge = memo(function DueDateBadge({ 
+  dueDate,
+  isCompleted = false,
+}: { 
+  dueDate: Timestamp;
+  isCompleted?: boolean;
+}) {
+  const status = getDueDateStatus(dueDate);
+  const formattedDate = formatDueDate(dueDate);
+  const config = dueDateConfig[status];
+  
+  // If completed, show a green completed style
+  if (isCompleted) {
+    return (
+      <div
+        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border bg-green-100 text-green-700 border-green-200"
+        title={`Completed - was due: ${formattedDate}`}
+        aria-label={`Completed, was due: ${formattedDate}`}
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        <span aria-hidden="true" className="line-through opacity-75">{formattedDate}</span>
+      </div>
+    );
+  }
+  
+  // Render the appropriate icon
+  const renderIcon = () => {
+    switch (config.icon) {
+      case 'alert':
+        return (
+          <svg
+            className={`w-3.5 h-3.5 ${config.pulse ? 'animate-pulse' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      case 'clock':
+        return (
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      case 'calendar':
+      default:
+        return (
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        );
+    }
+  };
+  
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}
+      title={`${config.label}: ${formattedDate}`}
+      aria-label={`${config.label}: ${formattedDate}`}
+    >
+      {renderIcon()}
+      <span aria-hidden="true">{formattedDate}</span>
+    </div>
+  );
+});
 
 interface CardProps {
   card: CardType;
@@ -195,6 +413,8 @@ interface CardProps {
   isSelected?: boolean;
   selectedCount?: number;
   onSelectToggle?: (cardId: string, shiftKey: boolean) => void;
+  onArchive?: (cardId: string) => void;
+  onDuplicate?: (cardId: string) => void;
   'data-onboarding'?: string;
 }
 
@@ -222,6 +442,8 @@ function CardComponent({
   isSelected = false,
   selectedCount = 0,
   onSelectToggle,
+  onArchive,
+  onDuplicate,
   'data-onboarding': dataOnboarding 
 }: CardProps) {
   const { searchQuery } = useFilter();
@@ -414,6 +636,68 @@ function CardComponent({
               </svg>
             </div>
           )}
+          
+          {/* Quick action buttons - appear on hover */}
+          {!snapshot.isDragging && !isSelected && (
+            <div 
+              className="absolute top-1 right-1 sm:top-2 sm:right-2 flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20"
+              role="toolbar"
+              aria-label="Quick actions"
+            >
+              {/* Edit button */}
+              <Tooltip content="Edit card" shortcut="e" position="top">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick();
+                  }}
+                  className="p-2 sm:p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 text-slate-500 hover:text-orange-600 hover:bg-orange-50 hover:border-orange-200 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                  aria-label="Edit card (e)"
+                >
+                  <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+              </Tooltip>
+              
+              {/* Duplicate button */}
+              {onDuplicate && (
+                <Tooltip content="Duplicate card" position="top">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDuplicate(card.id);
+                    }}
+                    className="p-2 sm:p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                    aria-label="Duplicate card"
+                  >
+                    <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </Tooltip>
+              )}
+              
+              {/* Archive button */}
+              {onArchive && (
+                <Tooltip content="Archive card" shortcut="c" position="top">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onArchive(card.id);
+                    }}
+                    className="p-2 sm:p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                    aria-label="Archive card (c)"
+                  >
+                    <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          )}
+          
           {/* Cover image/color if exists */}
           {coverData && (
             coverData.type === 'image' ? (
@@ -484,49 +768,18 @@ function CardComponent({
             </div>
 
             {/* Card metadata */}
-            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || hasAssignees || (hasChecklists && checklistStats.total > 0)) && (
+            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0)) && (
               <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100">
+                {/* Priority badge */}
+                <PriorityBadge priority={card.priority} />
+
                 {/* Due date badge */}
-                {card.dueDate && (() => {
-                  const status = getDueDateStatus(card.dueDate);
-                  const formattedDate = formatDueDate(card.dueDate);
-                  
-                  const statusStyles = {
-                    overdue: 'bg-red-100 text-red-700 border-red-200',
-                    soon: 'bg-orange-100 text-orange-700 border-orange-200',
-                    future: 'bg-slate-100 text-slate-600 border-slate-200',
-                  };
-                  
-                  const statusLabels = {
-                    overdue: 'Overdue',
-                    soon: 'Due soon',
-                    future: 'Due',
-                  };
-                  
-                  return (
-                    <div
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${statusStyles[status]}`}
-                      title={`Due: ${formattedDate}`}
-                      aria-label={`${statusLabels[status]}: ${formattedDate}`}
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span aria-hidden="true">{formattedDate}</span>
-                    </div>
-                  );
-                })()}
+                {card.dueDate && (
+                  <DueDateBadge 
+                    dueDate={card.dueDate} 
+                    isCompleted={hasChecklists && checklistStats.total > 0 && checklistStats.completed === checklistStats.total}
+                  />
+                )}
 
                 {/* Translation status badge */}
                 <TranslationStatusBadge
@@ -641,11 +894,14 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevProps.card.order === nextProps.card.order &&
     JSON.stringify(prevProps.card.coverImage) === JSON.stringify(nextProps.card.coverImage) &&
     prevProps.card.dueDate === nextProps.card.dueDate &&
+    prevProps.card.priority === nextProps.card.priority &&
     prevProps.index === nextProps.index &&
     prevProps.isDimmed === nextProps.isDimmed &&
     prevProps.isFocused === nextProps.isFocused &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.selectedCount === nextProps.selectedCount &&
+    prevProps.onArchive === nextProps.onArchive &&
+    prevProps.onDuplicate === nextProps.onDuplicate &&
     JSON.stringify(prevProps.card.labels) === JSON.stringify(nextProps.card.labels) &&
     JSON.stringify(prevProps.card.checklists) === JSON.stringify(nextProps.card.checklists) &&
     JSON.stringify(prevProps.card.attachments) === JSON.stringify(nextProps.card.attachments) &&

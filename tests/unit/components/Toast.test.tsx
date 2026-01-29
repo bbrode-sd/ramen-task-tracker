@@ -103,10 +103,15 @@ describe('Toast Component', () => {
 
 describe('ToastContext', () => {
   it('should provide showToast function', () => {
-    let contextValue: ReturnType<typeof useToast> | null = null;
+    // Use a ref to capture context value without reassignment during render
+    const contextRef = { current: null as ReturnType<typeof useToast> | null };
 
     function ContextReader() {
-      contextValue = useToast();
+      const context = useToast();
+      // Store in ref on first render only
+      if (!contextRef.current) {
+        contextRef.current = context;
+      }
       return null;
     }
 
@@ -116,8 +121,8 @@ describe('ToastContext', () => {
       </ToastProvider>
     );
 
-    expect(contextValue).not.toBeNull();
-    expect(typeof contextValue!.showToast).toBe('function');
+    expect(contextRef.current).not.toBeNull();
+    expect(typeof contextRef.current!.showToast).toBe('function');
   });
 
   it('should throw error when used outside provider', () => {

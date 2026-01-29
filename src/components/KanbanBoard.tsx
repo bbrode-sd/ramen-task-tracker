@@ -66,7 +66,7 @@ interface KanbanBoardProps {
  */
 export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const { user } = useAuth();
-  const { filterCards, getMatchCount, hasActiveFilters, matchesFilter } = useFilter();
+  const { filterCards, getMatchCount, hasActiveFilters, matchesFilter, sortCards } = useFilter();
   const {
     focusedColumnIndex,
     focusedCardIndex,
@@ -128,6 +128,38 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     return getMatchCount(cards, user?.uid);
   }, [cards, getMatchCount, user?.uid]);
 
+  // Calculate due date stats for the header
+  const dueDateStats = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    let overdue = 0;
+    let todayCount = 0;
+    let tomorrow = 0;
+    let thisWeek = 0;
+    
+    cards.forEach((card) => {
+      if (!card.dueDate || card.isArchived) return;
+      
+      const dueDate = card.dueDate.toDate();
+      const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+      const diffMs = dueDateOnly.getTime() - today.getTime();
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      
+      if (diffMs < 0) {
+        overdue++;
+      } else if (diffDays === 0) {
+        todayCount++;
+      } else if (diffDays === 1) {
+        tomorrow++;
+      } else if (diffDays <= 7) {
+        thisWeek++;
+      }
+    });
+    
+    return { overdue, today: todayCount, tomorrow, thisWeek };
+  }, [cards]);
+
   // Fetch board data
   useEffect(() => {
     const fetchBoard = async () => {
@@ -166,9 +198,19 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   useEffect(() => {
     if (!board || accessError) return;
     
-    const unsubscribe = subscribeToColumns(boardId, (fetchedColumns) => {
-      setColumns(fetchedColumns);
-    });
+    const unsubscribe = subscribeToColumns(
+      boardId,
+      (fetchedColumns) => {
+        setColumns(fetchedColumns);
+      },
+      (error) => {
+        console.error('Error subscribing to columns:', error);
+        const firebaseError = error as { code?: string };
+        if (firebaseError.code === 'permission-denied') {
+          setAccessError('You do not have access to this board.');
+        }
+      }
+    );
     return () => unsubscribe();
   }, [boardId, board, accessError]);
 
@@ -176,10 +218,23 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   useEffect(() => {
     if (!board || accessError) return;
     
-    const unsubscribe = subscribeToCards(boardId, (fetchedCards) => {
-      setCards(fetchedCards);
-      setLoading(false);
-    });
+    const unsubscribe = subscribeToCards(
+      boardId,
+      (fetchedCards) => {
+        setCards(fetchedCards);
+        setLoading(false);
+      },
+      {
+        onError: (error) => {
+          console.error('Error subscribing to cards:', error);
+          const firebaseError = error as { code?: string };
+          if (firebaseError.code === 'permission-denied') {
+            setAccessError('You do not have access to this board.');
+          }
+          setLoading(false);
+        },
+      }
+    );
     return () => unsubscribe();
   }, [boardId, board, accessError]);
 
@@ -242,10 +297,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   };
 
   const getCardsForColumn = useCallback((columnId: string) => {
-    return cards
+    const columnCards = cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order);
-  }, [cards]);
+    // Apply sorting from filter context
+    return sortCards(columnCards);
+  }, [cards, sortCards]);
 
   // Edge scrolling during drag
   const startEdgeScroll = useCallback(() => {
@@ -699,6 +756,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
           onActivityClick={() => setShowActivityPanel(true)}
           currentBackground={board?.background}
           onBackgroundChange={handleBackgroundChange}
+          dueDateStats={dueDateStats}
         />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
@@ -722,6 +780,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         onActivityClick={() => setShowActivityPanel(true)}
         currentBackground={board?.background}
         onBackgroundChange={handleBackgroundChange}
+        dueDateStats={dueDateStats}
       />
       
       {/* Accessibility: Live region for screen reader announcements */}

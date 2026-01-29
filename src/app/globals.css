@@ -283,6 +283,37 @@ button, a, input, textarea, select {
   animation: float 3s ease-in-out infinite;
 }
 
+/* Steam animation for ramen illustrations */
+@keyframes steam {
+  0%, 100% { 
+    transform: translateY(0) scaleY(1); 
+    opacity: 0.3; 
+  }
+  50% { 
+    transform: translateY(-4px) scaleY(1.1); 
+    opacity: 0.6; 
+  }
+}
+
+.animate-steam {
+  animation: steam 2s ease-in-out infinite;
+}
+
+.animate-steam > *:nth-child(1) {
+  animation: steam 2s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.animate-steam > *:nth-child(2) {
+  animation: steam 2s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+.animate-steam > *:nth-child(3) {
+  animation: steam 2s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
 /* Bounce animation for onboarding */
 @keyframes bounce-soft {
   0%, 100% { transform: translateY(0); }
@@ -754,4 +785,170 @@ button, a, input, textarea, select {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ============================================
+   MOBILE RESPONSIVENESS
+   ============================================ */
+
+/* Touch manipulation - prevent 300ms delay and double-tap zoom on touch devices */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure minimum touch target size on mobile (44x44px per WCAG) */
+@media (max-width: 640px) {
+  /* Make all buttons and interactive elements touch-friendly by default */
+  button:not(.no-touch-size),
+  [role="button"]:not(.no-touch-size),
+  a:not(.no-touch-size),
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+  }
+
+  /* Improve tap accuracy by adding padding around small buttons */
+  .tap-target {
+    position: relative;
+  }
+  
+  .tap-target::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    bottom: -8px;
+    left: -8px;
+  }
+
+  /* Better spacing for mobile form elements */
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Mobile-optimized scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Hide scrollbars on mobile but allow scrolling */
+  .hide-scrollbar-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar-mobile::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Slightly larger touch targets for tablets */
+  button:not(.no-touch-size),
+  [role="button"]:not(.no-touch-size) {
+    min-height: 40px;
+  }
+}
+
+/* Safe area insets for notched devices (iPhone X+) */
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-inset-top {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+}
+
+/* Prevent text selection on UI elements during touch */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Active state feedback for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+  
+  /* Disable hover effects on touch devices */
+  .hover-effect:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+}
+
+/* Touch-friendly drag and drop */
+@media (hover: none) and (pointer: coarse) {
+  .drag-handle {
+    touch-action: none;
+  }
+  
+  .card-dragging {
+    transform: scale(1.03);
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.3),
+      0 0 0 3px rgba(249, 115, 22, 0.5);
+  }
+}
+
+/* Responsive modal backdrop */
+@media (max-width: 640px) {
+  .modal-backdrop {
+    align-items: flex-start;
+    padding: 0;
+  }
+  
+  .modal-content {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+    border-radius: 0;
+    max-height: none;
+  }
+}
+
+/* Landscape mode optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-content {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  /* Reduce header size in landscape */
+  header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Mobile-first column layout */
+@media (max-width: 640px) {
+  .kanban-columns {
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  /* Stack sidebar below main content on mobile */
+  .modal-layout {
+    flex-direction: column;
+  }
+  
+  .modal-sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
 }

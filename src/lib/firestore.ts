@@ -390,7 +390,8 @@ export const subscribeToCardsPaginated = (
   boardId: string,
   columnId: string,
   callback: (cards: Card[], hasMore: boolean) => void,
-  initialLimit: number = 50
+  initialLimit: number = 50,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'cards'),
@@ -399,18 +400,27 @@ export const subscribeToCardsPaginated = (
     orderBy('order', 'asc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const allCards = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Card[];
-    
-    // Return limited cards with hasMore flag
-    const limitedCards = allCards.slice(0, initialLimit);
-    const hasMore = allCards.length > initialLimit;
-    
-    callback(limitedCards, hasMore);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const allCards = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Card[];
+      
+      // Return limited cards with hasMore flag
+      const limitedCards = allCards.slice(0, initialLimit);
+      const hasMore = allCards.length > initialLimit;
+      
+      callback(limitedCards, hasMore);
+    },
+    (error) => {
+      console.error('Error subscribing to paginated cards:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 // Load more cards for a column (for pagination)
@@ -802,20 +812,30 @@ export const deleteComment = async (
 export const subscribeToComments = (
   boardId: string,
   cardId: string,
-  callback: (comments: Comment[]) => void
+  callback: (comments: Comment[]) => void,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'cards', cardId, 'comments'),
     orderBy('createdAt', 'asc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const comments = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Comment[];
-    callback(comments);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const comments = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Comment[];
+      callback(comments);
+    },
+    (error) => {
+      console.error('Error subscribing to comments:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 // Reorder columns
@@ -1034,7 +1054,8 @@ export const subscribeToBoardMembers = (
 // Archive operations - subscribe to archived items
 export const subscribeToArchivedCards = (
   boardId: string,
-  callback: (cards: Card[]) => void
+  callback: (cards: Card[]) => void,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'cards'),
@@ -1042,18 +1063,28 @@ export const subscribeToArchivedCards = (
     orderBy('updatedAt', 'desc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const cards = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Card[];
-    callback(cards);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const cards = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Card[];
+      callback(cards);
+    },
+    (error) => {
+      console.error('Error subscribing to archived cards:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 export const subscribeToArchivedColumns = (
   boardId: string,
-  callback: (columns: Column[]) => void
+  callback: (columns: Column[]) => void,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'columns'),
@@ -1061,13 +1092,22 @@ export const subscribeToArchivedColumns = (
     orderBy('updatedAt', 'desc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const columns = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Column[];
-    callback(columns);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const columns = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Column[];
+      callback(columns);
+    },
+    (error) => {
+      console.error('Error subscribing to archived columns:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 // Permanent delete operations
@@ -1361,7 +1401,8 @@ export const subscribeToCardActivities = (
   boardId: string,
   cardId: string,
   callback: (activities: Activity[]) => void,
-  limitCount: number = 50
+  limitCount: number = 50,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'activities'),
@@ -1369,34 +1410,53 @@ export const subscribeToCardActivities = (
     orderBy('createdAt', 'desc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const activities = snapshot.docs
-      .slice(0, limitCount)
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Activity[];
-    callback(activities);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const activities = snapshot.docs
+        .slice(0, limitCount)
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Activity[];
+      callback(activities);
+    },
+    (error) => {
+      console.error('Error subscribing to card activities:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 export const subscribeToBoardActivities = (
   boardId: string,
   callback: (activities: Activity[]) => void,
-  limitCount: number = 100
+  limitCount: number = 100,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'activities'),
     orderBy('createdAt', 'desc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const activities = snapshot.docs
-      .slice(0, limitCount)
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Activity[];
-    callback(activities);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const activities = snapshot.docs
+        .slice(0, limitCount)
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Activity[];
+      callback(activities);
+    },
+    (error) => {
+      console.error('Error subscribing to board activities:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };

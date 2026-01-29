@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock Firebase before importing anything that uses it
 vi.mock('firebase/firestore', () => ({

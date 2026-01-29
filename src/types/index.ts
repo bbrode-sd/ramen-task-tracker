@@ -57,6 +57,11 @@ export interface CardCover {
   color?: string;
 }
 
+export type CardPriority = 'low' | 'medium' | 'high' | 'urgent' | null;
+
+export type SortBy = 'created' | 'dueDate' | 'priority' | 'title';
+export type SortOrder = 'asc' | 'desc';
+
 export interface Card {
   id: string;
   boardId: string;
@@ -76,6 +81,7 @@ export interface Card {
   assigneeIds?: string[];
   checklists?: Checklist[];
   coverImage?: CardCover;
+  priority?: CardPriority;
 }
 
 export interface Attachment {

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
-import { Card, Comment, Attachment, BoardMember, Checklist, ChecklistItem, Activity, CardCover } from '@/types';
+import { Card, Comment, Attachment, BoardMember, Checklist, ChecklistItem, Activity, CardCover, CardPriority } from '@/types';
 import {
   getCard,
   updateCard,
@@ -239,6 +239,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   // Due date
   const [dueDate, setDueDate] = useState<string>('');
 
+  // Priority
+  const [priority, setPriority] = useState<CardPriority>(null);
+
   // Assignees
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
   const [assignees, setAssignees] = useState<BoardMember[]>([]);
@@ -291,6 +294,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           const date = cardData.dueDate.toDate();
           setDueDate(date.toISOString().split('T')[0]);
         }
+        // Initialize priority
+        setPriority(cardData.priority ?? null);
         // Initialize checklists
         setChecklists(cardData.checklists || []);
       }
@@ -301,13 +306,28 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Subscribe to comments
   useEffect(() => {
-    const unsubscribe = subscribeToComments(boardId, cardId, setComments);
+    const unsubscribe = subscribeToComments(
+      boardId,
+      cardId,
+      setComments,
+      (error) => {
+        console.error('Error subscribing to comments:', error);
+      }
+    );
     return () => unsubscribe();
   }, [boardId, cardId]);
 
   // Subscribe to activities
   useEffect(() => {
-    const unsubscribe = subscribeToCardActivities(boardId, cardId, setActivities);
+    const unsubscribe = subscribeToCardActivities(
+      boardId,
+      cardId,
+      setActivities,
+      50, // limitCount
+      (error) => {
+        console.error('Error subscribing to card activities:', error);
+      }
+    );
     return () => unsubscribe();
   }, [boardId, cardId]);
 
@@ -570,6 +590,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const handleClearDueDate = async () => {
     setDueDate('');
     await updateCard(boardId, cardId, { dueDate: null });
+    const updatedCard = await getCard(boardId, cardId);
+    if (updatedCard) setCard(updatedCard);
+  };
+
+  const handlePriorityChange = async (newPriority: CardPriority) => {
+    setPriority(newPriority);
+    await updateCard(boardId, cardId, { priority: newPriority });
     const updatedCard = await getCard(boardId, cardId);
     if (updatedCard) setCard(updatedCard);
   };
@@ -1008,7 +1035,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-6 sm:py-10 px-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-0 sm:py-6 md:py-10 px-0 sm:px-4"
       onClick={onClose}
       role="presentation"
     >
@@ -1025,16 +1052,16 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         aria-modal="true"
         aria-labelledby="card-modal-title"
         aria-describedby="card-modal-description"
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-[1230px] animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full min-h-screen sm:min-h-0 sm:max-w-[1230px] sm:my-0 animate-in fade-in sm:zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
       >
         {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white rounded-t-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center" aria-hidden="true">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white rounded-none sm:rounded-t-2xl sticky top-0 z-10">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center flex-shrink-0" aria-hidden="true">
               <svg
-                className="w-5 h-5 text-orange-500"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1048,15 +1075,15 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 />
               </svg>
             </div>
-            <div>
-              <h2 id="card-modal-title" className="text-lg font-semibold text-slate-800">Card Details</h2>
-              <p id="card-modal-description" className="text-xs text-slate-400">Edit titles, descriptions, and more</p>
+            <div className="min-w-0">
+              <h2 id="card-modal-title" className="text-base sm:text-lg font-semibold text-slate-800 truncate">Card Details</h2>
+              <p id="card-modal-description" className="text-xs text-slate-400 hidden sm:block">Edit titles, descriptions, and more</p>
             </div>
           </div>
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors group"
+            className="p-2.5 sm:p-2 hover:bg-slate-100 rounded-xl transition-colors group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
             aria-label="Close card details dialog"
           >
             <svg
@@ -1110,7 +1137,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
         <div className="flex flex-col lg:flex-row">
           {/* Main Content */}
-          <div className="flex-1 p-5 sm:p-6 space-y-6">
+          <div className="flex-1 p-4 sm:p-5 md:p-6 space-y-5 sm:space-y-6">
             {/* Bilingual Title Section */}
             <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <legend className="sr-only">Card Title in English and Japanese</legend>
@@ -1556,7 +1583,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:w-56 p-5 bg-gradient-to-b from-slate-50 to-slate-100/50 lg:rounded-br-2xl space-y-4 border-t lg:border-t-0 lg:border-l border-slate-100">
+          <div className="lg:w-56 p-4 sm:p-5 bg-gradient-to-b from-slate-50 to-slate-100/50 sm:rounded-br-2xl space-y-4 border-t lg:border-t-0 lg:border-l border-slate-100">
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Add to card
             </h4>
@@ -1925,8 +1952,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </div>
             </div>
 
-            {/* Due Date */}
-            <div className="space-y-2">
+            {/* Due Date - Enhanced */}
+            <div className="space-y-3">
               <label htmlFor="card-due-date" className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                 <svg
                   className="w-4 h-4"
@@ -1944,6 +1971,109 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </svg>
                 Due Date
               </label>
+              
+              {/* Due Date Status Banner */}
+              {dueDate && (() => {
+                const dueDateObj = new Date(dueDate + 'T00:00:00');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const diffMs = dueDateObj.getTime() - today.getTime();
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                
+                let statusConfig: { bg: string; text: string; border: string; icon: string; label: string; pulse?: boolean };
+                
+                if (diffDays < 0) {
+                  statusConfig = {
+                    bg: 'bg-red-100',
+                    text: 'text-red-700',
+                    border: 'border-red-200',
+                    icon: 'alert',
+                    label: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`,
+                    pulse: true,
+                  };
+                } else if (diffDays === 0) {
+                  statusConfig = {
+                    bg: 'bg-red-50',
+                    text: 'text-red-600',
+                    border: 'border-red-200',
+                    icon: 'clock',
+                    label: 'Due today',
+                  };
+                } else if (diffDays === 1) {
+                  statusConfig = {
+                    bg: 'bg-orange-100',
+                    text: 'text-orange-700',
+                    border: 'border-orange-200',
+                    icon: 'clock',
+                    label: 'Due tomorrow',
+                  };
+                } else if (diffDays <= 7) {
+                  statusConfig = {
+                    bg: 'bg-yellow-100',
+                    text: 'text-yellow-700',
+                    border: 'border-yellow-200',
+                    icon: 'calendar',
+                    label: `Due in ${diffDays} days`,
+                  };
+                } else {
+                  statusConfig = {
+                    bg: 'bg-slate-100',
+                    text: 'text-slate-600',
+                    border: 'border-slate-200',
+                    icon: 'calendar',
+                    label: `Due in ${diffDays} days`,
+                  };
+                }
+                
+                return (
+                  <div className={`flex items-center gap-2 p-3 rounded-xl border ${statusConfig.bg} ${statusConfig.border}`}>
+                    {statusConfig.icon === 'alert' ? (
+                      <svg className={`w-5 h-5 ${statusConfig.text} ${statusConfig.pulse ? 'animate-pulse' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : statusConfig.icon === 'clock' ? (
+                      <svg className={`w-5 h-5 ${statusConfig.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg className={`w-5 h-5 ${statusConfig.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                    <span className={`text-sm font-medium ${statusConfig.text}`}>{statusConfig.label}</span>
+                  </div>
+                );
+              })()}
+              
+              {/* Quick date buttons */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'Today', days: 0 },
+                  { label: 'Tomorrow', days: 1 },
+                  { label: 'Next Week', days: 7 },
+                ].map((option) => {
+                  const targetDate = new Date();
+                  targetDate.setDate(targetDate.getDate() + option.days);
+                  const targetValue = targetDate.toISOString().split('T')[0];
+                  const isSelected = dueDate === targetValue;
+                  
+                  return (
+                    <button
+                      key={option.label}
+                      onClick={() => handleDueDateChange(targetValue)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                        isSelected
+                          ? 'bg-orange-500 text-white border-orange-500'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Date picker input */}
               <div className="relative">
                 <input
                   id="card-due-date"
@@ -1951,19 +2081,72 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={dueDate}
                   onChange={(e) => handleDueDateChange(e.target.value)}
                   aria-describedby="due-date-help"
-                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm"
+                  className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm"
                 />
                 <span id="due-date-help" className="sr-only">Select a due date for this card</span>
               </div>
+              
               {dueDate && (
                 <button
                   onClick={handleClearDueDate}
                   aria-label="Clear due date"
-                  className="w-full px-3 py-2 text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  className="w-full px-3 py-2.5 text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Clear due date
                 </button>
               )}
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                  />
+                </svg>
+                Priority
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { value: null, label: 'None', color: 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200' },
+                  { value: 'low', label: 'Low', color: 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200', dot: 'bg-slate-400' },
+                  { value: 'medium', label: 'Medium', color: 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100', dot: 'bg-yellow-500' },
+                  { value: 'high', label: 'High', color: 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100', dot: 'bg-orange-500' },
+                  { value: 'urgent', label: 'Urgent', color: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100', dot: 'bg-red-500' },
+                ] as { value: CardPriority; label: string; color: string; dot?: string }[]).map((option) => (
+                  <button
+                    key={option.value ?? 'none'}
+                    onClick={() => handlePriorityChange(option.value)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all flex items-center justify-center gap-1.5 ${
+                      priority === option.value
+                        ? `ring-2 ring-orange-500 ${option.color}`
+                        : option.color
+                    }`}
+                    aria-pressed={priority === option.value}
+                  >
+                    {option.dot && (
+                      <span 
+                        className={`w-2 h-2 rounded-full ${option.dot} ${option.value === 'urgent' && priority === 'urgent' ? 'animate-pulse' : ''}`} 
+                        aria-hidden="true" 
+                      />
+                    )}
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <hr className="border-slate-200" />
@@ -2022,11 +2205,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       {/* Save as Template Modal */}
       {showSaveTemplateModal && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60]"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
           onClick={() => setShowSaveTemplateModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6 animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-5">

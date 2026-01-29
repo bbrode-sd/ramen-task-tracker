@@ -9,24 +9,53 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { SyncIndicator } from './SyncIndicator';
 import Image from 'next/image';
-import { BoardMember, Card } from '@/types';
+import { BoardMember, Card, SortBy, SortOrder } from '@/types';
 import { subscribeToBoardMembers, subscribeToArchivedCards, subscribeToArchivedColumns, subscribeToCards } from '@/lib/firestore';
-import { ShareBoardModal, Avatar } from './ShareBoardModal';
-import { Tip } from './Tooltip';
-import { BackgroundPicker } from './BackgroundPicker';
+// Avatar is used inline for member display, keep static import
+import { Avatar } from './ShareBoardModal';
+import { Tip, ShortcutHint } from './Tooltip';
 import { BoardBackground } from '@/types';
-import { TranslationSettingsModal } from './TranslationSettingsModal';
-import { BatchTranslationModal } from './BatchTranslationModal';
-import { LanguageSettingsModal } from './LanguageSettingsModal';
 import { useLocale } from '@/contexts/LocaleContext';
 
-// Lazy load heavy modal components for better initial load performance
+// Lazy load all modal components for better initial load performance
+// These are only rendered when user opens them, reducing initial bundle size
+
 const ArchivedItemsDrawer = dynamic(() => import('./ArchivedItemsDrawer').then(mod => ({ default: mod.ArchivedItemsDrawer })), {
   ssr: false,
   loading: () => null,
 });
 
 const ExportImportModal = dynamic(() => import('./ExportImportModal').then(mod => ({ default: mod.ExportImportModal })), {
+  ssr: false,
+  loading: () => null,
+});
+
+// ShareBoardModal - loaded when user clicks share button
+const ShareBoardModal = dynamic(() => import('./ShareBoardModal').then(mod => ({ default: mod.ShareBoardModal })), {
+  ssr: false,
+  loading: () => null,
+});
+
+// BackgroundPicker - loaded when user opens background menu
+const BackgroundPicker = dynamic(() => import('./BackgroundPicker').then(mod => ({ default: mod.BackgroundPicker })), {
+  ssr: false,
+  loading: () => null,
+});
+
+// TranslationSettingsModal - loaded when user opens translation settings
+const TranslationSettingsModal = dynamic(() => import('./TranslationSettingsModal').then(mod => ({ default: mod.TranslationSettingsModal })), {
+  ssr: false,
+  loading: () => null,
+});
+
+// BatchTranslationModal - loaded when user opens batch translation
+const BatchTranslationModal = dynamic(() => import('./BatchTranslationModal').then(mod => ({ default: mod.BatchTranslationModal })), {
+  ssr: false,
+  loading: () => null,
+});
+
+// LanguageSettingsModal - loaded when user opens language settings
+const LanguageSettingsModal = dynamic(() => import('./LanguageSettingsModal').then(mod => ({ default: mod.LanguageSettingsModal })), {
   ssr: false,
   loading: () => null,
 });
@@ -55,7 +84,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="p-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 relative group"
+      className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 relative group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
       aria-label={getTooltip()}
       title={getTooltip()}
     >
@@ -99,6 +128,13 @@ function ThemeToggle() {
   );
 }
 
+interface DueDateStats {
+  overdue: number;
+  today: number;
+  tomorrow: number;
+  thisWeek: number;
+}
+
 interface HeaderProps {
   boardName?: string;
   onBoardNameChange?: (name: string) => void;
@@ -109,6 +145,7 @@ interface HeaderProps {
   onActivityClick?: () => void;
   currentBackground?: BoardBackground;
   onBackgroundChange?: (background: BoardBackground) => void;
+  dueDateStats?: DueDateStats;
 }
 
 export function Header({ 
@@ -121,6 +158,7 @@ export function Header({
   onActivityClick,
   currentBackground,
   onBackgroundChange,
+  dueDateStats,
 }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { t } = useLocale();
@@ -129,14 +167,22 @@ export function Header({
     setSearchQuery, 
     selectedLabels, 
     toggleLabel, 
+    selectedPriorities,
+    togglePriority,
     hasActiveFilters, 
-    clearFilters 
+    clearFilters,
+    sortBy,
+    sortOrder,
+    setSortBy,
+    setSortOrder,
   } = useFilter();
   const { searchInputRef: keyboardSearchInputRef, expandSearchCallback } = useKeyboardShortcuts();
   
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
+  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showArchivedDrawer, setShowArchivedDrawer] = useState(false);
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false);
@@ -145,13 +191,25 @@ export function Header({
   const [showBatchTranslation, setShowBatchTranslation] = useState(false);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [archivedCount, setArchivedCount] = useState(0);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const localSearchInputRef = useRef<HTMLInputElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
+  const priorityDropdownRef = useRef<HTMLDivElement>(null);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Priority options for filter
+  const priorityOptions = [
+    { value: 'urgent' as const, label: t('header.priorityUrgent'), color: 'bg-red-500' },
+    { value: 'high' as const, label: t('header.priorityHigh'), color: 'bg-orange-500' },
+    { value: 'medium' as const, label: t('header.priorityMedium'), color: 'bg-yellow-500' },
+    { value: 'low' as const, label: t('header.priorityLow'), color: 'bg-blue-500' },
+  ];
 
   // Connect the search input ref to the keyboard shortcuts context
   const searchInputRef = useCallback((element: HTMLInputElement | null) => {
@@ -197,15 +255,27 @@ export function Header({
       setArchivedCount(cardsCount + columnsCount);
     };
 
-    const unsubCards = subscribeToArchivedCards(boardId, (cards) => {
-      cardsCount = cards.length;
-      updateCount();
-    });
+    const unsubCards = subscribeToArchivedCards(
+      boardId,
+      (cards) => {
+        cardsCount = cards.length;
+        updateCount();
+      },
+      (error) => {
+        console.error('Error subscribing to archived cards:', error);
+      }
+    );
 
-    const unsubColumns = subscribeToArchivedColumns(boardId, (columns) => {
-      columnsCount = columns.length;
-      updateCount();
-    });
+    const unsubColumns = subscribeToArchivedColumns(
+      boardId,
+      (columns) => {
+        columnsCount = columns.length;
+        updateCount();
+      },
+      (error) => {
+        console.error('Error subscribing to archived columns:', error);
+      }
+    );
 
     return () => {
       unsubCards();
@@ -220,9 +290,17 @@ export function Header({
       return;
     }
 
-    const unsubscribe = subscribeToCards(boardId, (fetchedCards) => {
-      setCards(fetchedCards);
-    });
+    const unsubscribe = subscribeToCards(
+      boardId,
+      (fetchedCards) => {
+        setCards(fetchedCards);
+      },
+      {
+        onError: (error) => {
+          console.error('Error subscribing to cards for batch translation:', error);
+        },
+      }
+    );
 
     return () => unsubscribe();
   }, [boardId]);
@@ -254,14 +332,23 @@ export function Header({
     }
   }, [isSearchExpanded]);
 
-  // Close label dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (labelDropdownRef.current && !labelDropdownRef.current.contains(event.target as Node)) {
         setShowLabelDropdown(false);
       }
+      if (priorityDropdownRef.current && !priorityDropdownRef.current.contains(event.target as Node)) {
+        setShowPriorityDropdown(false);
+      }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setShowSortDropdown(false);
+      }
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
         setShowMoreMenu(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -309,12 +396,12 @@ export function Header({
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50" aria-hidden="true"></div>
       </div>
       
-      <div className="relative px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+      <div className="relative px-3 sm:px-4 md:px-6 py-3 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 min-w-0">
           {boardId && (
             <Link
               href="/"
-              className="p-2 -ml-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+              className="p-2.5 sm:p-2 -ml-1 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={t('header.backToBoards')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,26 +409,182 @@ export function Header({
               </svg>
             </Link>
           )}
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl drop-shadow-sm">🍜</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xl sm:text-2xl drop-shadow-sm flex-shrink-0">🍜</span>
             {boardName ? (
               <input
                 type="text"
                 value={boardName}
                 onChange={(e) => onBoardNameChange?.(e.target.value)}
-                className="text-lg sm:text-xl font-bold text-white bg-white/10 border border-white/20 focus:bg-white/20 focus:border-white/40 focus:outline-none rounded-lg px-3 py-1.5 min-w-0 max-w-[200px] sm:max-w-none transition-all placeholder:text-white/50"
+                className="text-base sm:text-lg md:text-xl font-bold text-white bg-white/10 border border-white/20 focus:bg-white/20 focus:border-white/40 focus:outline-none rounded-lg px-2 sm:px-3 py-1.5 min-w-0 w-full max-w-[140px] sm:max-w-[200px] md:max-w-none transition-all placeholder:text-white/50"
               />
             ) : (
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                Ramen Task Tracker
+              <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
+                <span className="hidden sm:inline">Ramen Task Tracker</span>
+                <span className="sm:hidden">Ramen</span>
               </h1>
             )}
           </div>
         </div>
 
-        {/* Search and Filters - only show on board pages */}
+        {/* Mobile Menu Button - only show on board pages */}
         {showSearchAndFilters && (
-          <div className="flex items-center gap-2 flex-1 justify-center max-w-xl">
+          <div className="lg:hidden flex items-center" ref={mobileMenuRef}>
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label={showMobileMenu ? t('common.close') : t('common.menu')}
+              aria-expanded={showMobileMenu}
+            >
+              {showMobileMenu ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+            
+            {/* Mobile Dropdown Menu */}
+            {showMobileMenu && (
+              <div className="absolute top-full left-0 right-0 mt-1 mx-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
+                {/* Search */}
+                <div className="p-3 border-b border-gray-100 dark:border-gray-700">
+                  <div className="relative" role="search">
+                    <svg 
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="search"
+                      value={localSearchQuery}
+                      onChange={(e) => setLocalSearchQuery(e.target.value)}
+                      placeholder={t('header.searchCards')}
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[44px]"
+                    />
+                  </div>
+                </div>
+                
+                {/* Labels Filter */}
+                {availableLabels.length > 0 && (
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-700">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('header.filterByLabel')}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {availableLabels.map((label) => (
+                        <button
+                          key={label}
+                          onClick={() => toggleLabel(label)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                            selectedLabels.includes(label) 
+                              ? 'bg-orange-500 text-white' 
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Priority Filter */}
+                <div className="p-3 border-b border-gray-100 dark:border-gray-700">
+                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('header.filterByPriority')}</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {priorityOptions.map((priority) => (
+                      <button
+                        key={priority.value}
+                        onClick={() => togglePriority(priority.value)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center gap-2 ${
+                          selectedPriorities.includes(priority.value) 
+                            ? 'bg-orange-500 text-white' 
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+                        }`}
+                      >
+                        <span className={`w-2.5 h-2.5 rounded-full ${priority.color}`} aria-hidden="true" />
+                        {priority.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="p-2">
+                  {onActivityClick && (
+                    <button
+                      onClick={() => { onActivityClick(); setShowMobileMenu(false); }}
+                      aria-label={t('header.activity')}
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                    >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {t('header.activity')}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setShowShareModal(true); setShowMobileMenu(false); }}
+                    aria-label={t('common.share')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    {t('common.share')}
+                  </button>
+                  <button
+                    onClick={() => { setShowArchivedDrawer(true); setShowMobileMenu(false); }}
+                    aria-label={t('common.archive')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                    {t('common.archive')}
+                    {archivedCount > 0 && (
+                      <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-orange-100 text-orange-600 rounded-full">
+                        {archivedCount > 99 ? '99+' : archivedCount}
+                      </span>
+                    )}
+                  </button>
+                  {onBackgroundChange && (
+                    <button
+                      onClick={() => { setShowBackgroundPicker(true); setShowMobileMenu(false); }}
+                      aria-label={t('header.background')}
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                    >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                      </svg>
+                      {t('header.background')}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setShowExportImportModal(true); setShowMobileMenu(false); }}
+                    aria-label={t('header.exportImport')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    {t('header.exportImport')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Search and Filters - Desktop only, hidden on mobile */}
+        {showSearchAndFilters && (
+          <div className="hidden lg:flex items-center gap-2 flex-1 justify-center max-w-xl">
             {/* Search Bar */}
             <div 
               className={`relative flex items-center transition-all duration-300 ease-out ${
@@ -387,22 +630,28 @@ export function Header({
                   )}
                 </div>
               ) : (
-                <Tip
-                  id="search-shortcut"
-                  tip={t('header.searchShortcut')}
-                  shortcut="/"
-                  position="bottom"
-                >
-                  <button
-                    onClick={handleSearchExpand}
-                    className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-                    aria-label={t('header.searchCards')}
+                <div className="relative">
+                  <Tip
+                    id="search-shortcut"
+                    tip={t('header.searchShortcut')}
+                    shortcut="/"
+                    position="bottom"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
-                </Tip>
+                    <button
+                      onClick={handleSearchExpand}
+                      className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                      aria-label={t('header.searchCards')}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
+                  </Tip>
+                  {/* Subtle shortcut hint badge */}
+                  <kbd className="absolute -bottom-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold bg-white/90 text-orange-600 rounded shadow-sm pointer-events-none">
+                    /
+                  </kbd>
+                </div>
               )}
             </div>
 
@@ -436,10 +685,10 @@ export function Header({
                     role="listbox"
                     aria-label="Available labels"
                     aria-multiselectable="true"
-                    className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden"
+                    className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
                   >
-                    <div className="px-3 py-2 border-b border-gray-100">
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide" id="label-filter-heading">{t('header.filterByLabel')}</h4>
+                    <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide" id="label-filter-heading">{t('header.filterByLabel')}</h4>
                     </div>
                     <div className="max-h-64 overflow-y-auto py-1" role="group" aria-labelledby="label-filter-heading">
                       {availableLabels.map((label) => (
@@ -448,13 +697,13 @@ export function Header({
                           role="option"
                           aria-selected={selectedLabels.includes(label)}
                           onClick={() => toggleLabel(label)}
-                          className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
                         >
                           <span 
                             className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
                               selectedLabels.includes(label) 
                                 ? 'bg-orange-500 border-orange-500' 
-                                : 'border-gray-300'
+                                : 'border-gray-300 dark:border-gray-600'
                             }`}
                             aria-hidden="true"
                           >
@@ -464,7 +713,7 @@ export function Header({
                               </svg>
                             )}
                           </span>
-                          <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-orange-50 text-orange-700 border border-orange-200/50">
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200/50 dark:border-orange-700/50">
                             {label}
                           </span>
                         </button>
@@ -474,6 +723,181 @@ export function Header({
                 )}
               </div>
             )}
+
+            {/* Priority Filter Dropdown */}
+            <div className="relative" ref={priorityDropdownRef}>
+              <button
+                onClick={() => setShowPriorityDropdown(!showPriorityDropdown)}
+                aria-expanded={showPriorityDropdown}
+                aria-haspopup="listbox"
+                aria-label={`${t('header.priority')}${selectedPriorities.length > 0 ? `, ${selectedPriorities.length} selected` : ''}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  selectedPriorities.length > 0 
+                    ? 'bg-white text-orange-600' 
+                    : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                </svg>
+                <span className="hidden sm:inline">{t('header.priority')}</span>
+                {selectedPriorities.length > 0 && (
+                  <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-orange-100 text-orange-700 rounded-full" aria-hidden="true">
+                    {selectedPriorities.length}
+                  </span>
+                )}
+              </button>
+
+              {showPriorityDropdown && (
+                <div 
+                  role="listbox"
+                  aria-label="Available priorities"
+                  aria-multiselectable="true"
+                  className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
+                >
+                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide" id="priority-filter-heading">{t('header.filterByPriority')}</h4>
+                  </div>
+                  <div className="py-1" role="group" aria-labelledby="priority-filter-heading">
+                    {priorityOptions.map((priority) => (
+                      <button
+                        key={priority.value}
+                        role="option"
+                        aria-selected={selectedPriorities.includes(priority.value)}
+                        onClick={() => togglePriority(priority.value)}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                      >
+                        <span 
+                          className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                            selectedPriorities.includes(priority.value) 
+                              ? 'bg-orange-500 border-orange-500' 
+                              : 'border-gray-300 dark:border-gray-600'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {selectedPriorities.includes(priority.value) && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </span>
+                        <span className={`w-2.5 h-2.5 rounded-full ${priority.color}`} aria-hidden="true" />
+                        <span>{priority.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                aria-expanded={showSortDropdown}
+                aria-haspopup="listbox"
+                aria-label="Sort cards"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 bg-white/20 text-white hover:bg-white/30 border border-white/20"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                </svg>
+                <span className="hidden sm:inline">{t('header.sort')}</span>
+                {sortOrder === 'asc' ? (
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
+              </button>
+
+              {showSortDropdown && (
+                <div 
+                  role="listbox"
+                  aria-label="Sort options"
+                  className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
+                >
+                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('header.sortBy')}</h4>
+                  </div>
+                  <div className="py-1">
+                    {([
+                      { value: 'priority', label: t('header.sortPriority') },
+                      { value: 'dueDate', label: t('header.sortDueDate') },
+                      { value: 'created', label: t('header.sortCreated') },
+                      { value: 'title', label: t('header.sortTitle') },
+                    ] as const).map((option) => (
+                      <button
+                        key={option.value}
+                        role="option"
+                        aria-selected={sortBy === option.value}
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                          sortBy === option.value 
+                            ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' 
+                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <span 
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            sortBy === option.value 
+                              ? 'bg-orange-500 border-orange-500' 
+                              : 'border-gray-300 dark:border-gray-600'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {sortBy === option.value && (
+                            <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                          )}
+                        </span>
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 dark:border-gray-700 px-3 py-2 mt-1">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('header.sortOrder')}</h4>
+                    <div className="flex gap-2" role="group" aria-label={t('header.sortOrder')}>
+                      <button
+                        onClick={() => setSortOrder('asc')}
+                        aria-label={t('header.ascending')}
+                        aria-pressed={sortOrder === 'asc'}
+                        className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
+                          sortOrder === 'asc'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                        {t('header.ascending')}
+                      </button>
+                      <button
+                        onClick={() => setSortOrder('desc')}
+                        aria-label={t('header.descending')}
+                        aria-pressed={sortOrder === 'desc'}
+                        className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
+                          sortOrder === 'desc'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        {t('header.descending')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Active Filters Indicator & Clear Button */}
             {hasActiveFilters && (
@@ -494,13 +918,45 @@ export function Header({
               </div>
             )}
 
-            {/* Member Avatars, Archive & Share Buttons */}
+            {/* Due Date Stats, Member Avatars, Archive & Share Buttons */}
             <div className="flex items-center gap-2 ml-2">
+              {/* Due Date Stats Indicator */}
+              {dueDateStats && (dueDateStats.overdue > 0 || dueDateStats.today > 0 || dueDateStats.tomorrow > 0) && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20">
+                  {dueDateStats.overdue > 0 ? (
+                    <>
+                      <svg className="w-4 h-4 text-red-200 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="hidden sm:inline">{dueDateStats.overdue} overdue</span>
+                      <span className="sm:hidden">{dueDateStats.overdue}</span>
+                    </>
+                  ) : dueDateStats.today > 0 ? (
+                    <>
+                      <svg className="w-4 h-4 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="hidden sm:inline">{dueDateStats.today} due today</span>
+                      <span className="sm:hidden">{dueDateStats.today}</span>
+                    </>
+                  ) : dueDateStats.tomorrow > 0 ? (
+                    <>
+                      <svg className="w-4 h-4 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="hidden sm:inline">{dueDateStats.tomorrow} due tomorrow</span>
+                      <span className="sm:hidden">{dueDateStats.tomorrow}</span>
+                    </>
+                  ) : null}
+                </div>
+              )}
+              
               {/* Stacked Member Avatars */}
               {members.length > 0 && (
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="flex items-center -space-x-2 hover:opacity-90 transition-opacity"
+                  aria-label={`View ${members.length} board member${members.length !== 1 ? 's' : ''}`}
                   title={`${members.length} member${members.length !== 1 ? 's' : ''}`}
                 >
                   {members.slice(0, 4).map((member, index) => (
@@ -546,9 +1002,10 @@ export function Header({
               <button
                 onClick={() => setShowShareModal(true)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
+                aria-label={t('header.shareBoard')}
                 title={t('header.shareBoard')}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
                 <span className="hidden sm:inline">{t('common.share')}</span>
@@ -686,37 +1143,44 @@ export function Header({
           </div>
         )}
         
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
           <SyncIndicator />
           
-          {/* Help button with keyboard shortcut hint */}
-          <Tip
-            id="keyboard-shortcuts"
-            tip="Press ? for keyboard shortcuts"
-            shortcut="?"
-            position="bottom"
-          >
-            <button
-              onClick={() => {
-                // Trigger keyboard shortcuts help modal by simulating ? key
-                const event = new KeyboardEvent('keydown', { key: '?' });
-                document.dispatchEvent(event);
-              }}
-              className="p-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20"
-              aria-label="Keyboard shortcuts"
-              title="Keyboard shortcuts (?)"
+          {/* Help button with keyboard shortcut hint - hidden on small mobile */}
+          <div className="relative hidden sm:block">
+            <Tip
+              id="keyboard-shortcuts"
+              tip="Press ? for keyboard shortcuts"
+              shortcut="?"
+              position="bottom"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </Tip>
+              <button
+                onClick={() => {
+                  // Trigger keyboard shortcuts help modal by simulating ? key
+                  const event = new KeyboardEvent('keydown', { key: '?' });
+                  document.dispatchEvent(event);
+                }}
+                className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Keyboard shortcuts"
+                title="Keyboard shortcuts (?)"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </Tip>
+            {/* Subtle shortcut hint badge */}
+            <kbd className="absolute -bottom-1 -right-1 px-1 py-0.5 text-[9px] font-bold bg-white/90 text-orange-600 rounded shadow-sm pointer-events-none">
+              ?
+            </kbd>
+          </div>
           
           <ThemeToggle />
           {user && (
             <>
+              {/* Desktop: Show user info container */}
               <div 
-                className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 bg-white/10 rounded-xl backdrop-blur-sm"
+                className="hidden sm:flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 bg-white/10 rounded-xl backdrop-blur-sm"
                 aria-label={`Signed in as ${user.displayName || user.email}`}
               >
                 {user.photoURL && (
@@ -729,14 +1193,24 @@ export function Header({
                     aria-hidden="true"
                   />
                 )}
-                <span className="text-white/90 text-sm font-medium hidden sm:block max-w-[150px] truncate">
+                <span className="text-white/90 text-sm font-medium hidden md:block max-w-[150px] truncate">
                   {user.displayName || user.email}
                 </span>
               </div>
+              {/* Mobile: Just show avatar */}
+              {user.photoURL && (
+                <Image
+                  src={user.photoURL}
+                  alt={user.displayName || user.email || 'User'}
+                  width={36}
+                  height={36}
+                  className="sm:hidden rounded-full ring-2 ring-white/30"
+                />
+              )}
               <button
                 onClick={signOut}
                 aria-label={t('common.signOut')}
-                className="px-3 sm:px-4 py-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-sm font-medium rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20"
+                className="hidden sm:flex px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-sm font-medium rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 touch-manipulation min-h-[44px] items-center justify-center"
               >
                 {t('common.signOut')}
               </button>

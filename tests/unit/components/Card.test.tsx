@@ -21,6 +21,12 @@ vi.mock('@/contexts/FilterContext', () => ({
   useFilter: () => ({ searchQuery: '' }),
 }));
 
+vi.mock('@/contexts/KeyboardShortcutsContext', () => ({
+  useKeyboardShortcuts: () => ({
+    setHoveredCardId: vi.fn(),
+  }),
+}));
+
 vi.mock('next/image', () => ({
   default: function MockImage({ src, alt, ...props }: { src: string; alt: string }) {
     // eslint-disable-next-line @next/next/no-img-element
@@ -93,7 +99,7 @@ describe('Card Component', () => {
     const user = userEvent.setup();
     renderCard();
 
-    const cardElement = screen.getByRole('button');
+    const cardElement = screen.getByRole('button', { name: /Test Card/ });
     await user.click(cardElement);
 
     expect(mockOnClick).toHaveBeenCalledTimes(1);
@@ -102,14 +108,14 @@ describe('Card Component', () => {
   it('should apply dimmed styles when isDimmed is true', () => {
     renderCard({}, { isDimmed: true });
 
-    const cardElement = screen.getByRole('button');
+    const cardElement = screen.getByRole('button', { name: /Test Card/ });
     expect(cardElement.className).toContain('opacity-40');
   });
 
   it('should apply focused styles when isFocused is true', () => {
     renderCard({}, { isFocused: true });
 
-    const cardElement = screen.getByRole('button');
+    const cardElement = screen.getByRole('button', { name: /Test Card/ });
     expect(cardElement.className).toContain('ring-2');
     expect(cardElement.className).toContain('ring-orange-500');
   });
@@ -117,7 +123,7 @@ describe('Card Component', () => {
   it('should apply selected styles when isSelected is true', () => {
     renderCard({}, { isSelected: true });
 
-    const cardElement = screen.getByRole('button');
+    const cardElement = screen.getByRole('button', { name: /Test Card/ });
     expect(cardElement.className).toContain('ring-2');
     expect(cardElement.className).toContain('bg-orange-50/50');
   });
@@ -138,7 +144,8 @@ describe('Card Component', () => {
       dueDate: createMockTimestamp(pastDate),
     });
 
-    const dueDateElement = screen.getByTitle(/^Due:/);
+    // The title now includes status info like "Overdue:"
+    const dueDateElement = screen.getByTitle(/^Overdue:/);
     expect(dueDateElement.className).toContain('bg-red-100');
   });
 
@@ -177,7 +184,7 @@ describe('Card Component', () => {
       titleJa: 'アクセシブルカード',
     });
 
-    const cardElement = screen.getByRole('button');
+    const cardElement = screen.getByRole('button', { name: /Accessible Card/ });
     expect(cardElement).toHaveAttribute('aria-label', 'Accessible Card, Japanese: アクセシブルカード');
     expect(cardElement).toHaveAttribute('aria-grabbed', 'false');
   });
@@ -187,7 +194,7 @@ describe('Card Component', () => {
       coverImage: { color: '#ff5733' },
     });
 
-    const cardElement = screen.getByRole('button');
+    const cardElement = screen.getByRole('button', { name: /Test Card/ });
     const coverDiv = cardElement.querySelector('[style*="background-color"]');
     expect(coverDiv).toBeInTheDocument();
   });

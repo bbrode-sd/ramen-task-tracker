@@ -472,7 +472,8 @@ service cloud.firestore {
           // Type validation - must be valid activity type
           isOneOf(request.resource.data.type, [
             'card_created', 'card_moved', 'card_updated', 'card_archived',
-            'comment_added', 'checklist_completed', 'assignee_added', 'due_date_set'
+            'comment_added', 'checklist_completed', 'assignee_added', 'due_date_set',
+            'attachment_added'
           ]) &&
           // Field length limits
           isValidLength(request.resource.data.userName, 100) &&

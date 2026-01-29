@@ -63,10 +63,18 @@ export function BoardActivityPanel({
     if (!isOpen) return;
     
     setLoading(true);
-    const unsubscribe = subscribeToBoardActivities(boardId, (fetchedActivities) => {
-      setActivities(fetchedActivities);
-      setLoading(false);
-    });
+    const unsubscribe = subscribeToBoardActivities(
+      boardId,
+      (fetchedActivities) => {
+        setActivities(fetchedActivities);
+        setLoading(false);
+      },
+      100, // limitCount
+      (error) => {
+        console.error('Error subscribing to board activities:', error);
+        setLoading(false);
+      }
+    );
     
     return () => unsubscribe();
   }, [boardId, isOpen]);

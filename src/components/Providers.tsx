@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FilterProvider } from '@/contexts/FilterContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -11,9 +12,20 @@ import { TranslationProvider } from '@/contexts/TranslationContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { ToastContainer } from './Toast';
-import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
-import { OnboardingTour } from './OnboardingTour';
 import { OfflineIndicator } from './OfflineIndicator';
+
+// Lazy load modal components that are only shown conditionally
+// KeyboardShortcutsHelp - shown when user presses ?
+const KeyboardShortcutsHelp = dynamic(
+  () => import('./KeyboardShortcutsHelp').then(mod => ({ default: mod.KeyboardShortcutsHelp })),
+  { ssr: false, loading: () => null }
+);
+
+// OnboardingTour - shown only for new users
+const OnboardingTour = dynamic(
+  () => import('./OnboardingTour').then(mod => ({ default: mod.OnboardingTour })),
+  { ssr: false, loading: () => null }
+);
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
