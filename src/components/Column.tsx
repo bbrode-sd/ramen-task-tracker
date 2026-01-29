@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import { Column as ColumnType, Card as CardType } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,7 @@ import {
   archiveColumn,
   archiveAllCardsInColumn,
   createCard,
+  updateCard,
 } from '@/lib/firestore';
 import { Card } from './Card';
 
@@ -39,6 +40,22 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Translate text to target language
+  const translate = useCallback(async (text: string, targetLanguage: 'en' | 'ja'): Promise<string> => {
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLanguage }),
+      });
+      const data = await response.json();
+      return data.translation || text;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  }, []);
+
   const handleRename = async () => {
     if (columnName.trim() && columnName !== column.name) {
       await updateColumn(boardId, column.id, { name: columnName.trim() });
@@ -60,19 +77,30 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
     if (!newCardTitleEn.trim() || !user) return;
 
     const maxOrder = cards.length > 0 ? Math.max(...cards.map((c) => c.order)) : -1;
+    const titleEn = newCardTitleEn.trim();
     
-    // Create card with English title, Japanese will be translated
-    await createCard(
+    // Create card with English title first (Japanese shows loading state)
+    const cardId = await createCard(
       boardId,
       column.id,
-      newCardTitleEn.trim(),
-      '', // Japanese title will be filled via translation
+      titleEn,
+      '', // Empty initially, will be filled after translation
       user.uid,
       maxOrder + 1
     );
 
     setNewCardTitleEn('');
     setIsAddingCard(false);
+
+    // Translate to Japanese in the background and update the card
+    if (cardId) {
+      try {
+        const titleJa = await translate(titleEn, 'ja');
+        await updateCard(boardId, cardId, { titleJa });
+      } catch (error) {
+        console.error('Failed to translate card title:', error);
+      }
+    }
   };
 
   return (
