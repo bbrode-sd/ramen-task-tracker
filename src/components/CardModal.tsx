@@ -1167,7 +1167,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   }}
                   aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-slate-800 placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white text-gray-900 placeholder:text-slate-400 ${
                     translationState.errors[fieldKeys.titleEn]
                       ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                       : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-400'
@@ -1205,7 +1205,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   }}
                   aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all text-slate-800 placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white text-gray-900 placeholder:text-slate-400 ${
                     translationState.errors[fieldKeys.titleJa]
                       ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                       : 'border-slate-200 focus:ring-red-500/20 focus:border-red-400'
@@ -1240,7 +1240,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   onBlur={() => handleDescriptionEnChange(descriptionEn)}
                   aria-describedby={translationState.errors[fieldKeys.descriptionEn] ? 'desc-en-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.descriptionEn]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all text-slate-800 placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white text-gray-900 placeholder:text-slate-400 ${
                     translationState.errors[fieldKeys.descriptionEn]
                       ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                       : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-400'
@@ -1268,7 +1268,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   onBlur={() => handleDescriptionJaChange(descriptionJa)}
                   aria-describedby={translationState.errors[fieldKeys.descriptionJa] ? 'desc-ja-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.descriptionJa]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all text-slate-800 placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white text-gray-900 placeholder:text-slate-400 ${
                     translationState.errors[fieldKeys.descriptionJa]
                       ? 'border-red-300 focus:ring-red-500/20 focus:border-red-400'
                       : 'border-slate-200 focus:ring-red-500/20 focus:border-red-400'
@@ -1531,7 +1531,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Write a comment..."
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all text-slate-800 placeholder:text-slate-500"
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all bg-white text-gray-900 placeholder:text-slate-400"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                             handleAddComment();
@@ -1630,7 +1630,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste link URL..."
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 text-slate-800 placeholder:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 bg-white text-gray-900 placeholder:text-slate-400"
                   autoFocus
                 />
                 <input
@@ -1638,7 +1638,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
                   placeholder="Link name (optional)"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 text-slate-800 placeholder:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 bg-white text-gray-900 placeholder:text-slate-400"
                 />
                 <div className="flex gap-2">
                   <button
@@ -1692,7 +1692,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={newChecklistTitle}
                   onChange={(e) => setNewChecklistTitle(e.target.value)}
                   placeholder="Checklist title..."
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 text-slate-800 placeholder:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white text-gray-900 placeholder:text-slate-400"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleAddChecklist();
@@ -2244,7 +2244,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
                   placeholder="e.g., Bug Report, Feature Request..."
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 text-slate-800 placeholder:text-slate-500"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white text-gray-900 placeholder:text-slate-400"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && templateName.trim()) {
