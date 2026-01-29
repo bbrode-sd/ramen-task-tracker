@@ -52,9 +52,23 @@ const themeScript = `
   })();
 `;
 
-// Service worker registration script
+// Service worker registration script - skip in development to avoid refresh issues
 const swScript = `
   (function() {
+    // Skip service worker in development mode to avoid refresh loops
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      console.log('[SW] Skipping service worker registration in development');
+      // Unregister any existing service workers in development
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(registration) {
+            registration.unregister();
+            console.log('[SW] Unregistered service worker in development');
+          });
+        });
+      }
+      return;
+    }
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js')
