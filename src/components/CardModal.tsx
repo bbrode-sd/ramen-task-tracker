@@ -931,8 +931,8 @@ function CommentItem({
           )}
         </div>
         
-        {/* Bilingual comment display */}
-        <div className="space-y-2">
+        {/* Bilingual comment display - side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* English version */}
           <div className={`bg-slate-50 border rounded-xl px-4 py-3 ${detectedLang === 'en' ? 'border-blue-200' : 'border-slate-100'}`}>
             <div className="flex items-center gap-2 mb-1">
