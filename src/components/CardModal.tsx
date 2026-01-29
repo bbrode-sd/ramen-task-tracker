@@ -555,7 +555,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     alt={user.displayName || 'User'}
                     width={36}
                     height={36}
-                    className="rounded-full flex-shrink-0 ring-2 ring-slate-100"
+                    className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 object-cover"
                   />
                 )}
                 <div className="flex-1">
@@ -862,7 +862,7 @@ function CommentItem({
           alt={comment.createdByName}
           width={36}
           height={36}
-          className="rounded-full flex-shrink-0 ring-2 ring-slate-100"
+          className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 object-cover"
         />
       ) : (
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center flex-shrink-0 shadow-sm">
