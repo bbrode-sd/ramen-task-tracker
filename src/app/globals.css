@@ -73,15 +73,15 @@ html {
   background: #94a3b8;
 }
 
-/* Improve placeholder text readability across the site */
+/* Placeholder text - lighter to distinguish from typed text */
 ::placeholder {
-  color: #64748b; /* slate-500 - good contrast */
+  color: #94a3b8; /* slate-400 - visible but clearly lighter than input text */
   opacity: 1;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #64748b; /* slate-500 */
+  color: #94a3b8; /* slate-400 */
   opacity: 1;
 }
 
