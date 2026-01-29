@@ -261,7 +261,6 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Activity log
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [showActivity, setShowActivity] = useState(false);
 
   // Cover image
   const [showCoverPicker, setShowCoverPicker] = useState(false);
@@ -1460,7 +1459,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </div>
             )}
 
-            {/* Comments */}
+            {/* Unified Activity Section */}
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
@@ -1474,36 +1473,17 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
                 Activity
-                {comments.length > 0 && (
+                {(comments.length + activities.filter(a => a.type !== 'comment_added').length) > 0 && (
                   <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                    {comments.length}
+                    {comments.length + activities.filter(a => a.type !== 'comment_added').length}
                   </span>
                 )}
               </h4>
-
-              {/* Comment list */}
-              <div className="space-y-4 pt-2">
-                {comments.length === 0 ? (
-                  <CommentsEmptyState />
-                ) : (
-                  comments.map((comment) => (
-                    <CommentItem
-                      key={comment.id}
-                      comment={comment}
-                      currentUserId={user?.uid}
-                      currentUserName={user?.displayName || 'Anonymous'}
-                      boardId={boardId}
-                      cardId={cardId}
-                      onDelete={() => handleDeleteComment(comment.id)}
-                    />
-                  ))
-                )}
-              </div>
 
               {/* Add comment */}
               <div className="flex gap-3">
@@ -1517,9 +1497,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  {/* Grid to match the bilingual comment layout */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
+                  {/* Use same grid as comments, with content centered in middle */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 justify-items-center">
+                    <div className="w-full md:col-span-2 md:w-1/2">
                       <textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
@@ -1545,56 +1525,33 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Activity Log Section */}
-            <div className="space-y-4">
-              <button
-                onClick={() => setShowActivity(!showActivity)}
-                className="flex items-center gap-2.5 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-              >
-                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-slate-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                Activity
-                {activities.length > 0 && (
-                  <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                    {activities.length}
-                  </span>
+              {/* Unified timeline of comments and activities */}
+              <div className="space-y-4 pt-2">
+                {comments.length === 0 && activities.filter(a => a.type !== 'comment_added').length === 0 ? (
+                  <CommentsEmptyState />
+                ) : (
+                  // Combine comments and activities (excluding 'comment_added' since we show the actual comment)
+                  [...comments.map(c => ({ type: 'comment' as const, data: c, timestamp: c.createdAt.toMillis() })),
+                   ...activities.filter(a => a.type !== 'comment_added').map(a => ({ type: 'activity' as const, data: a, timestamp: a.createdAt.toMillis() }))]
+                    .sort((a, b) => b.timestamp - a.timestamp) // Sort newest first
+                    .map((item) => 
+                      item.type === 'comment' ? (
+                        <CommentItem
+                          key={`comment-${item.data.id}`}
+                          comment={item.data}
+                          currentUserId={user?.uid}
+                          currentUserName={user?.displayName || 'Anonymous'}
+                          boardId={boardId}
+                          cardId={cardId}
+                          onDelete={() => handleDeleteComment(item.data.id)}
+                        />
+                      ) : (
+                        <ActivityItem key={`activity-${item.data.id}`} activity={item.data} />
+                      )
+                    )
                 )}
-                <svg
-                  className={`w-4 h-4 text-slate-400 transition-transform ${showActivity ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {showActivity && (
-                <div className="space-y-3 pl-2 border-l-2 border-slate-100 ml-4">
-                  {activities.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic py-2">No activity yet</p>
-                  ) : (
-                    activities.map((activity) => (
-                      <ActivityItem key={activity.id} activity={activity} />
-                    ))
-                  )}
-                </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -2542,6 +2499,10 @@ function ActivityItem({ activity }: { activity: Activity }) {
         return 'completed all checklist items';
       case 'card_updated':
         return 'updated this card';
+      case 'attachment_added':
+        return metadata?.attachmentType === 'image' 
+          ? 'added an image' 
+          : 'added an attachment';
       default:
         return 'made a change';
     }
