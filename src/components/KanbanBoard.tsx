@@ -87,6 +87,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const [columns, setColumns] = useState<ColumnType[]>([]);
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [showActivityPanel, setShowActivityPanel] = useState(false);
@@ -125,30 +126,57 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   // Fetch board data
   useEffect(() => {
     const fetchBoard = async () => {
-      const boardDoc = await getDoc(doc(db, 'boards', boardId));
-      if (boardDoc.exists()) {
-        setBoard({ id: boardDoc.id, ...boardDoc.data() } as Board);
+      try {
+        const boardDoc = await getDoc(doc(db, 'boards', boardId));
+        if (boardDoc.exists()) {
+          const boardData = { id: boardDoc.id, ...boardDoc.data() } as Board;
+          // Check if user is a member of the board
+          if (user && !boardData.memberIds.includes(user.uid)) {
+            setAccessError('You do not have access to this board.');
+            setLoading(false);
+            return;
+          }
+          setBoard(boardData);
+        } else {
+          setAccessError('Board not found.');
+          setLoading(false);
+        }
+      } catch (error) {
+        const firebaseError = error as { code?: string; message?: string };
+        if (firebaseError.code === 'permission-denied') {
+          setAccessError('You do not have access to this board.');
+        } else {
+          setAccessError('Failed to load board. Please try again.');
+          console.error('Error fetching board:', error);
+        }
+        setLoading(false);
       }
     };
-    fetchBoard();
-  }, [boardId]);
+    if (user) {
+      fetchBoard();
+    }
+  }, [boardId, user]);
 
-  // Subscribe to columns
+  // Subscribe to columns - only if we have board access
   useEffect(() => {
+    if (!board || accessError) return;
+    
     const unsubscribe = subscribeToColumns(boardId, (fetchedColumns) => {
       setColumns(fetchedColumns);
     });
     return () => unsubscribe();
-  }, [boardId]);
+  }, [boardId, board, accessError]);
 
-  // Subscribe to cards
+  // Subscribe to cards - only if we have board access
   useEffect(() => {
+    if (!board || accessError) return;
+    
     const unsubscribe = subscribeToCards(boardId, (fetchedCards) => {
       setCards(fetchedCards);
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [boardId]);
+  }, [boardId, board, accessError]);
 
   // Register columns count for keyboard navigation
   useEffect(() => {
@@ -593,6 +621,29 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     expandSearchCallback,
     handleCardClick,
   ]);
+
+  // Show access error state
+  if (accessError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">Access Denied</h2>
+          <p className="text-slate-600 mb-6">{accessError}</p>
+          <button
+            onClick={() => router.push('/')}
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm"
+          >
+            Go to My Boards
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -138,7 +138,8 @@ export const updateBoard = async (boardId: string, updates: Partial<Board>) => {
 
 export const subscribeToBoards = (
   userId: string,
-  callback: (boards: Board[]) => void
+  callback: (boards: Board[]) => void,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards'),
@@ -146,13 +147,22 @@ export const subscribeToBoards = (
     where('isArchived', '==', false)
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const boards = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Board[];
-    callback(boards);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const boards = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Board[];
+      callback(boards);
+    },
+    (error) => {
+      console.error('Error subscribing to boards:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 // Column operations
@@ -225,7 +235,8 @@ export const restoreCards = async (boardId: string, cardIds: string[]) => {
 
 export const subscribeToColumns = (
   boardId: string,
-  callback: (columns: Column[]) => void
+  callback: (columns: Column[]) => void,
+  onError?: (error: Error) => void
 ) => {
   const q = query(
     collection(db, 'boards', boardId, 'columns'),
@@ -233,13 +244,22 @@ export const subscribeToColumns = (
     orderBy('order', 'asc')
   );
   
-  return onSnapshot(q, (snapshot) => {
-    const columns = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Column[];
-    callback(columns);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const columns = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Column[];
+      callback(columns);
+    },
+    (error) => {
+      console.error('Error subscribing to columns:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };
 
 // Card operations
@@ -327,6 +347,7 @@ export const subscribeToCards = (
   options?: {
     limit?: number; // Limit initial cards per query (default: no limit)
     columnId?: string; // Filter by specific column
+    onError?: (error: Error) => void; // Error callback
   }
 ) => {
   let q = query(
@@ -345,13 +366,22 @@ export const subscribeToCards = (
     );
   }
   
-  return onSnapshot(q, (snapshot) => {
-    const cards = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Card[];
-    callback(cards);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const cards = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Card[];
+      callback(cards);
+    },
+    (error) => {
+      console.error('Error subscribing to cards:', error);
+      if (options?.onError) {
+        options.onError(error);
+      }
+    }
+  );
 };
 
 // Paginated cards subscription for large boards

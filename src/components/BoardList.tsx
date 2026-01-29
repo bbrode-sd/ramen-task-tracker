@@ -24,6 +24,7 @@ export function BoardList() {
   const [isCreating, setIsCreating] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Template state
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -35,19 +36,28 @@ export function BoardList() {
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribeToBoards(user.uid, (fetchedBoards) => {
-      setBoards(fetchedBoards);
-      setLoading(false);
-      
-      // Detect new user (no boards) and trigger onboarding
-      if (fetchedBoards.length === 0 && !hasCompletedOnboarding) {
-        setIsNewUser(true);
-        // Small delay to let the UI render first
-        setTimeout(() => {
-          startOnboarding();
-        }, 500);
+    const unsubscribe = subscribeToBoards(
+      user.uid,
+      (fetchedBoards) => {
+        setBoards(fetchedBoards);
+        setLoading(false);
+        setError(null);
+        
+        // Detect new user (no boards) and trigger onboarding
+        if (fetchedBoards.length === 0 && !hasCompletedOnboarding) {
+          setIsNewUser(true);
+          // Small delay to let the UI render first
+          setTimeout(() => {
+            startOnboarding();
+          }, 500);
+        }
+      },
+      (err) => {
+        console.error('Error subscribing to boards:', err);
+        setError('Failed to load boards. Please try again.');
+        setLoading(false);
       }
-    });
+    );
 
     return () => unsubscribe();
   }, [user, hasCompletedOnboarding, setIsNewUser, startOnboarding]);
@@ -114,6 +124,31 @@ export function BoardList() {
           <div className="relative">
             <div className="animate-spin rounded-full h-14 w-14 border-4 border-orange-200 border-t-orange-500"></div>
             <span className="absolute inset-0 flex items-center justify-center text-xl">🍜</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <Header />
+        <div className="flex items-center justify-center h-[calc(100vh-64px)] p-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">Error Loading Boards</h2>
+            <p className="text-slate-600 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
