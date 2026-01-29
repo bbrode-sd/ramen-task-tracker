@@ -354,7 +354,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-[1230px] animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
       >

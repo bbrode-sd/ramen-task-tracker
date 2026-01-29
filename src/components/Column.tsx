@@ -109,7 +109,7 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex-shrink-0 w-[480px] bg-slate-100 rounded-2xl shadow-sm flex flex-col max-h-[calc(100vh-130px)] border border-slate-200/80 ${
+          className={`flex-shrink-0 w-[300px] bg-slate-100 rounded-2xl shadow-sm flex flex-col max-h-[calc(100vh-130px)] border border-slate-200/80 ${
             snapshot.isDragging ? 'shadow-xl ring-2 ring-orange-400/30 rotate-1' : ''
           }`}
         >
