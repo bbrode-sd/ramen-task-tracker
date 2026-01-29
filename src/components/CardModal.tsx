@@ -1463,6 +1463,22 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 )}
               </h4>
 
+              {/* Comment list */}
+              <div className="space-y-4 pt-2">
+                {comments.length === 0 ? (
+                  <CommentsEmptyState />
+                ) : (
+                  comments.map((comment) => (
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      currentUserId={user?.uid}
+                      onDelete={() => handleDeleteComment(comment.id)}
+                    />
+                  ))
+                )}
+              </div>
+
               {/* Add comment */}
               <div className="flex gap-3">
                 {user?.photoURL && (
@@ -1497,22 +1513,6 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              {/* Comment list */}
-              <div className="space-y-4 pt-2">
-                {comments.length === 0 ? (
-                  <CommentsEmptyState />
-                ) : (
-                  comments.map((comment) => (
-                    <CommentItem
-                      key={comment.id}
-                      comment={comment}
-                      currentUserId={user?.uid}
-                      onDelete={() => handleDeleteComment(comment.id)}
-                    />
-                  ))
-                )}
               </div>
             </div>
 
