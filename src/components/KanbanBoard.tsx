@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { useAuth } from '@/contexts/AuthContext';
 import { Board, Column as ColumnType, Card as CardType } from '@/types';
@@ -20,18 +21,18 @@ import { CardModal } from './CardModal';
 
 interface KanbanBoardProps {
   boardId: string;
-  onBackToBoards: () => void;
+  selectedCardId?: string | null;
 }
 
-export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
+export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [board, setBoard] = useState<Board | null>(null);
   const [columns, setColumns] = useState<ColumnType[]>([]);
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   // Fetch board data
   useEffect(() => {
@@ -174,10 +175,18 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
     await reorderCards(boardId, cardUpdates);
   };
 
+  const handleCardClick = useCallback((cardId: string) => {
+    router.push(`/boards/${boardId}?card=${cardId}`);
+  }, [router, boardId]);
+
+  const handleCloseCard = useCallback(() => {
+    router.push(`/boards/${boardId}`);
+  }, [router, boardId]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
-        <Header boardName={board?.name} onBackToBoards={onBackToBoards} />
+        <Header boardName={board?.name} boardId={boardId} />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
             <div className="animate-spin rounded-full h-14 w-14 border-4 border-orange-200 border-t-orange-500"></div>
@@ -193,7 +202,7 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
       <Header
         boardName={board?.name}
         onBoardNameChange={handleBoardNameChange}
-        onBackToBoards={onBackToBoards}
+        boardId={boardId}
       />
       
       <main className="flex-1 overflow-x-auto p-4 sm:p-6">
@@ -212,7 +221,7 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
                     cards={getCardsForColumn(column.id)}
                     index={index}
                     boardId={boardId}
-                    onCardClick={setSelectedCardId}
+                    onCardClick={handleCardClick}
                   />
                 ))}
                 {provided.placeholder}
@@ -289,7 +298,7 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
         <CardModal
           boardId={boardId}
           cardId={selectedCardId}
-          onClose={() => setSelectedCardId(null)}
+          onClose={handleCloseCard}
         />
       )}
     </div>

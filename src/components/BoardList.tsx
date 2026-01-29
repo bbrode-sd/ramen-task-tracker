@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Board } from '@/types';
 import { subscribeToBoards, createBoard } from '@/lib/firestore';
 import { Header } from './Header';
 
-interface BoardListProps {
-  onSelectBoard: (boardId: string) => void;
-}
-
-export function BoardList({ onSelectBoard }: BoardListProps) {
+export function BoardList() {
   const { user } = useAuth();
+  const router = useRouter();
   const [boards, setBoards] = useState<Board[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
@@ -35,7 +34,7 @@ export function BoardList({ onSelectBoard }: BoardListProps) {
       const boardId = await createBoard(newBoardName.trim(), user.uid);
       setNewBoardName('');
       setIsCreating(false);
-      onSelectBoard(boardId);
+      router.push(`/boards/${boardId}`);
     } catch (error) {
       console.error('Error creating board:', error);
     }
@@ -130,9 +129,9 @@ export function BoardList({ onSelectBoard }: BoardListProps) {
 
           {/* Existing boards */}
           {boards.map((board, index) => (
-            <button
+            <Link
               key={board.id}
-              onClick={() => onSelectBoard(board.id)}
+              href={`/boards/${board.id}`}
               className="group relative bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 hover:from-orange-500 hover:via-orange-600 hover:to-red-600 rounded-2xl shadow-lg hover:shadow-xl p-6 text-left transition-all duration-200 hover:-translate-y-1 min-h-[140px] overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -157,7 +156,7 @@ export function BoardList({ onSelectBoard }: BoardListProps) {
                   {board.createdAt?.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
 

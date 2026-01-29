@@ -1,15 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
 
 interface HeaderProps {
   boardName?: string;
   onBoardNameChange?: (name: string) => void;
-  onBackToBoards?: () => void;
+  boardId?: string;
 }
 
-export function Header({ boardName, onBoardNameChange, onBackToBoards }: HeaderProps) {
+export function Header({ boardName, onBoardNameChange, boardId }: HeaderProps) {
   const { user, signOut } = useAuth();
 
   return (
@@ -19,16 +20,16 @@ export function Header({ boardName, onBoardNameChange, onBackToBoards }: HeaderP
       
       <div className="relative px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 sm:gap-4">
-          {onBackToBoards && (
-            <button
-              onClick={onBackToBoards}
+          {boardId && (
+            <Link
+              href="/"
               className="p-2 -ml-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
               aria-label="Back to boards"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
-            </button>
+            </Link>
           )}
           <div className="flex items-center gap-2.5">
             <span className="text-2xl drop-shadow-sm">🍜</span>

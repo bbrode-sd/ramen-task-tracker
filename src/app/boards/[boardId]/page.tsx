@@ -1,11 +1,22 @@
 'use client';
 
+import { use } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginScreen } from '@/components/LoginScreen';
-import { BoardList } from '@/components/BoardList';
+import { KanbanBoard } from '@/components/KanbanBoard';
 
-export default function Home() {
+interface BoardPageProps {
+  params: Promise<{
+    boardId: string;
+  }>;
+}
+
+export default function BoardPage({ params }: BoardPageProps) {
+  const { boardId } = use(params);
   const { user, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const cardId = searchParams.get('card');
 
   if (loading) {
     return (
@@ -22,5 +33,5 @@ export default function Home() {
     return <LoginScreen />;
   }
 
-  return <BoardList />;
+  return <KanbanBoard boardId={boardId} selectedCardId={cardId} />;
 }
