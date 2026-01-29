@@ -73,9 +73,10 @@ export async function enableOfflinePersistence(): Promise<{ success: boolean; er
     return { success: false };
   }
 
-  // Skip persistence when using emulators - not needed and causes timing issues
-  if (useEmulators) {
-    console.log('[Offline] Skipping persistence - using emulators');
+  // Skip persistence when using emulators or skip auth mode - not needed and causes issues
+  const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+  if (useEmulators || skipAuth) {
+    console.log('[Offline] Skipping persistence - using emulators or skip auth mode');
     persistenceEnabled = true; // Mark as "ready" so UI doesn't wait
     return { success: true };
   }

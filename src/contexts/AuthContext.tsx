@@ -32,6 +32,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
+        // In skip auth mode, ensure we're using anonymous auth (not a stale session)
+        if (skipAuth && !firebaseUser.isAnonymous && !anonymousSignInAttempted.current) {
+          // Sign out the old user and sign in anonymously
+          console.log('[Skip Auth] Found non-anonymous user, signing out to use anonymous auth...');
+          anonymousSignInAttempted.current = true;
+          try {
+            await firebaseSignOut(auth);
+            await signInAnonymously(auth);
+            // onAuthStateChanged will fire again with the anonymous user
+            return;
+          } catch (error) {
+            console.error('[Skip Auth] Error switching to anonymous auth:', error);
+          }
+        }
+        
         // User is signed in (could be anonymous or Google)
         const userData: User = {
           uid: firebaseUser.uid,
