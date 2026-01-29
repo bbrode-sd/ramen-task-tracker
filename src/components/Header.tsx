@@ -1178,12 +1178,12 @@ export function Header({
           <ThemeToggle />
           {user && (
             <>
-              {/* Desktop: Show user info container */}
+              {/* User info container - visible on all screen sizes */}
               <div 
-                className="hidden sm:flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 bg-white/10 rounded-xl backdrop-blur-sm"
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-xl backdrop-blur-sm"
                 aria-label={`Signed in as ${user.displayName || user.email}`}
               >
-                {user.photoURL && (
+                {user.photoURL ? (
                   <Image
                     src={user.photoURL}
                     alt=""
@@ -1192,21 +1192,18 @@ export function Header({
                     className="rounded-full ring-2 ring-white/30"
                     aria-hidden="true"
                   />
+                ) : (
+                  <div 
+                    className="w-7 h-7 rounded-full ring-2 ring-white/30 bg-white/20 flex items-center justify-center text-white text-xs font-semibold"
+                    aria-hidden="true"
+                  >
+                    {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                  </div>
                 )}
-                <span className="text-white/90 text-sm font-medium hidden md:block max-w-[150px] truncate">
+                <span className="text-white/90 text-sm font-medium max-w-[120px] sm:max-w-[150px] truncate">
                   {user.displayName || user.email}
                 </span>
               </div>
-              {/* Mobile: Just show avatar */}
-              {user.photoURL && (
-                <Image
-                  src={user.photoURL}
-                  alt={user.displayName || user.email || 'User'}
-                  width={36}
-                  height={36}
-                  className="sm:hidden rounded-full ring-2 ring-white/30"
-                />
-              )}
               <button
                 onClick={signOut}
                 aria-label={t('common.signOut')}
