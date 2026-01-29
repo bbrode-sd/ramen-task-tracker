@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,8 +35,20 @@ export function BoardList() {
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
 
+  // Use refs to avoid re-running the subscription effect when these values change
+  const hasCompletedOnboardingRef = useRef(hasCompletedOnboarding);
+  const onboardingTriggeredRef = useRef(false);
+  
+  // Keep the ref in sync with the state
+  useEffect(() => {
+    hasCompletedOnboardingRef.current = hasCompletedOnboarding;
+  }, [hasCompletedOnboarding]);
+
   useEffect(() => {
     if (!user) return;
+
+    // Reset onboarding trigger flag when user changes
+    onboardingTriggeredRef.current = false;
 
     const unsubscribe = subscribeToBoards(
       user.uid,
@@ -46,7 +58,10 @@ export function BoardList() {
         setError(null);
         
         // Detect new user (no boards) and trigger onboarding
-        if (fetchedBoards.length === 0 && !hasCompletedOnboarding) {
+        // Use ref to get latest value without causing effect re-run
+        // Also prevent triggering multiple times
+        if (fetchedBoards.length === 0 && !hasCompletedOnboardingRef.current && !onboardingTriggeredRef.current) {
+          onboardingTriggeredRef.current = true;
           setIsNewUser(true);
           // Small delay to let the UI render first
           setTimeout(() => {
@@ -62,7 +77,7 @@ export function BoardList() {
     );
 
     return () => unsubscribe();
-  }, [user, hasCompletedOnboarding, setIsNewUser, startOnboarding]);
+  }, [user, setIsNewUser, startOnboarding]);
 
   // Fetch templates when picker opens
   useEffect(() => {
