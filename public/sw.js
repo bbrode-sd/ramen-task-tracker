@@ -12,7 +12,7 @@
  * 4. Come back online - app should sync automatically
  */
 
-const CACHE_NAME = 'ramen-task-tracker-v1';
+const CACHE_NAME = 'ramen-task-tracker-v2';
 
 // Static assets to cache for offline use
 const STATIC_ASSETS = [
