@@ -12,25 +12,45 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+// Check if we should use emulators
+export const useEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === 'true';
+
+// Initialize Firebase app
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const googleProvider = new GoogleAuthProvider();
+// Get service instances
+const authInstance = getAuth(app);
+const dbInstance = getFirestore(app);
+const storageInstance = getStorage(app);
 
-// Connect to emulators in development/test mode
-const useEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === 'true';
-let emulatorsConnected = false;
-
-if (typeof window !== 'undefined' && useEmulators && !emulatorsConnected) {
-  emulatorsConnected = true;
-  console.log('[Firebase] Connecting to local emulators...');
-  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, 'localhost', 8181);
-  connectStorageEmulator(storage, 'localhost', 9199);
+// Connect to emulators BEFORE exporting instances
+// This must happen before any Firestore operations
+if (typeof window !== 'undefined' && useEmulators) {
+  // Check if already connected by looking at internal state
+  const firestoreSettings = (dbInstance as unknown as { _settings?: { host?: string } })._settings;
+  const isAlreadyConnected = firestoreSettings?.host?.includes('127.0.0.1');
+  
+  if (!isAlreadyConnected) {
+    console.log('[Firebase] Connecting to local emulators...');
+    try {
+      connectAuthEmulator(authInstance, 'http://127.0.0.1:9099', { disableWarnings: true });
+      connectFirestoreEmulator(dbInstance, '127.0.0.1', 8181);
+      connectStorageEmulator(storageInstance, '127.0.0.1', 9199);
+      console.log('[Firebase] Connected to emulators successfully');
+    } catch (error) {
+      // Already connected (can happen during HMR) - this is fine
+      console.log('[Firebase] Emulators already connected or error:', error);
+    }
+  } else {
+    console.log('[Firebase] Already connected to emulators');
+  }
 }
+
+// Export instances
+export const auth = authInstance;
+export const db = dbInstance;
+export const storage = storageInstance;
+export const googleProvider = new GoogleAuthProvider();
 
 // Track persistence status
 let persistenceEnabled = false;
@@ -51,6 +71,13 @@ export async function enableOfflinePersistence(): Promise<{ success: boolean; er
   // Only run on client side
   if (typeof window === 'undefined') {
     return { success: false };
+  }
+
+  // Skip persistence when using emulators - not needed and causes timing issues
+  if (useEmulators) {
+    console.log('[Offline] Skipping persistence - using emulators');
+    persistenceEnabled = true; // Mark as "ready" so UI doesn't wait
+    return { success: true };
   }
 
   // Already attempted
