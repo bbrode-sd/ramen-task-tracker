@@ -53,6 +53,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [linkUrl, setLinkUrl] = useState('');
   const [linkName, setLinkName] = useState('');
 
+  // Track last saved values to avoid re-translating unchanged content
+  const [lastSavedTitleEn, setLastSavedTitleEn] = useState('');
+  const [lastSavedTitleJa, setLastSavedTitleJa] = useState('');
+  const [lastSavedDescriptionEn, setLastSavedDescriptionEn] = useState('');
+  const [lastSavedDescriptionJa, setLastSavedDescriptionJa] = useState('');
+
   // Fetch card data
   useEffect(() => {
     const fetchCard = async () => {
@@ -63,6 +69,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         setTitleJa(cardData.titleJa);
         setDescriptionEn(cardData.descriptionEn);
         setDescriptionJa(cardData.descriptionJa);
+        // Initialize last saved values
+        setLastSavedTitleEn(cardData.titleEn);
+        setLastSavedTitleJa(cardData.titleJa);
+        setLastSavedDescriptionEn(cardData.descriptionEn);
+        setLastSavedDescriptionJa(cardData.descriptionJa);
       }
       setLoading(false);
     };
@@ -106,7 +117,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   }, []);
 
   const handleTitleEnChange = async (value: string) => {
+    // Only process if value actually changed
+    if (value === lastSavedTitleEn) return;
+    
     setTitleEn(value);
+    setLastSavedTitleEn(value);
     await updateCard(boardId, cardId, { titleEn: value });
 
     // Auto-translate to Japanese
@@ -114,13 +129,18 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       setIsTranslating('titleJa');
       const translated = await translate(value, 'ja');
       setTitleJa(translated);
+      setLastSavedTitleJa(translated);
       await updateCard(boardId, cardId, { titleJa: translated });
       setIsTranslating(null);
     }
   };
 
   const handleTitleJaChange = async (value: string) => {
+    // Only process if value actually changed
+    if (value === lastSavedTitleJa) return;
+    
     setTitleJa(value);
+    setLastSavedTitleJa(value);
     await updateCard(boardId, cardId, { titleJa: value });
 
     // Auto-translate to English
@@ -128,32 +148,43 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       setIsTranslating('titleEn');
       const translated = await translate(value, 'en');
       setTitleEn(translated);
+      setLastSavedTitleEn(translated);
       await updateCard(boardId, cardId, { titleEn: translated });
       setIsTranslating(null);
     }
   };
 
   const handleDescriptionEnChange = async (value: string) => {
+    // Only process if value actually changed
+    if (value === lastSavedDescriptionEn) return;
+    
     setDescriptionEn(value);
+    setLastSavedDescriptionEn(value);
     await updateCard(boardId, cardId, { descriptionEn: value });
 
     if (value.trim()) {
       setIsTranslating('descriptionJa');
       const translated = await translate(value, 'ja');
       setDescriptionJa(translated);
+      setLastSavedDescriptionJa(translated);
       await updateCard(boardId, cardId, { descriptionJa: translated });
       setIsTranslating(null);
     }
   };
 
   const handleDescriptionJaChange = async (value: string) => {
+    // Only process if value actually changed
+    if (value === lastSavedDescriptionJa) return;
+    
     setDescriptionJa(value);
+    setLastSavedDescriptionJa(value);
     await updateCard(boardId, cardId, { descriptionJa: value });
 
     if (value.trim()) {
       setIsTranslating('descriptionEn');
       const translated = await translate(value, 'en');
       setDescriptionEn(translated);
+      setLastSavedDescriptionEn(translated);
       await updateCard(boardId, cardId, { descriptionEn: translated });
       setIsTranslating(null);
     }
