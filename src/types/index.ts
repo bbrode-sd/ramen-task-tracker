@@ -57,7 +57,10 @@ export interface Attachment {
 export interface Comment {
   id: string;
   cardId: string;
-  content: string;
+  content: string; // Original content (kept for backwards compatibility)
+  contentEn: string; // English version
+  contentJa: string; // Japanese version
+  detectedLanguage: 'en' | 'ja'; // Which language was originally typed
   createdAt: Timestamp;
   updatedAt: Timestamp;
   createdBy: string;

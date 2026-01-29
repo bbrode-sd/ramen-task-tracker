@@ -190,17 +190,52 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     }
   };
 
+  const translateWithAutoDetect = useCallback(async (text: string): Promise<{
+    detectedLanguage: 'en' | 'ja';
+    original: string;
+    translation: string;
+  }> => {
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, autoDetect: true }),
+      });
+      const data = await response.json();
+      return {
+        detectedLanguage: data.detectedLanguage || 'en',
+        original: data.original || text,
+        translation: data.translation || text,
+      };
+    } catch (error) {
+      console.error('Translation error:', error);
+      return { detectedLanguage: 'en', original: text, translation: text };
+    }
+  }, []);
+
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
 
     setIsAddingComment(true);
+    
+    // Detect language and translate
+    const { detectedLanguage, original, translation } = await translateWithAutoDetect(newComment.trim());
+    
+    // Set English and Japanese content based on detected language
+    const contentEn = detectedLanguage === 'en' ? original : translation;
+    const contentJa = detectedLanguage === 'ja' ? original : translation;
+    
     await addComment(
       boardId,
       cardId,
       newComment.trim(),
       user.uid,
       user.displayName || 'Anonymous',
-      user.photoURL
+      user.photoURL,
+      [],
+      contentEn,
+      contentJa,
+      detectedLanguage
     );
     setNewComment('');
     setIsAddingComment(false);
@@ -853,6 +888,11 @@ function CommentItem({
   onDelete: () => void;
 }) {
   const isOwner = currentUserId === comment.createdBy;
+  
+  // Get content for both languages, falling back to original content for old comments
+  const englishContent = comment.contentEn || comment.content;
+  const japaneseContent = comment.contentJa || comment.content;
+  const detectedLang = comment.detectedLanguage || 'en';
 
   return (
     <div className="flex gap-3 group">
@@ -890,8 +930,30 @@ function CommentItem({
             </button>
           )}
         </div>
-        <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+        
+        {/* Bilingual comment display */}
+        <div className="space-y-2">
+          {/* English version */}
+          <div className={`bg-slate-50 border rounded-xl px-4 py-3 ${detectedLang === 'en' ? 'border-blue-200' : 'border-slate-100'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center justify-center w-6 h-5 text-[9px] font-bold text-blue-600 bg-blue-50 rounded border border-blue-100">EN</span>
+              {detectedLang === 'en' && (
+                <span className="text-[10px] text-blue-500 font-medium">Original</span>
+              )}
+            </div>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{englishContent}</p>
+          </div>
+          
+          {/* Japanese version */}
+          <div className={`bg-slate-50 border rounded-xl px-4 py-3 ${detectedLang === 'ja' ? 'border-red-200' : 'border-slate-100'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center justify-center w-6 h-5 text-[9px] font-bold text-red-600 bg-red-50 rounded border border-red-100">JP</span>
+              {detectedLang === 'ja' && (
+                <span className="text-[10px] text-red-500 font-medium">オリジナル</span>
+              )}
+            </div>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{japaneseContent}</p>
+          </div>
         </div>
       </div>
     </div>

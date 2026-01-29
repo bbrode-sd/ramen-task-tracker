@@ -280,13 +280,19 @@ export const addComment = async (
   userId: string,
   userName: string,
   userPhoto: string | null,
-  attachments: Attachment[] = []
+  attachments: Attachment[] = [],
+  contentEn?: string,
+  contentJa?: string,
+  detectedLanguage?: 'en' | 'ja'
 ): Promise<string> => {
   const commentRef = await addDoc(
     collection(db, 'boards', boardId, 'cards', cardId, 'comments'),
     {
       cardId,
       content,
+      contentEn: contentEn || content,
+      contentJa: contentJa || content,
+      detectedLanguage: detectedLanguage || 'en',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       createdBy: userId,
