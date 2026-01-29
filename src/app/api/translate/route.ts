@@ -1,9 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import pokemonNames from '@/data/pokemon-names.json';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Type for the pokemon names lookup
+interface PokemonLookup {
+  en_to_ja: Record<string, string>;
+  ja_to_en: Record<string, string>;
+}
+
+const pokemonLookup = pokemonNames as PokemonLookup;
+
+// Post-process translation to ensure correct Pokémon names
+function correctPokemonNames(text: string, targetLanguage: 'en' | 'ja'): string {
+  let corrected = text;
+  
+  if (targetLanguage === 'ja') {
+    // Replace English Pokémon names with official Japanese names
+    for (const [enName, jaName] of Object.entries(pokemonLookup.en_to_ja)) {
+      // Case-insensitive replacement for English names
+      const regex = new RegExp(`\\b${enName}\\b`, 'gi');
+      corrected = corrected.replace(regex, jaName);
+    }
+  } else {
+    // Replace Japanese Pokémon names with official English names
+    for (const [jaName, enName] of Object.entries(pokemonLookup.ja_to_en)) {
+      corrected = corrected.replace(new RegExp(jaName, 'g'), enName);
+    }
+  }
+  
+  return corrected;
+}
 
 // Pokémon-specialized translation instructions
 const POKEMON_TRANSLATION_CONTEXT = `
@@ -100,7 +130,8 @@ For very short phrases or single words, provide the most natural translation usi
         max_tokens: 1000,
       });
 
-      const translation = completion.choices[0]?.message?.content?.trim() || text;
+      const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
+      const translation = correctPokemonNames(rawTranslation, translateTo);
 
       return NextResponse.json({
         detectedLanguage,
@@ -153,7 +184,8 @@ For very short phrases or single words, provide the most natural translation usi
       max_tokens: 1000,
     });
 
-    const translation = completion.choices[0]?.message?.content?.trim() || text;
+    const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
+    const translation = correctPokemonNames(rawTranslation, targetLanguage as 'en' | 'ja');
 
     return NextResponse.json({ translation, isPlaceholder: false });
   } catch (error) {
