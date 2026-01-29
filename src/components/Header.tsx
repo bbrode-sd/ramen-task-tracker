@@ -140,8 +140,10 @@ export function Header({
   const [showExportImportModal, setShowExportImportModal] = useState(false);
   const [showTranslationSettings, setShowTranslationSettings] = useState(false);
   const [showBatchTranslation, setShowBatchTranslation] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [archivedCount, setArchivedCount] = useState(0);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const localSearchInputRef = useRef<HTMLInputElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
@@ -253,6 +255,9 @@ export function Header({
     const handleClickOutside = (event: MouseEvent) => {
       if (labelDropdownRef.current && !labelDropdownRef.current.contains(event.target as Node)) {
         setShowLabelDropdown(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -517,20 +522,6 @@ export function Header({
                 </button>
               )}
 
-              {/* Background Picker Button */}
-              {onBackgroundChange && (
-                <button
-                  onClick={() => setShowBackgroundPicker(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                  aria-label="Change board background"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                  </svg>
-                  <span className="hidden sm:inline">Background</span>
-                </button>
-              )}
-
               {/* Activity Button */}
               {onActivityClick && (
                 <button
@@ -545,59 +536,6 @@ export function Header({
                 </button>
               )}
 
-              {/* Export/Import Button */}
-              <button
-                onClick={() => setShowExportImportModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                title="Export or import board"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-                <span className="hidden sm:inline">Export</span>
-              </button>
-
-              {/* Translation Settings Button */}
-              <button
-                onClick={() => setShowTranslationSettings(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                title="Translation settings"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                </svg>
-                <span className="hidden lg:inline">Translate</span>
-              </button>
-
-              {/* Batch Translation Button */}
-              <button
-                onClick={() => setShowBatchTranslation(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                title="Translate all cards"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="hidden lg:inline">Batch</span>
-              </button>
-
-              {/* Archive Button */}
-              <button
-                onClick={() => setShowArchivedDrawer(true)}
-                className="relative flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                title="View archived items"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-                <span className="hidden sm:inline">Archive</span>
-                {archivedCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-white text-orange-600 rounded-full shadow-sm">
-                    {archivedCount > 99 ? '99+' : archivedCount}
-                  </span>
-                )}
-              </button>
-
               {/* Share Button */}
               <button
                 onClick={() => setShowShareModal(true)}
@@ -609,6 +547,120 @@ export function Header({
                 </svg>
                 <span className="hidden sm:inline">Share</span>
               </button>
+
+              {/* More Menu */}
+              <div className="relative" ref={moreMenuRef}>
+                <button
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className="relative flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
+                  aria-label="More options"
+                  aria-expanded={showMoreMenu}
+                  aria-haspopup="menu"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                  </svg>
+                  <span className="hidden sm:inline">More</span>
+                  {archivedCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-white text-orange-600 rounded-full shadow-sm">
+                      {archivedCount > 99 ? '99+' : archivedCount}
+                    </span>
+                  )}
+                </button>
+
+                {showMoreMenu && (
+                  <div 
+                    role="menu"
+                    className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
+                  >
+                    {/* Background */}
+                    {onBackgroundChange && (
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          setShowBackgroundPicker(true);
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                        </svg>
+                        Background
+                      </button>
+                    )}
+
+                    {/* Export/Import */}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowExportImportModal(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                      Export / Import
+                    </button>
+
+                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
+
+                    {/* Translation Settings */}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowTranslationSettings(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                      </svg>
+                      Translation Settings
+                    </button>
+
+                    {/* Batch Translation */}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowBatchTranslation(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Batch Translation
+                    </button>
+
+                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
+
+                    {/* Archive */}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowArchivedDrawer(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                      </svg>
+                      <span className="flex-1">Archive</span>
+                      {archivedCount > 0 && (
+                        <span className="min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-orange-100 text-orange-600 rounded-full">
+                          {archivedCount > 99 ? '99+' : archivedCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
