@@ -817,6 +817,17 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           createdBy: user.uid,
         });
         
+        // Log activity for file upload
+        await logActivity(boardId, {
+          cardId,
+          cardTitle: card?.titleEn || '',
+          type: 'attachment_added',
+          userId: user.uid,
+          userName: user.displayName || 'Anonymous',
+          userPhoto: user.photoURL,
+          metadata: { attachmentName: result.name, attachmentType: fileType },
+        });
+        
         // Track the first image attachment for auto-cover
         if (fileType === 'image' && !firstImageAttachmentId) {
           // Fetch the updated card to get the attachment ID
@@ -867,6 +878,17 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 url: result.url,
                 name: result.name,
                 createdBy: user.uid,
+              });
+              
+              // Log activity for image paste
+              await logActivity(boardId, {
+                cardId,
+                cardTitle: card?.titleEn || '',
+                type: 'attachment_added',
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous',
+                userPhoto: user.photoURL,
+                metadata: { attachmentName: result.name, attachmentType: 'image' },
               });
               
               // Auto-set cover if this is the first image

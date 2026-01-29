@@ -170,7 +170,8 @@ export type ActivityType =
   | 'comment_added' 
   | 'checklist_completed' 
   | 'assignee_added' 
-  | 'due_date_set';
+  | 'due_date_set'
+  | 'attachment_added';
 
 export interface Activity {
   id: string;
