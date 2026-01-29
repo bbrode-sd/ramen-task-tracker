@@ -626,7 +626,7 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevProps.card.titleJa === nextProps.card.titleJa &&
     prevProps.card.columnId === nextProps.card.columnId &&
     prevProps.card.order === nextProps.card.order &&
-    prevProps.card.coverImage === nextProps.card.coverImage &&
+    JSON.stringify(prevProps.card.coverImage) === JSON.stringify(nextProps.card.coverImage) &&
     prevProps.card.dueDate === nextProps.card.dueDate &&
     prevProps.index === nextProps.index &&
     prevProps.isDimmed === nextProps.isDimmed &&
