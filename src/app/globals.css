@@ -85,6 +85,11 @@ textarea::placeholder {
   opacity: 1;
 }
 
+/* Ensure readable text color for all form inputs */
+input, textarea, select {
+  color: #0f172a; /* slate-900 - dark, readable text */
+}
+
 /* Smooth transitions for interactive elements */
 button, a, input, textarea, select {
   transition: all 0.15s ease;
