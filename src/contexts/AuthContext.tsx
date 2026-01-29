@@ -8,6 +8,7 @@ import {
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
+import { saveUserProfile } from '@/lib/firestore';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -24,14 +25,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        setUser({
+        const userData = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
-        });
+        };
+        setUser(userData);
+        
+        // Save/update user profile in Firestore for member lookup
+        try {
+          await saveUserProfile(userData);
+        } catch (error) {
+          console.error('Error saving user profile:', error);
+        }
       } else {
         setUser(null);
       }

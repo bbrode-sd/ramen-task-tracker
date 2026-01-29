@@ -24,8 +24,19 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dark mode via class (for manual toggle) */
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --surface: #1e293b;
+  --surface-hover: #334155;
+  --border: #334155;
+  --text-muted: #94a3b8;
+}
+
+/* Dark mode via system preference (fallback when no class is set) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --background: #0f172a;
     --foreground: #f1f5f9;
     --surface: #1e293b;
@@ -41,6 +52,7 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Smooth scrolling */
@@ -48,10 +60,127 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Better focus styles */
+/* ============================================
+   ACCESSIBILITY - FOCUS STYLES
+   ============================================ */
+
+/* Enhanced focus styles for all interactive elements 
+   WCAG 2.1 requires visible focus indicators */
 *:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.2);
+}
+
+/* High contrast focus ring for buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.25);
+}
+
+/* Focus style for inputs and textareas */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 0;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+}
+
+/* Focus style for links */
+a:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Focus style for cards and draggable items */
+[data-card-id]:focus-visible,
+[data-column-id]:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.2), var(--shadow-lg);
+}
+
+/* Skip to main content link - screen reader accessible */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+  top: 12px;
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+/* Screen reader only class - visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Make sr-only visible on focus (for skip links) */
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Focus within for container focus indication */
+.focus-within-visible:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+
+/* Reduced motion - respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  *:focus-visible {
+    outline: 4px solid currentColor;
+    outline-offset: 2px;
+  }
+  
+  button, [role="button"] {
+    border: 2px solid currentColor;
+  }
 }
 
 /* Custom scrollbar */
@@ -87,7 +216,21 @@ textarea::placeholder {
 
 /* Ensure readable text color for all form inputs */
 input, textarea, select {
-  color: #0f172a; /* slate-900 - dark, readable text */
+  color: var(--foreground);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Dark mode glass effect */
+.dark .glass {
+  background: rgba(30, 41, 59, 0.9);
 }
 
 /* Smooth transitions for interactive elements */
@@ -138,4 +281,477 @@ button, a, input, textarea, select {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Bounce animation for onboarding */
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 2s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Scale in animation for empty states */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+/* Spotlight pulse for onboarding highlight */
+@keyframes spotlight-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(249, 115, 22, 0.1); }
+}
+
+.animate-spotlight {
+  animation: spotlight-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   ARIA LIVE REGIONS - SCREEN READER ANNOUNCEMENTS
+   ============================================ */
+
+/* Live region for dynamic announcements */
+.aria-live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================
+   DRAG AND DROP STYLES
+   ============================================ */
+
+/* Drag shadow for elevated dragged items */
+.drag-shadow {
+  box-shadow: 
+    0 15px 35px -5px rgba(0, 0, 0, 0.2),
+    0 10px 20px -5px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(249, 115, 22, 0.2);
+}
+
+/* Card being dragged */
+.card-dragging {
+  transform: rotate(3deg) scale(1.02);
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.25),
+    0 15px 25px -5px rgba(0, 0, 0, 0.15),
+    0 0 0 2px rgba(249, 115, 22, 0.3);
+  z-index: 9999;
+}
+
+/* Column being dragged */
+.column-dragging {
+  transform: rotate(2deg);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 2px rgba(249, 115, 22, 0.4);
+}
+
+/* Source placeholder (item being dragged from) */
+.drag-placeholder {
+  opacity: 0.4;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+/* Pickup animation */
+@keyframes drag-pickup {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1.02) rotate(3deg); }
+}
+
+.animate-pickup {
+  animation: drag-pickup 0.15s ease-out forwards;
+}
+
+/* Drop indicator line */
+.drop-indicator {
+  position: relative;
+}
+
+.drop-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -5px;
+  height: 3px;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  border-radius: 2px;
+  animation: drop-indicator-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes drop-indicator-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scaleX(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scaleX(0.98);
+  }
+}
+
+/* Drop zone highlighting */
+.drop-zone-active {
+  background: linear-gradient(135deg, rgba(254, 215, 170, 0.3), rgba(253, 186, 116, 0.2)) !important;
+  border-color: rgba(249, 115, 22, 0.3) !important;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+/* Valid drop zone glow */
+.drop-zone-valid {
+  box-shadow: inset 0 0 20px rgba(249, 115, 22, 0.1);
+}
+
+/* Card selection highlight */
+.card-selected {
+  ring: 2px solid #f97316;
+  box-shadow: 
+    0 0 0 2px #f97316,
+    0 4px 12px rgba(249, 115, 22, 0.25);
+  background: linear-gradient(135deg, #fff7ed, #ffffff);
+}
+
+/* Selection checkmark */
+.card-selected::after {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Multi-select badge */
+.multi-select-badge {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(234, 88, 12, 0.4);
+  z-index: 10;
+}
+
+/* Cursor styles during drag */
+.dragging-cursor {
+  cursor: grabbing !important;
+}
+
+.dragging-cursor * {
+  cursor: grabbing !important;
+}
+
+/* Drag handle cursor */
+.drag-handle {
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Touch device long-press indicator */
+@keyframes long-press-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.long-press-indicator {
+  position: absolute;
+  inset: -8px;
+  border: 3px solid #f97316;
+  border-radius: 16px;
+  animation: long-press-ring 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+/* Card slide animation */
+.card-slide-transition {
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Smooth drop animation */
+@keyframes card-drop {
+  0% { 
+    transform: scale(1.02) rotate(3deg); 
+    opacity: 0.9;
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1;
+  }
+}
+
+.animate-drop {
+  animation: card-drop 0.2s ease-out forwards;
+}
+
+/* Gap indicator for drop position */
+.drop-gap {
+  position: relative;
+}
+
+.drop-gap::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 60px;
+  background: linear-gradient(180deg, 
+    rgba(249, 115, 22, 0.05) 0%, 
+    rgba(249, 115, 22, 0.15) 50%, 
+    rgba(249, 115, 22, 0.05) 100%
+  );
+  border: 2px dashed rgba(249, 115, 22, 0.4);
+  border-radius: 12px;
+  animation: gap-pulse 1s ease-in-out infinite;
+}
+
+@keyframes gap-pulse {
+  0%, 100% { 
+    opacity: 0.7;
+    transform: scaleY(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scaleY(1.02);
+  }
+}
+
+/* Haptic-like visual feedback on pickup */
+@keyframes haptic-pulse {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.98); }
+  50% { transform: scale(1.02); }
+  75% { transform: scale(0.99); }
+  100% { transform: scale(1); }
+}
+
+.haptic-feedback {
+  animation: haptic-pulse 0.15s ease-in-out;
+}
+
+/* Edge scroll indicator */
+.edge-scroll-left,
+.edge-scroll-right {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+
+.edge-scroll-left {
+  left: 0;
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.2), transparent);
+}
+
+.edge-scroll-right {
+  right: 0;
+  background: linear-gradient(270deg, rgba(249, 115, 22, 0.2), transparent);
+}
+
+.edge-scroll-left.active,
+.edge-scroll-right.active {
+  opacity: 1;
+}
+
+/* Shimmer effect for dragging */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.drag-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Column drop zone */
+.column-drop-zone {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.column-drop-zone.dragging-over {
+  background-color: rgba(254, 215, 170, 0.2);
+  box-shadow: inset 0 0 30px rgba(249, 115, 22, 0.1);
+}
+
+/* ============================================
+   OFFLINE INDICATOR STYLES
+   ============================================ */
+
+/* Offline banner slide in animation */
+@keyframes offline-slide-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.offline-banner {
+  animation: offline-slide-in 0.3s ease-out forwards;
+}
+
+/* Pulse animation for offline indicator */
+@keyframes offline-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.offline-pulse {
+  animation: offline-pulse 2s ease-in-out infinite;
+}
+
+/* Connection status indicator dot */
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.connection-dot.online {
+  background-color: #22c55e; /* green-500 */
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.connection-dot.offline {
+  background-color: #f59e0b; /* amber-500 */
+  animation: offline-pulse 2s ease-in-out infinite;
+}
+
+/* Syncing spinner */
+@keyframes sync-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sync-spinner {
+  animation: sync-spin 1s linear infinite;
+}
+
+/* Pending changes badge bounce */
+@keyframes pending-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.pending-badge {
+  animation: pending-bounce 2s ease-in-out infinite;
+}
+
+/* Dark mode offline banner adjustments */
+.dark .offline-banner {
+  background: linear-gradient(135deg, #b45309, #d97706);
+}
+
+/* Skip to content link for accessibility */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+  padding: 1rem;
+  background: var(--primary);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+}
+
+.skip-to-content:focus {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Aria live region - visually hidden but accessible */
+.aria-live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

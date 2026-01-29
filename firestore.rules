@@ -2,33 +2,635 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only access their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    
+    // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+    
+    // Check if the user is authenticated
+    // Test cases: 
+    //   - Anonymous user should fail
+    //   - Logged-in user should pass
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Boards - users can only access boards they own or are members of
-    match /boards/{boardId} {
-      allow read, write: if request.auth != null && 
-        (resource == null || 
-         resource.data.ownerId == request.auth.uid || 
-         request.auth.uid in resource.data.memberIds);
-      allow create: if request.auth != null;
+    // Get the current user's ID
+    function currentUserId() {
+      return request.auth.uid;
+    }
+    
+    // Check if the user owns the board
+    // Test cases:
+    //   - Board owner should return true
+    //   - Board member (non-owner) should return false
+    //   - Non-member should return false
+    function isBoardOwner(boardId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/boards/$(boardId)).data.ownerId == currentUserId();
+    }
+    
+    // Check if the user is a member of the board (includes owner)
+    // Test cases:
+    //   - Board owner should return true
+    //   - Board member should return true  
+    //   - Non-member should return false
+    function isBoardMember(boardId) {
+      return isAuthenticated() && 
+        currentUserId() in get(/databases/$(database)/documents/boards/$(boardId)).data.memberIds;
+    }
+    
+    // Check if the user created the resource (has createdBy field)
+    // Test cases:
+    //   - Creator should return true
+    //   - Non-creator should return false
+    function isResourceOwner(resource) {
+      return isAuthenticated() && resource.data.createdBy == currentUserId();
+    }
+    
+    // Check if a field exists and is a string
+    function isString(field) {
+      return field is string;
+    }
+    
+    // Check if a field exists and is a valid timestamp
+    function isTimestamp(field) {
+      return field is timestamp;
+    }
+    
+    // Check if a field exists and is a number
+    function isNumber(field) {
+      return field is number;
+    }
+    
+    // Check if a field exists and is a boolean
+    function isBool(field) {
+      return field is bool;
+    }
+    
+    // Check if a field exists and is a list
+    function isList(field) {
+      return field is list;
+    }
+    
+    // Check string length is within limit
+    function isValidLength(field, maxLength) {
+      return field.size() <= maxLength;
+    }
+    
+    // Check if a value is in a list of allowed values
+    function isOneOf(value, allowedValues) {
+      return value in allowedValues;
+    }
+    
+    // ============================================================================
+    // USER PROFILES
+    // ============================================================================
+    // Users can only read/write their own profile
+    // 
+    // Test cases:
+    //   - User can read their own profile
+    //   - User can create their own profile with valid fields
+    //   - User can update their own profile
+    //   - User cannot read another user's profile
+    //   - User cannot write to another user's profile
+    //   - Anonymous user cannot access any profile
+    //   - Profile creation requires email field
+    //   - Profile cannot have unexpected fields
+    
+    match /users/{userId} {
+      // Only the user can read their own profile
+      allow read: if isAuthenticated() && currentUserId() == userId;
       
-      // Columns within a board
+      // Only the user can create their own profile
+      allow create: if isAuthenticated() && 
+        currentUserId() == userId &&
+        // Required fields
+        request.resource.data.uid == userId &&
+        request.resource.data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt']) &&
+        // Field type validation
+        isString(request.resource.data.email) &&
+        isTimestamp(request.resource.data.createdAt) &&
+        isTimestamp(request.resource.data.updatedAt) &&
+        // Field length limits
+        isValidLength(request.resource.data.email, 254) &&
+        (request.resource.data.displayName == null || 
+          (isString(request.resource.data.displayName) && isValidLength(request.resource.data.displayName, 100))) &&
+        // Prevent extra fields (allowlist approach)
+        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
+      
+      // Only the user can update their own profile
+      allow update: if isAuthenticated() && 
+        currentUserId() == userId &&
+        // Cannot change uid
+        request.resource.data.uid == resource.data.uid &&
+        // Cannot change createdAt
+        request.resource.data.createdAt == resource.data.createdAt &&
+        // Must update updatedAt
+        isTimestamp(request.resource.data.updatedAt) &&
+        // Field length limits
+        (request.resource.data.displayName == null || 
+          (isString(request.resource.data.displayName) && isValidLength(request.resource.data.displayName, 100))) &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
+      
+      // Users cannot delete their profile (would orphan data)
+      allow delete: if false;
+    }
+    
+    // ============================================================================
+    // BOARDS
+    // ============================================================================
+    // Board access: owner or member (in memberIds array)
+    // Only owner can modify memberIds (to prevent privilege escalation)
+    // ownerId cannot be changed after creation
+    //
+    // Test cases:
+    //   - Owner can read board
+    //   - Member can read board
+    //   - Non-member cannot read board
+    //   - Authenticated user can create board
+    //   - Creator becomes owner and member on creation
+    //   - Owner can update board fields
+    //   - Member can update board fields (except memberIds and ownerId)
+    //   - Member cannot modify memberIds
+    //   - Member cannot modify ownerId
+    //   - Owner cannot change ownerId after creation
+    //   - Only owner can add/remove members
+    //   - User cannot add themselves to memberIds (unless owner)
+    //   - Only owner can delete/archive board
+    //   - Board name must be <= 200 chars
+    
+    match /boards/{boardId} {
+      // Read: must be owner or member
+      allow read: if isAuthenticated() && 
+        currentUserId() in resource.data.memberIds;
+      
+      // Create: authenticated user can create
+      // Creator becomes owner and must be in memberIds
+      allow create: if isAuthenticated() &&
+        // Creator must be the owner
+        request.resource.data.ownerId == currentUserId() &&
+        // Creator must be in memberIds
+        currentUserId() in request.resource.data.memberIds &&
+        // Required fields
+        request.resource.data.keys().hasAll(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived']) &&
+        // Field type validation
+        isString(request.resource.data.name) &&
+        isString(request.resource.data.ownerId) &&
+        isList(request.resource.data.memberIds) &&
+        isTimestamp(request.resource.data.createdAt) &&
+        isTimestamp(request.resource.data.updatedAt) &&
+        isBool(request.resource.data.isArchived) &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background']);
+      
+      // Update: different rules for owner vs member
+      allow update: if isAuthenticated() && 
+        currentUserId() in resource.data.memberIds &&
+        // ownerId can NEVER be changed
+        request.resource.data.ownerId == resource.data.ownerId &&
+        // createdAt can NEVER be changed
+        request.resource.data.createdAt == resource.data.createdAt &&
+        // Must update updatedAt
+        isTimestamp(request.resource.data.updatedAt) &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background']) &&
+        // PRIVILEGE ESCALATION PREVENTION:
+        // Only owner can modify memberIds
+        (request.resource.data.memberIds == resource.data.memberIds || 
+          resource.data.ownerId == currentUserId()) &&
+        // If owner is modifying memberIds, they cannot remove themselves
+        (request.resource.data.memberIds == resource.data.memberIds || 
+          resource.data.ownerId in request.resource.data.memberIds);
+      
+      // Delete: only owner can delete
+      // NOTE: Consider soft-delete (isArchived) instead
+      allow delete: if isBoardOwner(boardId);
+      
+      // ============================================================================
+      // COLUMNS (nested under boards)
+      // ============================================================================
+      // Inherits board access - must be board member
+      //
+      // Test cases:
+      //   - Board member can read columns
+      //   - Non-member cannot read columns
+      //   - Board member can create column
+      //   - Column must have valid required fields
+      //   - Column name must be <= 200 chars
+      //   - Board member can update column
+      //   - Board member can archive column
+      //   - boardId cannot be changed
+      
       match /columns/{columnId} {
-        allow read, write: if request.auth != null;
+        // Read: must be board member
+        allow read: if isBoardMember(boardId);
+        
+        // Create: must be board member with valid fields
+        allow create: if isBoardMember(boardId) &&
+          // boardId must match parent
+          request.resource.data.boardId == boardId &&
+          // Required fields
+          request.resource.data.keys().hasAll(['boardId', 'name', 'order', 'createdAt', 'updatedAt', 'isArchived']) &&
+          // Field type validation
+          isString(request.resource.data.name) &&
+          isNumber(request.resource.data.order) &&
+          isTimestamp(request.resource.data.createdAt) &&
+          isTimestamp(request.resource.data.updatedAt) &&
+          isBool(request.resource.data.isArchived) &&
+          // Field length limits
+          isValidLength(request.resource.data.name, 200) &&
+          // Prevent extra fields
+          request.resource.data.keys().hasOnly(['boardId', 'name', 'order', 'createdAt', 'updatedAt', 'isArchived']);
+        
+        // Update: must be board member
+        allow update: if isBoardMember(boardId) &&
+          // boardId cannot be changed
+          request.resource.data.boardId == resource.data.boardId &&
+          // createdAt cannot be changed
+          request.resource.data.createdAt == resource.data.createdAt &&
+          // Must update updatedAt
+          isTimestamp(request.resource.data.updatedAt) &&
+          // Field length limits
+          isValidLength(request.resource.data.name, 200) &&
+          // Prevent extra fields
+          request.resource.data.keys().hasOnly(['boardId', 'name', 'order', 'createdAt', 'updatedAt', 'isArchived']);
+        
+        // Delete: must be board member
+        // RATE LIMITING NOTE: Consider Cloud Function for cascade delete of cards
+        allow delete: if isBoardMember(boardId);
       }
       
-      // Cards within a board
+      // ============================================================================
+      // CARDS (nested under boards)
+      // ============================================================================
+      // Inherits board access - must be board member
+      //
+      // Test cases:
+      //   - Board member can read cards
+      //   - Non-member cannot read cards
+      //   - Board member can create card
+      //   - Card creator is set to current user
+      //   - Card title must be <= 500 chars
+      //   - Card description must be <= 10000 chars
+      //   - Board member can update card
+      //   - createdBy cannot be changed
+      //   - boardId cannot be changed (moving between boards not allowed client-side)
+      
       match /cards/{cardId} {
-        allow read, write: if request.auth != null;
+        // Read: must be board member
+        allow read: if isBoardMember(boardId);
         
-        // Comments on cards
+        // Create: must be board member with valid fields
+        // RATE LIMITING NOTE: High-volume card creation could be abused.
+        // Consider Cloud Function with rate limiting for production.
+        allow create: if isBoardMember(boardId) &&
+          // boardId must match parent
+          request.resource.data.boardId == boardId &&
+          // createdBy must be current user
+          request.resource.data.createdBy == currentUserId() &&
+          // Required fields
+          request.resource.data.keys().hasAll(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels']) &&
+          // Field type validation
+          isString(request.resource.data.columnId) &&
+          isString(request.resource.data.titleEn) &&
+          isString(request.resource.data.titleJa) &&
+          isString(request.resource.data.descriptionEn) &&
+          isString(request.resource.data.descriptionJa) &&
+          isNumber(request.resource.data.order) &&
+          isTimestamp(request.resource.data.createdAt) &&
+          isTimestamp(request.resource.data.updatedAt) &&
+          isBool(request.resource.data.isArchived) &&
+          isList(request.resource.data.attachments) &&
+          isList(request.resource.data.labels) &&
+          // Field length limits
+          isValidLength(request.resource.data.titleEn, 500) &&
+          isValidLength(request.resource.data.titleJa, 500) &&
+          isValidLength(request.resource.data.descriptionEn, 10000) &&
+          isValidLength(request.resource.data.descriptionJa, 10000) &&
+          // Attachments limit (prevent abuse)
+          request.resource.data.attachments.size() <= 50 &&
+          // Labels limit
+          request.resource.data.labels.size() <= 20 &&
+          // Prevent extra fields
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage']);
+        
+        // Update: must be board member
+        allow update: if isBoardMember(boardId) &&
+          // boardId cannot be changed (prevents moving to another board)
+          request.resource.data.boardId == resource.data.boardId &&
+          // createdBy cannot be changed
+          request.resource.data.createdBy == resource.data.createdBy &&
+          // createdAt cannot be changed
+          request.resource.data.createdAt == resource.data.createdAt &&
+          // Must update updatedAt
+          isTimestamp(request.resource.data.updatedAt) &&
+          // Field length limits
+          isValidLength(request.resource.data.titleEn, 500) &&
+          isValidLength(request.resource.data.titleJa, 500) &&
+          isValidLength(request.resource.data.descriptionEn, 10000) &&
+          isValidLength(request.resource.data.descriptionJa, 10000) &&
+          // Attachments limit
+          request.resource.data.attachments.size() <= 50 &&
+          // Labels limit
+          request.resource.data.labels.size() <= 20 &&
+          // Checklists limit (if present)
+          (!('checklists' in request.resource.data) || request.resource.data.checklists.size() <= 20) &&
+          // Prevent extra fields
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage']);
+        
+        // Delete: must be board member
+        // RATE LIMITING NOTE: Cascade delete of comments should be handled
+        // by Cloud Function to ensure all subcollection data is removed
+        allow delete: if isBoardMember(boardId);
+        
+        // ============================================================================
+        // COMMENTS (nested under cards)
+        // ============================================================================
+        // Inherits board access - must be board member
+        // Only comment creator can update/delete their own comment
+        //
+        // Test cases:
+        //   - Board member can read comments
+        //   - Board member can create comment
+        //   - Comment creator is set to current user
+        //   - Content must be <= 5000 chars
+        //   - Only comment creator can update their comment
+        //   - Only comment creator or board owner can delete comment
+        //   - Comment attachments limited to 10
+        //
+        // RATE LIMITING NOTE: Comment spam is a common attack vector.
+        // Consider Cloud Function with rate limiting (e.g., max 10 comments/minute/user)
+        
         match /comments/{commentId} {
-          allow read, write: if request.auth != null;
+          // Read: must be board member
+          allow read: if isBoardMember(boardId);
+          
+          // Create: must be board member
+          allow create: if isBoardMember(boardId) &&
+            // cardId must match parent
+            request.resource.data.cardId == cardId &&
+            // createdBy must be current user
+            request.resource.data.createdBy == currentUserId() &&
+            // Required fields
+            request.resource.data.keys().hasAll(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'attachments']) &&
+            // Field type validation
+            isString(request.resource.data.content) &&
+            isString(request.resource.data.contentEn) &&
+            isString(request.resource.data.contentJa) &&
+            isString(request.resource.data.detectedLanguage) &&
+            isTimestamp(request.resource.data.createdAt) &&
+            isTimestamp(request.resource.data.updatedAt) &&
+            isString(request.resource.data.createdByName) &&
+            isList(request.resource.data.attachments) &&
+            // Language validation
+            isOneOf(request.resource.data.detectedLanguage, ['en', 'ja']) &&
+            // Field length limits
+            isValidLength(request.resource.data.content, 5000) &&
+            isValidLength(request.resource.data.contentEn, 5000) &&
+            isValidLength(request.resource.data.contentJa, 5000) &&
+            isValidLength(request.resource.data.createdByName, 100) &&
+            // Attachments limit
+            request.resource.data.attachments.size() <= 10 &&
+            // Prevent extra fields
+            request.resource.data.keys().hasOnly(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'createdByPhoto', 'attachments']);
+          
+          // Update: only comment creator can update
+          allow update: if isBoardMember(boardId) &&
+            isResourceOwner(resource) &&
+            // cardId cannot be changed
+            request.resource.data.cardId == resource.data.cardId &&
+            // createdBy cannot be changed
+            request.resource.data.createdBy == resource.data.createdBy &&
+            // createdAt cannot be changed
+            request.resource.data.createdAt == resource.data.createdAt &&
+            // createdByName cannot be changed
+            request.resource.data.createdByName == resource.data.createdByName &&
+            // createdByPhoto cannot be changed
+            request.resource.data.createdByPhoto == resource.data.createdByPhoto &&
+            // Must update updatedAt
+            isTimestamp(request.resource.data.updatedAt) &&
+            // Field length limits
+            isValidLength(request.resource.data.content, 5000) &&
+            isValidLength(request.resource.data.contentEn, 5000) &&
+            isValidLength(request.resource.data.contentJa, 5000) &&
+            // Attachments limit
+            request.resource.data.attachments.size() <= 10 &&
+            // Prevent extra fields
+            request.resource.data.keys().hasOnly(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'createdByPhoto', 'attachments']);
+          
+          // Delete: comment creator OR board owner can delete
+          allow delete: if isBoardMember(boardId) && 
+            (isResourceOwner(resource) || isBoardOwner(boardId));
         }
       }
+      
+      // ============================================================================
+      // ACTIVITIES (nested under boards)
+      // ============================================================================
+      // Activity log for audit trail - append-only by board members
+      //
+      // Test cases:
+      //   - Board member can read activities
+      //   - Board member can create activity
+      //   - Activity userId must be current user
+      //   - No one can update activities (immutable log)
+      //   - Only board owner can delete activities
+      //
+      // RATE LIMITING NOTE: Activity logging should ideally be done via
+      // Cloud Functions to ensure consistency and prevent spam.
+      
+      match /activities/{activityId} {
+        // Read: must be board member
+        allow read: if isBoardMember(boardId);
+        
+        // Create: must be board member
+        allow create: if isBoardMember(boardId) &&
+          // boardId must match parent
+          request.resource.data.boardId == boardId &&
+          // userId must be current user (can't log as someone else)
+          request.resource.data.userId == currentUserId() &&
+          // Required fields
+          request.resource.data.keys().hasAll(['boardId', 'type', 'userId', 'userName', 'createdAt']) &&
+          // Field type validation
+          isString(request.resource.data.type) &&
+          isString(request.resource.data.userId) &&
+          isString(request.resource.data.userName) &&
+          isTimestamp(request.resource.data.createdAt) &&
+          // Type validation - must be valid activity type
+          isOneOf(request.resource.data.type, [
+            'card_created', 'card_moved', 'card_updated', 'card_archived',
+            'comment_added', 'checklist_completed', 'assignee_added', 'due_date_set'
+          ]) &&
+          // Field length limits
+          isValidLength(request.resource.data.userName, 100) &&
+          (!('cardTitle' in request.resource.data) || isValidLength(request.resource.data.cardTitle, 500)) &&
+          // Prevent extra fields
+          request.resource.data.keys().hasOnly(['boardId', 'cardId', 'cardTitle', 'type', 'userId', 'userName', 'userPhoto', 'metadata', 'createdAt']);
+        
+        // Update: activities are immutable - no updates allowed
+        allow update: if false;
+        
+        // Delete: only board owner can delete (for cleanup)
+        // Consider disabling this for strict audit trails
+        allow delete: if isBoardOwner(boardId);
+      }
+    }
+    
+    // ============================================================================
+    // CARD TEMPLATES
+    // ============================================================================
+    // User can read/write their own templates
+    //
+    // Test cases:
+    //   - User can read their own templates
+    //   - User cannot read other users' templates
+    //   - User can create template (createdBy = current user)
+    //   - User can update their own template
+    //   - User can delete their own template
+    //   - Template name must be <= 200 chars
+    
+    match /cardTemplates/{templateId} {
+      // Read: only creator can read their templates
+      allow read: if isAuthenticated() && 
+        resource.data.createdBy == currentUserId();
+      
+      // Create: authenticated user with valid fields
+      allow create: if isAuthenticated() &&
+        // createdBy must be current user
+        request.resource.data.createdBy == currentUserId() &&
+        // Required fields
+        request.resource.data.keys().hasAll(['name', 'titleEn', 'labels', 'createdBy', 'createdAt']) &&
+        // Field type validation
+        isString(request.resource.data.name) &&
+        isString(request.resource.data.titleEn) &&
+        isList(request.resource.data.labels) &&
+        isTimestamp(request.resource.data.createdAt) &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        isValidLength(request.resource.data.titleEn, 500) &&
+        (!('titleJa' in request.resource.data) || isValidLength(request.resource.data.titleJa, 500)) &&
+        (!('descriptionEn' in request.resource.data) || isValidLength(request.resource.data.descriptionEn, 10000)) &&
+        (!('descriptionJa' in request.resource.data) || isValidLength(request.resource.data.descriptionJa, 10000)) &&
+        // Labels limit
+        request.resource.data.labels.size() <= 20 &&
+        // Checklists limit (if present)
+        (!('checklists' in request.resource.data) || request.resource.data.checklists.size() <= 20) &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'labels', 'checklists', 'createdBy', 'createdAt']);
+      
+      // Update: only creator can update
+      allow update: if isAuthenticated() &&
+        isResourceOwner(resource) &&
+        // createdBy cannot be changed
+        request.resource.data.createdBy == resource.data.createdBy &&
+        // createdAt cannot be changed
+        request.resource.data.createdAt == resource.data.createdAt &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        isValidLength(request.resource.data.titleEn, 500) &&
+        (!('titleJa' in request.resource.data) || isValidLength(request.resource.data.titleJa, 500)) &&
+        (!('descriptionEn' in request.resource.data) || isValidLength(request.resource.data.descriptionEn, 10000)) &&
+        (!('descriptionJa' in request.resource.data) || isValidLength(request.resource.data.descriptionJa, 10000)) &&
+        // Labels limit
+        request.resource.data.labels.size() <= 20 &&
+        // Checklists limit (if present)
+        (!('checklists' in request.resource.data) || request.resource.data.checklists.size() <= 20) &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'labels', 'checklists', 'createdBy', 'createdAt']);
+      
+      // Delete: only creator can delete
+      allow delete: if isAuthenticated() && isResourceOwner(resource);
+    }
+    
+    // ============================================================================
+    // BOARD TEMPLATES
+    // ============================================================================
+    // Built-in templates: anyone authenticated can read
+    // Custom templates: only creator can read/write
+    //
+    // Test cases:
+    //   - Authenticated user can read built-in templates (isBuiltIn = true)
+    //   - User can read their own custom templates
+    //   - User cannot read other users' custom templates
+    //   - User can create custom template
+    //   - User cannot create built-in template
+    //   - User can update their own template
+    //   - User cannot update built-in template
+    //   - User can delete their own template
+    //   - User cannot delete built-in template
+    //
+    // NOTE: Built-in templates are defined in code (BUILT_IN_BOARD_TEMPLATES)
+    // and use client-generated IDs like 'built-in-0'. The Firestore collection
+    // may only contain custom templates. This rule handles both cases.
+    
+    match /boardTemplates/{templateId} {
+      // Read: built-in templates readable by all, custom only by creator
+      allow read: if isAuthenticated() && 
+        (resource.data.isBuiltIn == true || resource.data.createdBy == currentUserId());
+      
+      // Create: authenticated user with valid fields
+      allow create: if isAuthenticated() &&
+        // Cannot create built-in templates
+        request.resource.data.isBuiltIn == false &&
+        // createdBy must be current user
+        request.resource.data.createdBy == currentUserId() &&
+        // Required fields
+        request.resource.data.keys().hasAll(['name', 'description', 'columns', 'isBuiltIn', 'createdBy', 'createdAt']) &&
+        // Field type validation
+        isString(request.resource.data.name) &&
+        isString(request.resource.data.description) &&
+        isList(request.resource.data.columns) &&
+        isBool(request.resource.data.isBuiltIn) &&
+        isTimestamp(request.resource.data.createdAt) &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        isValidLength(request.resource.data.description, 1000) &&
+        // Columns limit
+        request.resource.data.columns.size() <= 20 &&
+        request.resource.data.columns.size() >= 1 &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'description', 'columns', 'isBuiltIn', 'createdBy', 'createdAt']);
+      
+      // Update: only creator can update custom templates
+      allow update: if isAuthenticated() &&
+        // Cannot modify built-in templates
+        resource.data.isBuiltIn == false &&
+        isResourceOwner(resource) &&
+        // Cannot change isBuiltIn
+        request.resource.data.isBuiltIn == resource.data.isBuiltIn &&
+        // createdBy cannot be changed
+        request.resource.data.createdBy == resource.data.createdBy &&
+        // createdAt cannot be changed
+        request.resource.data.createdAt == resource.data.createdAt &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        isValidLength(request.resource.data.description, 1000) &&
+        // Columns limit
+        request.resource.data.columns.size() <= 20 &&
+        request.resource.data.columns.size() >= 1 &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'description', 'columns', 'isBuiltIn', 'createdBy', 'createdAt']);
+      
+      // Delete: only creator can delete custom templates
+      allow delete: if isAuthenticated() && 
+        resource.data.isBuiltIn == false && 
+        isResourceOwner(resource);
+    }
+    
+    // ============================================================================
+    // CATCH-ALL: DENY BY DEFAULT
+    // ============================================================================
+    // Any path not explicitly matched above is denied
+    // This is Firebase's default behavior, but making it explicit is good practice
+    
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

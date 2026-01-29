@@ -1,17 +1,26 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
-import { Column as ColumnType, Card as CardType } from '@/types';
+import { Column as ColumnType, Card as CardType, CardTemplate } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import {
   updateColumn,
   archiveColumn,
+  restoreColumn,
   archiveAllCardsInColumn,
+  restoreCards,
   createCard,
   updateCard,
+  logActivity,
+  getCardTemplates,
+  createCardFromTemplate,
 } from '@/lib/firestore';
+import { useToast } from '@/contexts/ToastContext';
 import { Card } from './Card';
+import { ColumnEmptyState } from './EmptyState';
+
 
 interface ColumnProps {
   column: ColumnType;
@@ -19,26 +28,106 @@ interface ColumnProps {
   index: number;
   boardId: string;
   onCardClick: (cardId: string) => void;
+  hasActiveFilters?: boolean;
+  matchesFilter?: (card: CardType) => boolean;
+  isFocused?: boolean;
+  focusedCardIndex?: number | null;
+  selectedCards?: Set<string>;
+  onCardSelectToggle?: (cardId: string, shiftKey: boolean) => void;
 }
 
-export function Column({ column, cards, index, boardId, onCardClick }: ColumnProps) {
+/**
+ * Column Component - Accessible draggable column/list
+ * 
+ * Accessibility Testing Points:
+ * - VoiceOver/NVDA: Column should announce name and card count
+ * - Menu should announce as popup menu
+ * - Dropdown should use aria-expanded
+ */
+// Column component - wrapped in memo to prevent unnecessary re-renders
+// React DevTools Profiler: This component should only re-render when its specific column's props change
+function ColumnComponent({ 
+  column, 
+  cards, 
+  index, 
+  boardId, 
+  onCardClick, 
+  hasActiveFilters = false, 
+  matchesFilter, 
+  isFocused = false, 
+  focusedCardIndex = null,
+  selectedCards = new Set(),
+  onCardSelectToggle,
+}: ColumnProps) {
+  const renderStart = process.env.NODE_ENV === 'development' ? performance.now() : 0;
   const { user } = useAuth();
+  const { showToast } = useToast();
+  const { triggerAddCard, setTriggerAddCard, addCardInputRefs } = useKeyboardShortcuts();
   const [isEditing, setIsEditing] = useState(false);
   const [columnName, setColumnName] = useState(column.name);
   const [showMenu, setShowMenu] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitleEn, setNewCardTitleEn] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
+  const addCardTextareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Template state
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+  const [cardTemplates, setCardTemplates] = useState<CardTemplate[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
+  const templateDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle triggerAddCard from keyboard shortcut
+  useEffect(() => {
+    if (triggerAddCard === index) {
+      setIsAddingCard(true);
+      setTriggerAddCard(null);
+      // Focus the textarea after it renders
+      setTimeout(() => {
+        addCardTextareaRef.current?.focus();
+      }, 0);
+    }
+  }, [triggerAddCard, index, setTriggerAddCard]);
+
+  // Register the add card textarea ref
+  useEffect(() => {
+    addCardInputRefs.current.set(index, addCardTextareaRef.current);
+    return () => {
+      addCardInputRefs.current.delete(index);
+    };
+  }, [index, addCardInputRefs]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowMenu(false);
       }
+      if (templateDropdownRef.current && !templateDropdownRef.current.contains(event.target as Node)) {
+        setShowTemplateDropdown(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Fetch card templates when dropdown opens
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      if (showTemplateDropdown && user) {
+        setIsLoadingTemplates(true);
+        try {
+          const templates = await getCardTemplates(user.uid);
+          setCardTemplates(templates);
+        } catch (error) {
+          console.error('Failed to fetch templates:', error);
+        } finally {
+          setIsLoadingTemplates(false);
+        }
+      }
+    };
+    fetchTemplates();
+  }, [showTemplateDropdown, user]);
 
   // Translate text to target language
   const translate = useCallback(async (text: string, targetLanguage: 'en' | 'ja'): Promise<string> => {
@@ -65,12 +154,36 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
 
   const handleArchive = async () => {
     setShowMenu(false);
-    await archiveColumn(boardId, column.id);
+    try {
+      await archiveColumn(boardId, column.id);
+      showToast('success', `List "${column.name}" archived`, {
+        undoAction: async () => {
+          await restoreColumn(boardId, column.id);
+        },
+      });
+    } catch (error) {
+      console.error('Failed to archive column:', error);
+      showToast('error', 'Failed to archive list');
+    }
   };
 
   const handleArchiveAllCards = async () => {
     setShowMenu(false);
-    await archiveAllCardsInColumn(boardId, column.id);
+    try {
+      const archivedCardIds = await archiveAllCardsInColumn(boardId, column.id);
+      if (archivedCardIds.length > 0) {
+        showToast('success', `${archivedCardIds.length} card${archivedCardIds.length > 1 ? 's' : ''} archived`, {
+          undoAction: async () => {
+            await restoreCards(boardId, archivedCardIds);
+          },
+        });
+      } else {
+        showToast('info', 'No cards to archive');
+      }
+    } catch (error) {
+      console.error('Failed to archive cards:', error);
+      showToast('error', 'Failed to archive cards');
+    }
   };
 
   const handleAddCard = async () => {
@@ -92,8 +205,19 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
     setNewCardTitleEn('');
     setIsAddingCard(false);
 
-    // Translate to Japanese in the background and update the card
+    // Log activity
     if (cardId) {
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: titleEn,
+        type: 'card_created',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+        metadata: { columnName: column.name },
+      });
+
+      // Translate to Japanese in the background and update the card
       try {
         const titleJa = await translate(titleEn, 'ja');
         await updateCard(boardId, cardId, { titleJa });
@@ -103,16 +227,74 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
     }
   };
 
+  const handleCreateFromTemplate = async (template: CardTemplate) => {
+    if (!user) return;
+    
+    setIsCreatingFromTemplate(true);
+    try {
+      const maxOrder = cards.length > 0 ? Math.max(...cards.map((c) => c.order)) : -1;
+      const cardId = await createCardFromTemplate(
+        boardId,
+        column.id,
+        template.id,
+        user.uid,
+        maxOrder + 1
+      );
+      
+      // Log activity
+      if (cardId) {
+        await logActivity(boardId, {
+          cardId,
+          cardTitle: template.titleEn,
+          type: 'card_created',
+          userId: user.uid,
+          userName: user.displayName || 'Anonymous',
+          userPhoto: user.photoURL,
+          metadata: { columnName: column.name, fromTemplate: template.name },
+        });
+      }
+      
+      showToast('success', `Card created from "${template.name}" template`);
+      setShowTemplateDropdown(false);
+    } catch (error) {
+      console.error('Failed to create card from template:', error);
+      showToast('error', 'Failed to create card from template');
+    } finally {
+      setIsCreatingFromTemplate(false);
+    }
+  };
+
   return (
     <Draggable draggableId={column.id} index={index}>
       {(provided, snapshot) => (
-        <div
+        <section
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex-shrink-0 w-[300px] bg-slate-100 rounded-2xl shadow-sm flex flex-col max-h-[calc(100vh-130px)] border border-slate-200/80 ${
-            snapshot.isDragging ? 'shadow-xl ring-2 ring-orange-400/30 rotate-1' : ''
+          data-column-id={column.id}
+          tabIndex={isFocused ? 0 : -1}
+          role="region"
+          aria-label={`${column.name} list with ${cards.length} cards`}
+          aria-describedby={`column-drag-instructions-${column.id}`}
+          style={{
+            ...provided.draggableProps.style,
+            transition: snapshot.isDragging 
+              ? 'none' 
+              : snapshot.isDropAnimating 
+                ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
+                : provided.draggableProps.style?.transition,
+          }}
+          className={`flex-shrink-0 w-[300px] bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col max-h-[calc(100vh-130px)] border ${
+            snapshot.isDragging 
+              ? 'column-dragging drag-shadow z-50' 
+              : 'shadow-sm transition-all duration-200'
+          } ${snapshot.isDropAnimating ? 'animate-drop' : ''} ${
+            isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 shadow-lg' : 'border-white/40'
           }`}
         >
+          {/* Screen reader drag instructions for column */}
+          <span id={`column-drag-instructions-${column.id}`} className="sr-only">
+            Drag to reorder lists. Press space bar to lift, use arrow keys to move, space bar to drop.
+          </span>
           {/* Column Header */}
           <div
             {...provided.dragHandleProps}
@@ -150,6 +332,9 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowMenu(!showMenu)}
+                aria-expanded={showMenu}
+                aria-haspopup="menu"
+                aria-label={`${column.name} list actions menu`}
                 className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors"
               >
                 <svg
@@ -157,6 +342,7 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -168,34 +354,41 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
               </button>
 
               {showMenu && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-10 overflow-hidden">
+                <div 
+                  role="menu"
+                  aria-label={`Actions for ${column.name} list`}
+                  className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-10 overflow-hidden"
+                >
                   <button
+                    role="menuitem"
                     onClick={() => {
                       setIsEditing(true);
                       setShowMenu(false);
                     }}
                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                   >
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Rename list
                   </button>
                   <button
+                    role="menuitem"
                     onClick={handleArchiveAllCards}
                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                   >
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                     Archive all cards
                   </button>
-                  <hr className="my-1.5 border-gray-100" />
+                  <hr className="my-1.5 border-gray-100" aria-hidden="true" />
                   <button
+                    role="menuitem"
                     onClick={handleArchive}
                     className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
                     Archive list
@@ -211,19 +404,39 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 overflow-y-auto px-2 py-2 min-h-[60px] transition-colors ${
-                  snapshot.isDraggingOver ? 'bg-orange-50/50' : ''
+                className={`flex-1 overflow-y-auto px-2 py-2 min-h-[60px] transition-all duration-200 column-drop-zone rounded-lg ${
+                  snapshot.isDraggingOver 
+                    ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 shadow-inner' 
+                    : ''
                 }`}
+                style={{
+                  boxShadow: snapshot.isDraggingOver 
+                    ? 'inset 0 2px 8px rgba(249, 115, 22, 0.1)' 
+                    : undefined,
+                }}
               >
-                {cards.map((card, cardIndex) => (
-                  <Card
-                    key={card.id}
-                    card={card}
-                    index={cardIndex}
-                    boardId={boardId}
-                    onClick={() => onCardClick(card.id)}
+                {cards.length === 0 ? (
+                  <ColumnEmptyState 
+                    isDraggingOver={snapshot.isDraggingOver} 
+                    showTip={index === 0} // Only show tip in first column
                   />
-                ))}
+                ) : (
+                  cards.map((card, cardIndex) => (
+                    <Card
+                      key={card.id}
+                      card={card}
+                      index={cardIndex}
+                      boardId={boardId}
+                      onClick={() => onCardClick(card.id)}
+                      isDimmed={hasActiveFilters && matchesFilter ? !matchesFilter(card) : false}
+                      isFocused={focusedCardIndex === cardIndex}
+                      isSelected={selectedCards.has(card.id)}
+                      selectedCount={selectedCards.size}
+                      onSelectToggle={onCardSelectToggle}
+                      data-onboarding={cardIndex === 0 ? "card" : undefined}
+                    />
+                  ))
+                )}
                 {provided.placeholder}
               </div>
             )}
@@ -232,11 +445,17 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
           {/* Add Card */}
           <div className="px-2 pb-2 pt-1">
             {isAddingCard ? (
-              <div className="bg-white rounded-xl shadow-md border border-slate-200 p-3">
+              <div className="bg-white rounded-xl shadow-md border border-slate-200 p-3" role="form" aria-label="Add new card">
+                <label htmlFor={`add-card-${column.id}`} className="sr-only">
+                  Enter card title in English
+                </label>
                 <textarea
+                  id={`add-card-${column.id}`}
+                  ref={addCardTextareaRef}
                   value={newCardTitleEn}
                   onChange={(e) => setNewCardTitleEn(e.target.value)}
                   placeholder="Enter a title for this card (English)..."
+                  aria-describedby={`add-card-help-${column.id}`}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none placeholder:text-slate-500"
                   rows={2}
                   autoFocus
@@ -251,10 +470,14 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
                     }
                   }}
                 />
+                <span id={`add-card-help-${column.id}`} className="sr-only">
+                  Press Enter to add card, Escape to cancel. The card will be automatically translated to Japanese.
+                </span>
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={handleAddCard}
                     disabled={!newCardTitleEn.trim()}
+                    aria-label="Add card to list"
                     className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
                   >
                     Add card
@@ -264,6 +487,7 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
                       setIsAddingCard(false);
                       setNewCardTitleEn('');
                     }}
+                    aria-label="Cancel adding card"
                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     <svg
@@ -271,6 +495,7 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -283,31 +508,130 @@ export function Column({ column, cards, index, boardId, onCardClick }: ColumnPro
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => setIsAddingCard(true)}
-                className="w-full px-3 py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl flex items-center gap-2 transition-all group"
-              >
-                <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 group-hover:bg-orange-100 rounded-lg transition-colors">
-                  <svg
-                    className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              <div className="space-y-1">
+                <button
+                  onClick={() => setIsAddingCard(true)}
+                  data-onboarding="add-card"
+                  aria-label={`Add a card to ${column.name}`}
+                  className="w-full px-3 py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl flex items-center gap-2 transition-all group"
+                >
+                  <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 group-hover:bg-orange-100 rounded-lg transition-colors" aria-hidden="true">
+                    <svg
+                      className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </span>
+                  Add a card
+                </button>
+                
+                {/* Create from template */}
+                <div className="relative" ref={templateDropdownRef}>
+                  <button
+                    onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
+                    aria-expanded={showTemplateDropdown}
+                    aria-haspopup="menu"
+                    aria-label="Create card from template"
+                    className="w-full px-3 py-2 text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-200/40 rounded-xl flex items-center gap-2 transition-all group"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </span>
-                Add a card
-              </button>
+                    <span className="w-6 h-6 flex items-center justify-center bg-slate-200/60 group-hover:bg-purple-100 rounded-lg transition-colors">
+                      <svg
+                        className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-xs">From template</span>
+                  </button>
+                  
+                  {showTemplateDropdown && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-20">
+                      <div className="px-3 py-2 border-b border-slate-100 bg-slate-50">
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Card Templates</h4>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {isLoadingTemplates ? (
+                          <div className="px-4 py-3 text-sm text-slate-400 text-center">
+                            <svg className="w-4 h-4 animate-spin mx-auto mb-1" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Loading...
+                          </div>
+                        ) : cardTemplates.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-slate-400 text-center">
+                            <p>No templates yet</p>
+                            <p className="text-xs mt-1">Save a card as template to use here</p>
+                          </div>
+                        ) : (
+                          cardTemplates.map((template) => (
+                            <button
+                              key={template.id}
+                              onClick={() => handleCreateFromTemplate(template)}
+                              disabled={isCreatingFromTemplate}
+                              className="w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors disabled:opacity-50 border-b border-slate-50 last:border-0"
+                            >
+                              <p className="text-sm font-medium text-slate-700 truncate">{template.name}</p>
+                              <p className="text-xs text-slate-400 truncate">{template.titleEn}</p>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
-        </div>
+        </section>
       )}
     </Draggable>
   );
 }
+
+// Export memoized Column component with custom comparison
+// Only re-renders when the column itself or its cards change
+export const Column = memo(ColumnComponent, (prevProps, nextProps) => {
+  // Quick reference equality checks first
+  if (prevProps.column !== nextProps.column) return false;
+  if (prevProps.index !== nextProps.index) return false;
+  if (prevProps.boardId !== nextProps.boardId) return false;
+  if (prevProps.hasActiveFilters !== nextProps.hasActiveFilters) return false;
+  if (prevProps.isFocused !== nextProps.isFocused) return false;
+  if (prevProps.focusedCardIndex !== nextProps.focusedCardIndex) return false;
+  
+  // Deep comparison for cards array - compare by ID and key properties
+  if (prevProps.cards.length !== nextProps.cards.length) return false;
+  
+  for (let i = 0; i < prevProps.cards.length; i++) {
+    const prevCard = prevProps.cards[i];
+    const nextCard = nextProps.cards[i];
+    if (
+      prevCard.id !== nextCard.id ||
+      prevCard.order !== nextCard.order ||
+      prevCard.titleEn !== nextCard.titleEn ||
+      prevCard.titleJa !== nextCard.titleJa
+    ) {
+      return false;
+    }
+  }
+  
+  return true;
+});

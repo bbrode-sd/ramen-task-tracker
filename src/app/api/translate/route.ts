@@ -14,8 +14,15 @@ interface PokemonLookup {
 
 const pokemonLookup = pokemonNames as PokemonLookup;
 
-// Post-process translation to ensure correct Pokémon names
-function correctPokemonNames(text: string, targetLanguage: 'en' | 'ja'): string {
+// Context mode type
+type ContextMode = 'general' | 'pokemon' | 'custom';
+
+// Post-process translation to ensure correct Pokémon names (only for pokemon context)
+function correctPokemonNames(text: string, targetLanguage: 'en' | 'ja', contextMode: ContextMode): string {
+  if (contextMode !== 'pokemon') {
+    return text;
+  }
+  
   let corrected = text;
   
   if (targetLanguage === 'ja') {
@@ -34,6 +41,13 @@ function correctPokemonNames(text: string, targetLanguage: 'en' | 'ja'): string 
   
   return corrected;
 }
+
+// General translation context
+const GENERAL_TRANSLATION_CONTEXT = `
+You are a professional translator providing high-quality translations between English and Japanese.
+Translate naturally while maintaining the original tone and meaning.
+For short phrases or single words, provide the most natural translation in the target language.
+`;
 
 // Pokémon-specialized translation instructions
 const POKEMON_TRANSLATION_CONTEXT = `
@@ -57,6 +71,22 @@ When you encounter any Pokémon terminology, recall the official localization us
 For non-Pokémon content in the text, translate naturally and maintain the original tone.
 `;
 
+// Get the appropriate translation context based on mode
+function getTranslationContext(contextMode: ContextMode, customContext?: string): string {
+  switch (contextMode) {
+    case 'general':
+      return GENERAL_TRANSLATION_CONTEXT;
+    case 'pokemon':
+      return POKEMON_TRANSLATION_CONTEXT;
+    case 'custom':
+      return customContext?.trim() 
+        ? `You are a professional translator. ${customContext}\n\nTranslate naturally while maintaining the original tone and meaning.`
+        : GENERAL_TRANSLATION_CONTEXT;
+    default:
+      return GENERAL_TRANSLATION_CONTEXT;
+  }
+}
+
 // Helper function to detect if text is primarily Japanese
 function detectLanguage(text: string): 'en' | 'ja' {
   // Check for Japanese characters (Hiragana, Katakana, Kanji)
@@ -79,7 +109,15 @@ function detectLanguage(text: string): 'en' | 'ja' {
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, targetLanguage, autoDetect } = await request.json();
+    const { 
+      text, 
+      targetLanguage, 
+      autoDetect,
+      contextMode = 'pokemon',
+      customContext = '',
+    } = await request.json();
+
+    const translationContext = getTranslationContext(contextMode as ContextMode, customContext);
 
     // Auto-detect mode: detect language and translate to the other language
     if (autoDetect) {
@@ -113,13 +151,13 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `${POKEMON_TRANSLATION_CONTEXT}
+            content: `${translationContext}
 
 Translate the following ${sourceLanguageName} text to ${targetLanguageName}. 
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${targetLanguageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation using official terminology.`,
+For very short phrases or single words, provide the most natural translation.`,
           },
           {
             role: 'user',
@@ -131,7 +169,7 @@ For very short phrases or single words, provide the most natural translation usi
       });
 
       const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
-      const translation = correctPokemonNames(rawTranslation, translateTo);
+      const translation = correctPokemonNames(rawTranslation, translateTo, contextMode as ContextMode);
 
       return NextResponse.json({
         detectedLanguage,
@@ -167,13 +205,13 @@ For very short phrases or single words, provide the most natural translation usi
       messages: [
         {
           role: 'system',
-          content: `${POKEMON_TRANSLATION_CONTEXT}
+          content: `${translationContext}
 
 Translate the following ${sourceLanguage} text to ${languageName}. 
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${languageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation using official terminology.`,
+For very short phrases or single words, provide the most natural translation.`,
         },
         {
           role: 'user',
@@ -185,7 +223,7 @@ For very short phrases or single words, provide the most natural translation usi
     });
 
     const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
-    const translation = correctPokemonNames(rawTranslation, targetLanguage as 'en' | 'ja');
+    const translation = correctPokemonNames(rawTranslation, targetLanguage as 'en' | 'ja', contextMode as ContextMode);
 
     return NextResponse.json({ translation, isPlaceholder: false });
   } catch (error) {
