@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { Board, BoardTemplate } from '@/types';
 import { subscribeToBoards, createBoard, getBoardTemplates, createBoardFromTemplate, BUILT_IN_BOARD_TEMPLATES } from '@/lib/firestore';
 import { Header } from './Header';
@@ -15,6 +16,7 @@ import { ShortcutHint } from './Tooltip';
 export function BoardList() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t, locale } = useLocale();
   const { 
     hasCompletedOnboarding, 
     setIsNewUser, 
@@ -141,13 +143,13 @@ export function BoardList() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-2">Error Loading Boards</h2>
+            <h2 className="text-xl font-semibold text-slate-800 mb-2">{t('boards.errorLoading')}</h2>
             <p className="text-slate-600 mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm"
             >
-              Try Again
+              {t('common.tryAgain')}
             </button>
           </div>
         </div>
@@ -160,8 +162,8 @@ export function BoardList() {
       <Header />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Your Boards</h2>
-          <p className="text-gray-500">Select a board or create a new one to get started</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">{t('boards.title')}</h2>
+          <p className="text-gray-500">{t('boards.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -176,8 +178,8 @@ export function BoardList() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-800">Choose a Template</h3>
-                    <p className="text-xs text-slate-400">Start with a pre-built structure or blank board</p>
+                    <h3 className="text-lg font-semibold text-slate-800">{t('boards.templates.title')}</h3>
+                    <p className="text-xs text-slate-400">{t('boards.templates.subtitle')}</p>
                   </div>
                 </div>
                 <button
@@ -206,8 +208,8 @@ export function BoardList() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">Blank Board</p>
-                    <p className="text-xs text-slate-400 mt-1">Start fresh with an empty board</p>
+                    <p className="text-sm font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">{t('boards.templates.blank')}</p>
+                    <p className="text-xs text-slate-400 mt-1">{t('boards.templates.blankDescription')}</p>
                   </button>
                   
                   {/* Built-in and user templates */}
@@ -243,7 +245,7 @@ export function BoardList() {
                             : 'text-slate-700 group-hover:text-purple-600'
                         }`}>{template.name}</p>
                         {template.isBuiltIn && (
-                          <span className="text-[10px] font-medium text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">Built-in</span>
+                          <span className="text-[10px] font-medium text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">{t('boards.templates.builtIn')}</span>
                         )}
                       </div>
                       <p className="text-xs text-slate-400 line-clamp-2">{template.description}</p>
@@ -281,7 +283,7 @@ export function BoardList() {
                 type="text"
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
-                placeholder="Board name..."
+                placeholder={t('boards.boardName')}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 text-gray-900 placeholder:text-slate-500"
                 autoFocus
                 onKeyDown={(e) => {
@@ -299,7 +301,7 @@ export function BoardList() {
                   disabled={!newBoardName.trim() || isCreatingBoard}
                   className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium rounded-xl hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
                 >
-                  {isCreatingBoard ? 'Creating...' : 'Create Board'}
+                  {isCreatingBoard ? t('boards.creating') : t('boards.createBoard')}
                 </button>
                 <button
                   onClick={() => {
@@ -309,7 +311,7 @@ export function BoardList() {
                   }}
                   className="px-4 py-2.5 bg-gray-100 text-gray-600 font-medium rounded-xl hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -335,7 +337,7 @@ export function BoardList() {
                 </svg>
               </div>
               <span className="text-gray-500 group-hover:text-gray-700 font-medium transition-colors">
-                Create new board
+                {t('boards.createNew')}
               </span>
             </button>
           )}
@@ -366,7 +368,7 @@ export function BoardList() {
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                          Shared
+                          {t('boards.shared')}
                         </span>
                       )}
                       <svg className="w-5 h-5 text-white/50 group-hover:text-white/80 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,7 +381,7 @@ export function BoardList() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {board.createdAt?.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {board.createdAt?.toDate().toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               </Link>
@@ -391,10 +393,10 @@ export function BoardList() {
           <div className="mt-8">
             <EmptyState
               variant="boards"
-              title="No boards yet"
-              description="Create your first board to start organizing your tasks with bilingual support. Press ? anytime for keyboard shortcuts!"
+              title={t('boards.noBoards')}
+              description={t('boards.noBoardsDescription')}
               action={() => setShowTemplatePicker(true)}
-              actionLabel="Create Your First Board"
+              actionLabel={t('boards.createFirst')}
               size="lg"
             />
             <div className="flex items-center justify-center gap-4 mt-6">

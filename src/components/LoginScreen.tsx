@@ -1,9 +1,11 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export function LoginScreen() {
   const { signInWithGoogle, loading } = useAuth();
+  const { t } = useLocale();
 
   if (loading) {
     return (
@@ -15,6 +17,13 @@ export function LoginScreen() {
       </div>
     );
   }
+
+  const features = [
+    { icon: '🎯', textKey: 'login.features.dragDrop' },
+    { icon: '🌏', textKey: 'login.features.bilingual' },
+    { icon: '💬', textKey: 'login.features.comments' },
+    { icon: '📦', textKey: 'login.features.archive' },
+  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-4">
@@ -33,10 +42,10 @@ export function LoginScreen() {
             <span className="text-7xl block mb-4 drop-shadow-lg">🍜</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-            Ramen Task Tracker
+            {t('app.title')}
           </h1>
           <p className="text-gray-500 text-base leading-relaxed">
-            Bilingual Kanban board with<br className="sm:hidden" /> English/Japanese support
+            {t('app.description')}
           </p>
         </div>
 
@@ -63,24 +72,19 @@ export function LoginScreen() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="text-gray-700 font-semibold">Sign in with Google</span>
+            <span className="text-gray-700 font-semibold">{t('auth.signInWithGoogle')}</span>
           </button>
         </div>
 
         <div className="mt-10 pt-8 border-t border-gray-100">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Features</h3>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('login.features.title')}</h3>
           <ul className="space-y-3">
-            {[
-              { icon: '🎯', text: 'Drag & drop cards between columns' },
-              { icon: '🌏', text: 'Bilingual cards (English ↔ Japanese)' },
-              { icon: '💬', text: 'Comments, images & attachments' },
-              { icon: '📦', text: 'Archive cards and columns' },
-            ].map((feature, i) => (
+            {features.map((feature, i) => (
               <li key={i} className="flex items-center gap-3 text-gray-600">
                 <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-orange-50 rounded-lg text-sm">
                   {feature.icon}
                 </span>
-                <span className="text-sm">{feature.text}</span>
+                <span className="text-sm">{t(feature.textKey)}</span>
               </li>
             ))}
           </ul>
@@ -89,7 +93,7 @@ export function LoginScreen() {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-400">
-            Secure authentication powered by Firebase
+            {t('auth.secureAuth')}
           </p>
         </div>
       </div>

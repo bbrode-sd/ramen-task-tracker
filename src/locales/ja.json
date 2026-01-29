@@ -1,0 +1,291 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "confirm": "確認",
+    "search": "検索",
+    "clear": "クリア",
+    "tryAgain": "再試行",
+    "create": "作成",
+    "archive": "アーカイブ",
+    "restore": "復元",
+    "share": "共有",
+    "more": "その他",
+    "yes": "はい",
+    "no": "いいえ",
+    "done": "完了",
+    "back": "戻る",
+    "next": "次へ",
+    "signOut": "ログアウト",
+    "settings": "設定"
+  },
+  "app": {
+    "title": "ラーメン タスク トラッカー",
+    "description": "英語/日本語対応のバイリンガルかんばんボード"
+  },
+  "auth": {
+    "signInWithGoogle": "Googleでログイン",
+    "signedInAs": "{{name}}としてログイン中",
+    "secureAuth": "Firebaseによる安全な認証"
+  },
+  "login": {
+    "features": {
+      "title": "機能",
+      "dragDrop": "カードをドラッグ＆ドロップで移動",
+      "bilingual": "バイリンガルカード（英語 ↔ 日本語）",
+      "comments": "コメント、画像、添付ファイル",
+      "archive": "カードとリストのアーカイブ"
+    }
+  },
+  "boards": {
+    "title": "ボード一覧",
+    "subtitle": "ボードを選択するか、新しいボードを作成してください",
+    "createNew": "新しいボードを作成",
+    "createFirst": "最初のボードを作成",
+    "noBoards": "ボードがありません",
+    "noBoardsDescription": "最初のボードを作成して、バイリンガル対応でタスクを整理しましょう。?を押すといつでもキーボードショートカットを確認できます！",
+    "creating": "作成中...",
+    "createBoard": "ボードを作成",
+    "boardName": "ボード名...",
+    "shared": "共有済み",
+    "errorLoading": "ボードの読み込みエラー",
+    "failedToLoad": "ボードの読み込みに失敗しました。再試行してください。",
+    "templates": {
+      "title": "テンプレートを選択",
+      "subtitle": "テンプレートから始めるか、空のボードを作成",
+      "blank": "空のボード",
+      "blankDescription": "まっさらなボードから始める",
+      "builtIn": "組み込み",
+      "using": "使用中: {{name}}"
+    }
+  },
+  "header": {
+    "backToBoards": "ボード一覧に戻る",
+    "searchCards": "カードを検索...",
+    "searchShortcut": "/ で検索",
+    "labels": "ラベル",
+    "filterByLabel": "ラベルで絞り込み",
+    "clearFilters": "すべてのフィルターをクリア",
+    "activity": "アクティビティ",
+    "viewActivity": "ボードのアクティビティを表示",
+    "shareBoard": "ボードを共有",
+    "moreOptions": "その他のオプション",
+    "background": "背景",
+    "exportImport": "エクスポート / インポート",
+    "translationSettings": "翻訳設定",
+    "batchTranslation": "一括翻訳",
+    "languageSettings": "言語設定",
+    "keyboardShortcuts": "キーボードショートカット",
+    "theme": {
+      "system": "テーマ: システム",
+      "light": "テーマ: ライト",
+      "dark": "テーマ: ダーク"
+    }
+  },
+  "column": {
+    "listWith": "{{name}} リスト（{{count}}枚のカード）",
+    "listActions": "{{name}} リストのアクションメニュー",
+    "actionsFor": "{{name}} リストのアクション",
+    "rename": "リスト名を変更",
+    "archiveAllCards": "すべてのカードをアーカイブ",
+    "archiveList": "リストをアーカイブ",
+    "archived": "リスト「{{name}}」をアーカイブしました",
+    "cardsArchived": "{{count}}枚のカードをアーカイブしました",
+    "cardsArchivedPlural": "{{count}}枚のカードをアーカイブしました",
+    "noCardsToArchive": "アーカイブするカードがありません",
+    "failedToArchive": "リストのアーカイブに失敗しました",
+    "failedToArchiveCards": "カードのアーカイブに失敗しました",
+    "addCard": "カードを追加",
+    "addCardTo": "{{name}}にカードを追加",
+    "enterTitle": "カードのタイトルを入力（英語）...",
+    "addCardHelp": "Enterで追加、Escでキャンセル。カードは自動的に日本語に翻訳されます。",
+    "fromTemplate": "テンプレートから",
+    "cardTemplates": "カードテンプレート",
+    "noTemplates": "テンプレートがありません",
+    "saveAsTemplate": "カードをテンプレートとして保存すると、ここに表示されます",
+    "createdFromTemplate": "「{{name}}」テンプレートからカードを作成しました",
+    "failedFromTemplate": "テンプレートからカードを作成できませんでした",
+    "dragInstructions": "ドラッグしてリストを並び替え。スペースキーで持ち上げ、矢印キーで移動、スペースキーで配置。"
+  },
+  "card": {
+    "untitled": "タイトルなし",
+    "japanese": "日本語: {{title}}",
+    "dragInstructions": "スペースキーで持ち上げ。矢印キーで移動。スペースキーで配置。",
+    "translating": "翻訳中...",
+    "jpOnly": "日本語のみ",
+    "enOnly": "英語のみ",
+    "translationMissing": "{{lang}}の翻訳がありません",
+    "hasDescription": "説明あり",
+    "hasAttachments": "添付ファイルあり",
+    "checklist": "チェックリスト: {{completed}}/{{total}} 完了",
+    "due": {
+      "overdue": "期限切れ",
+      "soon": "まもなく期限",
+      "future": "期限",
+      "today": "今日",
+      "tomorrow": "明日"
+    }
+  },
+  "cardModal": {
+    "title": "カードの詳細",
+    "titleEn": "タイトル（英語）",
+    "titleJa": "タイトル（日本語）",
+    "descriptionEn": "説明（英語）",
+    "descriptionJa": "説明（日本語）",
+    "labels": "ラベル",
+    "addLabel": "ラベルを追加",
+    "dueDate": "期限日",
+    "setDueDate": "期限日を設定",
+    "clearDueDate": "期限日をクリア",
+    "assignees": "担当者",
+    "addAssignee": "担当者を追加",
+    "checklists": "チェックリスト",
+    "addChecklist": "チェックリストを追加",
+    "attachments": "添付ファイル",
+    "addAttachment": "添付ファイルを追加",
+    "comments": "コメント",
+    "addComment": "コメントを追加...",
+    "cover": "カバー",
+    "setCover": "カバーを設定",
+    "removeCover": "カバーを削除",
+    "actions": "アクション",
+    "copyCard": "カードをコピー",
+    "moveCard": "カードを移動",
+    "archiveCard": "カードをアーカイブ",
+    "deleteCard": "カードを削除",
+    "saveAsTemplate": "テンプレートとして保存"
+  },
+  "archiveDrawer": {
+    "title": "アーカイブ済みアイテム",
+    "cards": "カード",
+    "lists": "リスト",
+    "noArchivedCards": "アーカイブされたカードはありません",
+    "noArchivedLists": "アーカイブされたリストはありません",
+    "restoreCard": "カードを復元",
+    "restoreList": "リストを復元",
+    "deleteForever": "完全に削除"
+  },
+  "shareModal": {
+    "title": "ボードを共有",
+    "invitePeople": "メンバーを招待",
+    "enterEmail": "メールアドレスを入力",
+    "invite": "招待",
+    "members": "メンバー",
+    "owner": "オーナー",
+    "editor": "編集者",
+    "viewer": "閲覧者",
+    "remove": "削除",
+    "copyLink": "リンクをコピー",
+    "linkCopied": "リンクをクリップボードにコピーしました"
+  },
+  "exportImport": {
+    "title": "エクスポート / インポート",
+    "export": "エクスポート",
+    "exportDescription": "ボードデータをJSONファイルとしてダウンロード",
+    "exportButton": "ボードをエクスポート",
+    "import": "インポート",
+    "importDescription": "JSONファイルからボードデータをインポート",
+    "importButton": "ボードをインポート",
+    "selectFile": "ファイルを選択"
+  },
+  "translation": {
+    "settingsTitle": "翻訳設定",
+    "primaryLanguage": "主要言語",
+    "auto": "自動検出",
+    "english": "英語",
+    "japanese": "日本語",
+    "contextMode": "コンテキストモード",
+    "general": "一般",
+    "pokemon": "ポケモン",
+    "custom": "カスタム",
+    "customContext": "カスタムコンテキスト",
+    "customContextPlaceholder": "カスタム翻訳コンテキストを入力...",
+    "batchTitle": "一括翻訳",
+    "batchDescription": "すべてのカードを選択した言語に翻訳",
+    "translateAll": "すべて翻訳",
+    "translating": "翻訳中...",
+    "translated": "{{count}}件を翻訳しました"
+  },
+  "language": {
+    "title": "言語設定",
+    "description": "表示言語を選択してください",
+    "current": "現在の言語",
+    "english": "English",
+    "japanese": "日本語",
+    "auto": "ブラウザから自動検出",
+    "browserDetected": "ブラウザの言語は{{lang}}として検出されました"
+  },
+  "emptyState": {
+    "boards": {
+      "title": "ボードがありません",
+      "description": "最初のボードを作成して始めましょう"
+    },
+    "cards": {
+      "title": "カードがありません",
+      "description": "カードを追加して始めましょう",
+      "dragHint": "ここにカードをドロップするか、「カードを追加」をクリック"
+    },
+    "search": {
+      "title": "結果が見つかりません",
+      "description": "検索条件やフィルターを調整してください"
+    },
+    "archived": {
+      "title": "アーカイブはありません",
+      "description": "アーカイブされたアイテムがここに表示されます"
+    }
+  },
+  "shortcuts": {
+    "title": "キーボードショートカット",
+    "navigation": "ナビゲーション",
+    "actions": "アクション",
+    "search": "検索にフォーカス",
+    "newCard": "新しいカードを追加",
+    "help": "ショートカットを表示",
+    "escape": "モーダル/メニューを閉じる",
+    "arrows": "カード/リストを移動"
+  },
+  "onboarding": {
+    "welcome": "ラーメン タスク トラッカーへようこそ！",
+    "step1": {
+      "title": "ボードを作成",
+      "description": "ここをクリックして最初のボードを作成"
+    },
+    "step2": {
+      "title": "カードを追加",
+      "description": "クリックしてボードにタスクを追加"
+    },
+    "step3": {
+      "title": "ドラッグ＆ドロップ",
+      "description": "カードをドラッグしてリスト間を移動"
+    },
+    "skipTour": "ツアーをスキップ",
+    "replayTour": "ツアーを再生"
+  },
+  "sync": {
+    "synced": "すべての変更を保存しました",
+    "syncing": "変更を保存中...",
+    "offline": "オフライン - 接続時に同期されます",
+    "error": "同期エラー - 再試行中..."
+  },
+  "offline": {
+    "title": "オフラインです",
+    "description": "一部の機能が制限されています",
+    "reconnecting": "再接続中..."
+  },
+  "toast": {
+    "success": "成功",
+    "error": "エラー",
+    "info": "情報",
+    "warning": "警告",
+    "undo": "元に戻す"
+  },
+  "dates": {
+    "today": "今日",
+    "tomorrow": "明日",
+    "yesterday": "昨日"
+  }
+}

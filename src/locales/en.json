@@ -1,0 +1,291 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "clear": "Clear",
+    "tryAgain": "Try Again",
+    "create": "Create",
+    "archive": "Archive",
+    "restore": "Restore",
+    "share": "Share",
+    "more": "More",
+    "yes": "Yes",
+    "no": "No",
+    "done": "Done",
+    "back": "Back",
+    "next": "Next",
+    "signOut": "Sign Out",
+    "settings": "Settings"
+  },
+  "app": {
+    "title": "Ramen Task Tracker",
+    "description": "Bilingual Kanban board with English/Japanese support"
+  },
+  "auth": {
+    "signInWithGoogle": "Sign in with Google",
+    "signedInAs": "Signed in as {{name}}",
+    "secureAuth": "Secure authentication powered by Firebase"
+  },
+  "login": {
+    "features": {
+      "title": "Features",
+      "dragDrop": "Drag & drop cards between columns",
+      "bilingual": "Bilingual cards (English ↔ Japanese)",
+      "comments": "Comments, images & attachments",
+      "archive": "Archive cards and columns"
+    }
+  },
+  "boards": {
+    "title": "Your Boards",
+    "subtitle": "Select a board or create a new one to get started",
+    "createNew": "Create new board",
+    "createFirst": "Create Your First Board",
+    "noBoards": "No boards yet",
+    "noBoardsDescription": "Create your first board to start organizing your tasks with bilingual support. Press ? anytime for keyboard shortcuts!",
+    "creating": "Creating...",
+    "createBoard": "Create Board",
+    "boardName": "Board name...",
+    "shared": "Shared",
+    "errorLoading": "Error Loading Boards",
+    "failedToLoad": "Failed to load boards. Please try again.",
+    "templates": {
+      "title": "Choose a Template",
+      "subtitle": "Start with a pre-built structure or blank board",
+      "blank": "Blank Board",
+      "blankDescription": "Start fresh with an empty board",
+      "builtIn": "Built-in",
+      "using": "Using: {{name}}"
+    }
+  },
+  "header": {
+    "backToBoards": "Back to boards",
+    "searchCards": "Search cards...",
+    "searchShortcut": "Press / to search",
+    "labels": "Labels",
+    "filterByLabel": "Filter by Label",
+    "clearFilters": "Clear all filters",
+    "activity": "Activity",
+    "viewActivity": "View board activity",
+    "shareBoard": "Share board",
+    "moreOptions": "More options",
+    "background": "Background",
+    "exportImport": "Export / Import",
+    "translationSettings": "Translation Settings",
+    "batchTranslation": "Batch Translation",
+    "languageSettings": "Language Settings",
+    "keyboardShortcuts": "Keyboard shortcuts",
+    "theme": {
+      "system": "Theme: System",
+      "light": "Theme: Light",
+      "dark": "Theme: Dark"
+    }
+  },
+  "column": {
+    "listWith": "{{name}} list with {{count}} cards",
+    "listActions": "{{name}} list actions menu",
+    "actionsFor": "Actions for {{name}} list",
+    "rename": "Rename list",
+    "archiveAllCards": "Archive all cards",
+    "archiveList": "Archive list",
+    "archived": "List \"{{name}}\" archived",
+    "cardsArchived": "{{count}} card archived",
+    "cardsArchivedPlural": "{{count}} cards archived",
+    "noCardsToArchive": "No cards to archive",
+    "failedToArchive": "Failed to archive list",
+    "failedToArchiveCards": "Failed to archive cards",
+    "addCard": "Add a card",
+    "addCardTo": "Add a card to {{name}}",
+    "enterTitle": "Enter a title for this card (English)...",
+    "addCardHelp": "Press Enter to add card, Escape to cancel. The card will be automatically translated to Japanese.",
+    "fromTemplate": "From template",
+    "cardTemplates": "Card Templates",
+    "noTemplates": "No templates yet",
+    "saveAsTemplate": "Save a card as template to use here",
+    "createdFromTemplate": "Card created from \"{{name}}\" template",
+    "failedFromTemplate": "Failed to create card from template",
+    "dragInstructions": "Drag to reorder lists. Press space bar to lift, use arrow keys to move, space bar to drop."
+  },
+  "card": {
+    "untitled": "Untitled card",
+    "japanese": "Japanese: {{title}}",
+    "dragInstructions": "Press space bar to lift. Use arrow keys to move. Press space bar to drop.",
+    "translating": "Translating...",
+    "jpOnly": "JP only",
+    "enOnly": "EN only",
+    "translationMissing": "{{lang}} translation missing",
+    "hasDescription": "Has description",
+    "hasAttachments": "Has attachments",
+    "checklist": "Checklist: {{completed}}/{{total}} completed",
+    "due": {
+      "overdue": "Overdue",
+      "soon": "Due soon",
+      "future": "Due",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    }
+  },
+  "cardModal": {
+    "title": "Card Details",
+    "titleEn": "Title (English)",
+    "titleJa": "Title (Japanese)",
+    "descriptionEn": "Description (English)",
+    "descriptionJa": "Description (Japanese)",
+    "labels": "Labels",
+    "addLabel": "Add label",
+    "dueDate": "Due Date",
+    "setDueDate": "Set due date",
+    "clearDueDate": "Clear due date",
+    "assignees": "Assignees",
+    "addAssignee": "Add assignee",
+    "checklists": "Checklists",
+    "addChecklist": "Add checklist",
+    "attachments": "Attachments",
+    "addAttachment": "Add attachment",
+    "comments": "Comments",
+    "addComment": "Add a comment...",
+    "cover": "Cover",
+    "setCover": "Set cover",
+    "removeCover": "Remove cover",
+    "actions": "Actions",
+    "copyCard": "Copy card",
+    "moveCard": "Move card",
+    "archiveCard": "Archive card",
+    "deleteCard": "Delete card",
+    "saveAsTemplate": "Save as template"
+  },
+  "archiveDrawer": {
+    "title": "Archived Items",
+    "cards": "Cards",
+    "lists": "Lists",
+    "noArchivedCards": "No archived cards",
+    "noArchivedLists": "No archived lists",
+    "restoreCard": "Restore card",
+    "restoreList": "Restore list",
+    "deleteForever": "Delete forever"
+  },
+  "shareModal": {
+    "title": "Share Board",
+    "invitePeople": "Invite people",
+    "enterEmail": "Enter email address",
+    "invite": "Invite",
+    "members": "Members",
+    "owner": "Owner",
+    "editor": "Editor",
+    "viewer": "Viewer",
+    "remove": "Remove",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied to clipboard"
+  },
+  "exportImport": {
+    "title": "Export / Import",
+    "export": "Export",
+    "exportDescription": "Download your board data as a JSON file",
+    "exportButton": "Export Board",
+    "import": "Import",
+    "importDescription": "Import board data from a JSON file",
+    "importButton": "Import Board",
+    "selectFile": "Select file"
+  },
+  "translation": {
+    "settingsTitle": "Translation Settings",
+    "primaryLanguage": "Primary Language",
+    "auto": "Auto-detect",
+    "english": "English",
+    "japanese": "Japanese",
+    "contextMode": "Context Mode",
+    "general": "General",
+    "pokemon": "Pokémon",
+    "custom": "Custom",
+    "customContext": "Custom Context",
+    "customContextPlaceholder": "Enter custom translation context...",
+    "batchTitle": "Batch Translation",
+    "batchDescription": "Translate all cards to the selected language",
+    "translateAll": "Translate All",
+    "translating": "Translating...",
+    "translated": "Translated {{count}} items"
+  },
+  "language": {
+    "title": "Language Settings",
+    "description": "Choose your preferred display language",
+    "current": "Current language",
+    "english": "English",
+    "japanese": "日本語",
+    "auto": "Auto-detect from browser",
+    "browserDetected": "Your browser language was detected as {{lang}}"
+  },
+  "emptyState": {
+    "boards": {
+      "title": "No boards yet",
+      "description": "Create your first board to get started"
+    },
+    "cards": {
+      "title": "No cards yet",
+      "description": "Add a card to get started",
+      "dragHint": "Drop cards here or click 'Add a card'"
+    },
+    "search": {
+      "title": "No results found",
+      "description": "Try adjusting your search or filters"
+    },
+    "archived": {
+      "title": "Nothing archived",
+      "description": "Archived items will appear here"
+    }
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "navigation": "Navigation",
+    "actions": "Actions",
+    "search": "Focus search",
+    "newCard": "Add new card",
+    "help": "Show shortcuts",
+    "escape": "Close modal/menu",
+    "arrows": "Navigate cards/columns"
+  },
+  "onboarding": {
+    "welcome": "Welcome to Ramen Task Tracker!",
+    "step1": {
+      "title": "Create a Board",
+      "description": "Click here to create your first board"
+    },
+    "step2": {
+      "title": "Add Cards",
+      "description": "Click to add tasks to your board"
+    },
+    "step3": {
+      "title": "Drag & Drop",
+      "description": "Drag cards between columns to organize"
+    },
+    "skipTour": "Skip tour",
+    "replayTour": "Replay tour"
+  },
+  "sync": {
+    "synced": "All changes saved",
+    "syncing": "Saving changes...",
+    "offline": "Offline - changes will sync when connected",
+    "error": "Sync error - retrying..."
+  },
+  "offline": {
+    "title": "You're offline",
+    "description": "Some features may be limited",
+    "reconnecting": "Reconnecting..."
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "info": "Info",
+    "warning": "Warning",
+    "undo": "Undo"
+  },
+  "dates": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday"
+  }
+}

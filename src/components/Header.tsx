@@ -17,6 +17,8 @@ import { BackgroundPicker } from './BackgroundPicker';
 import { BoardBackground } from '@/types';
 import { TranslationSettingsModal } from './TranslationSettingsModal';
 import { BatchTranslationModal } from './BatchTranslationModal';
+import { LanguageSettingsModal } from './LanguageSettingsModal';
+import { useLocale } from '@/contexts/LocaleContext';
 
 // Lazy load heavy modal components for better initial load performance
 const ArchivedItemsDrawer = dynamic(() => import('./ArchivedItemsDrawer').then(mod => ({ default: mod.ArchivedItemsDrawer })), {
@@ -121,6 +123,7 @@ export function Header({
   onBackgroundChange,
 }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { t } = useLocale();
   const { 
     searchQuery, 
     setSearchQuery, 
@@ -140,6 +143,7 @@ export function Header({
   const [showExportImportModal, setShowExportImportModal] = useState(false);
   const [showTranslationSettings, setShowTranslationSettings] = useState(false);
   const [showBatchTranslation, setShowBatchTranslation] = useState(false);
+  const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [archivedCount, setArchivedCount] = useState(0);
@@ -311,7 +315,7 @@ export function Header({
             <Link
               href="/"
               className="p-2 -ml-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-              aria-label="Back to boards"
+              aria-label={t('header.backToBoards')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -355,7 +359,7 @@ export function Header({
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <label htmlFor="card-search" className="sr-only">Search cards</label>
+                  <label htmlFor="card-search" className="sr-only">{t('header.searchCards')}</label>
                   <input
                     id="card-search"
                     ref={searchInputRef}
@@ -363,7 +367,7 @@ export function Header({
                     value={localSearchQuery}
                     onChange={(e) => setLocalSearchQuery(e.target.value)}
                     onBlur={handleSearchBlur}
-                    placeholder="Search cards..."
+                    placeholder={t('header.searchCards')}
                     aria-describedby="search-results-count"
                     className="w-full pl-9 pr-8 py-2 bg-white/20 hover:bg-white/25 focus:bg-white/30 border border-white/20 focus:border-white/40 rounded-xl text-white placeholder:text-white/50 text-sm focus:outline-none transition-all backdrop-blur-sm"
                   />
@@ -385,14 +389,14 @@ export function Header({
               ) : (
                 <Tip
                   id="search-shortcut"
-                  tip="Press / to search"
+                  tip={t('header.searchShortcut')}
                   shortcut="/"
                   position="bottom"
                 >
                   <button
                     onClick={handleSearchExpand}
                     className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-                    aria-label="Search cards"
+                    aria-label={t('header.searchCards')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -409,7 +413,7 @@ export function Header({
                   onClick={() => setShowLabelDropdown(!showLabelDropdown)}
                   aria-expanded={showLabelDropdown}
                   aria-haspopup="listbox"
-                  aria-label={`Filter by labels${selectedLabels.length > 0 ? `, ${selectedLabels.length} selected` : ''}`}
+                  aria-label={`${t('header.labels')}${selectedLabels.length > 0 ? `, ${selectedLabels.length} selected` : ''}`}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     selectedLabels.length > 0 
                       ? 'bg-white text-orange-600' 
@@ -419,7 +423,7 @@ export function Header({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
                   </svg>
-                  <span className="hidden sm:inline">Labels</span>
+                  <span className="hidden sm:inline">{t('header.labels')}</span>
                   {selectedLabels.length > 0 && (
                     <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-orange-100 text-orange-700 rounded-full" aria-hidden="true">
                       {selectedLabels.length}
@@ -435,7 +439,7 @@ export function Header({
                     className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden"
                   >
                     <div className="px-3 py-2 border-b border-gray-100">
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide" id="label-filter-heading">Filter by Label</h4>
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide" id="label-filter-heading">{t('header.filterByLabel')}</h4>
                     </div>
                     <div className="max-h-64 overflow-y-auto py-1" role="group" aria-labelledby="label-filter-heading">
                       {availableLabels.map((label) => (
@@ -479,13 +483,13 @@ export function Header({
                 </span>
                 <button
                   onClick={clearFilters}
-                  aria-label="Clear all filters"
+                  aria-label={t('header.clearFilters')}
                   className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span className="hidden sm:inline">Clear</span>
+                  <span className="hidden sm:inline">{t('common.clear')}</span>
                 </button>
               </div>
             )}
@@ -529,12 +533,12 @@ export function Header({
                 <button
                   onClick={onActivityClick}
                   className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                  aria-label="View board activity"
+                  aria-label={t('header.viewActivity')}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="hidden sm:inline">Activity</span>
+                  <span className="hidden sm:inline">{t('header.activity')}</span>
                 </button>
               )}
 
@@ -542,12 +546,12 @@ export function Header({
               <button
                 onClick={() => setShowShareModal(true)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                title="Share board"
+                title={t('header.shareBoard')}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
-                <span className="hidden sm:inline">Share</span>
+                <span className="hidden sm:inline">{t('common.share')}</span>
               </button>
 
               {/* More Menu */}
@@ -555,14 +559,14 @@ export function Header({
                 <button
                   onClick={() => setShowMoreMenu(!showMoreMenu)}
                   className="relative flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20"
-                  aria-label="More options"
+                  aria-label={t('header.moreOptions')}
                   aria-expanded={showMoreMenu}
                   aria-haspopup="menu"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
                   </svg>
-                  <span className="hidden sm:inline">More</span>
+                  <span className="hidden sm:inline">{t('common.more')}</span>
                   {archivedCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-white text-orange-600 rounded-full shadow-sm">
                       {archivedCount > 99 ? '99+' : archivedCount}
@@ -588,7 +592,7 @@ export function Header({
                         <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                         </svg>
-                        Background
+                        {t('header.background')}
                       </button>
                     )}
 
@@ -604,7 +608,7 @@ export function Header({
                       <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                       </svg>
-                      Export / Import
+                      {t('header.exportImport')}
                     </button>
 
                     <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
@@ -621,7 +625,7 @@ export function Header({
                       <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                       </svg>
-                      Translation Settings
+                      {t('header.translationSettings')}
                     </button>
 
                     {/* Batch Translation */}
@@ -636,7 +640,22 @@ export function Header({
                       <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      Batch Translation
+                      {t('header.batchTranslation')}
+                    </button>
+
+                    {/* Language Settings */}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowLanguageSettings(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      </svg>
+                      Language / 言語
                     </button>
 
                     <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
@@ -653,7 +672,7 @@ export function Header({
                       <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                       </svg>
-                      <span className="flex-1">Archive</span>
+                      <span className="flex-1">{t('common.archive')}</span>
                       {archivedCount > 0 && (
                         <span className="min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-orange-100 text-orange-600 rounded-full">
                           {archivedCount > 99 ? '99+' : archivedCount}
@@ -716,10 +735,10 @@ export function Header({
               </div>
               <button
                 onClick={signOut}
-                aria-label="Sign out of your account"
+                aria-label={t('common.signOut')}
                 className="px-3 sm:px-4 py-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-sm font-medium rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20"
               >
-                Sign Out
+                {t('common.signOut')}
               </button>
             </>
           )}
@@ -779,6 +798,12 @@ export function Header({
           boardId={boardId}
         />
       )}
+
+      {/* Language Settings Modal */}
+      <LanguageSettingsModal
+        isOpen={showLanguageSettings}
+        onClose={() => setShowLanguageSettings(false)}
+      />
     </header>
   );
 }
