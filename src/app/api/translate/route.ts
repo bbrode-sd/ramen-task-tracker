@@ -5,6 +5,28 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Pokémon-specialized translation instructions
+const POKEMON_TRANSLATION_CONTEXT = `
+You are a professional translator specializing in Pokémon game localization.
+
+CRITICAL: When translating Pokémon-related content, you MUST use the official localized names from the Pokémon games. Do NOT phonetically translate or romanize - use the exact official terms.
+
+Key terminology categories that require official translations:
+1. **Pokémon Names**: Use official localized names (e.g., Pikachu/ピカチュウ, Charizard/リザードン, Eevee/イーブイ, Mewtwo/ミュウツー)
+2. **Move Names**: Use official move names (e.g., Thunderbolt/10まんボルト, Flamethrower/かえんほうしゃ, Ice Beam/れいとうビーム, Earthquake/じしん)
+3. **Ability Names**: Use official ability names (e.g., Levitate/ふゆう, Intimidate/いかく, Overgrow/しんりょく, Blaze/もうか)
+4. **Held Items**: Use official item names (e.g., Leftovers/たべのこし, Choice Band/こだわりハチマキ, Choice Scarf/こだわりスカーフ, Life Orb/いのちのたま, Focus Sash/きあいのタスキ)
+5. **Types**: Use official type names (e.g., Dragon/ドラゴン, Fairy/フェアリー, Steel/はがね, Ghost/ゴースト)
+6. **Stats**: Use official stat abbreviations (e.g., HP, Attack/こうげき, Defense/ぼうぎょ, Sp. Atk/とくこう, Sp. Def/とくぼう, Speed/すばやさ)
+7. **Natures**: Use official nature names (e.g., Adamant/いじっぱり, Jolly/ようき, Modest/ひかえめ, Timid/おくびょう)
+8. **Status Conditions**: Use official terms (e.g., Paralysis/まひ, Burn/やけど, Poison/どく, Sleep/ねむり, Freeze/こおり)
+9. **Game Terms**: EVs/努力値, IVs/個体値, Shiny/色違い, etc.
+
+When you encounter any Pokémon terminology, recall the official localization used in the games. If unsure about a specific term, prioritize accuracy over literal translation.
+
+For non-Pokémon content in the text, translate naturally and maintain the original tone.
+`;
+
 // Helper function to detect if text is primarily Japanese
 function detectLanguage(text: string): 'en' | 'ja' {
   // Check for Japanese characters (Hiragana, Katakana, Kanji)
@@ -61,18 +83,20 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator. Translate the following ${sourceLanguageName} text to ${targetLanguageName}. 
+            content: `${POKEMON_TRANSLATION_CONTEXT}
+
+Translate the following ${sourceLanguageName} text to ${targetLanguageName}. 
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${targetLanguageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation.`,
+For very short phrases or single words, provide the most natural translation using official terminology.`,
           },
           {
             role: 'user',
             content: text,
           },
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 1000,
       });
 
@@ -112,18 +136,20 @@ For very short phrases or single words, provide the most natural translation.`,
       messages: [
         {
           role: 'system',
-          content: `You are a professional translator. Translate the following ${sourceLanguage} text to ${languageName}. 
+          content: `${POKEMON_TRANSLATION_CONTEXT}
+
+Translate the following ${sourceLanguage} text to ${languageName}. 
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${languageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation.`,
+For very short phrases or single words, provide the most natural translation using official terminology.`,
         },
         {
           role: 'user',
           content: text,
         },
       ],
-      temperature: 0.3,
+      temperature: 0.2,
       max_tokens: 1000,
     });
 
