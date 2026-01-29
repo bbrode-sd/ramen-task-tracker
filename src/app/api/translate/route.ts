@@ -17,23 +17,64 @@ const pokemonLookup = pokemonNames as PokemonLookup;
 // Context mode type
 type ContextMode = 'general' | 'pokemon' | 'custom';
 
+// Find Pokémon names in source text and return their correct translations
+function findPokemonNames(text: string, sourceLanguage: 'en' | 'ja'): { original: string; translation: string }[] {
+  const found: { original: string; translation: string }[] = [];
+  
+  if (sourceLanguage === 'en') {
+    // Look for English Pokémon names in the text
+    for (const [enName, jaName] of Object.entries(pokemonLookup.en_to_ja)) {
+      const regex = new RegExp(`\\b${enName}\\b`, 'gi');
+      if (regex.test(text)) {
+        found.push({ original: enName, translation: jaName });
+      }
+    }
+  } else {
+    // Look for Japanese Pokémon names in the text
+    for (const [jaName, enName] of Object.entries(pokemonLookup.ja_to_en)) {
+      if (text.includes(jaName)) {
+        found.push({ original: jaName, translation: enName });
+      }
+    }
+  }
+  
+  return found;
+}
+
+// Build a prompt injection with correct Pokémon name translations
+function buildPokemonNameHint(pokemonNames: { original: string; translation: string }[]): string {
+  if (pokemonNames.length === 0) return '';
+  
+  const hints = pokemonNames.map(p => `${p.original} → ${p.translation}`).join(', ');
+  return `\n\nIMPORTANT: Use these EXACT translations for the following Pokémon names found in the text: ${hints}`;
+}
+
 // Post-process translation to ensure correct Pokémon names (only for pokemon context)
-function correctPokemonNames(text: string, targetLanguage: 'en' | 'ja', contextMode: ContextMode): string {
-  if (contextMode !== 'pokemon') {
+function correctPokemonNames(text: string, targetLanguage: 'en' | 'ja', contextMode: ContextMode, foundNames: { original: string; translation: string }[]): string {
+  if (contextMode !== 'pokemon' || foundNames.length === 0) {
     return text;
   }
   
   let corrected = text;
   
+  // Replace any incorrect translations with the correct ones
+  for (const { translation } of foundNames) {
+    // The translation should already be correct if the AI followed instructions,
+    // but let's ensure it's there
+    if (targetLanguage === 'ja') {
+      // For ja target, translation is Japanese - nothing to fix if AI did it right
+    } else {
+      // For en target, translation is English - nothing to fix if AI did it right
+    }
+  }
+  
+  // Fallback: still do the replacement scan in case AI ignored the hint
   if (targetLanguage === 'ja') {
-    // Replace English Pokémon names with official Japanese names
     for (const [enName, jaName] of Object.entries(pokemonLookup.en_to_ja)) {
-      // Case-insensitive replacement for English names
       const regex = new RegExp(`\\b${enName}\\b`, 'gi');
       corrected = corrected.replace(regex, jaName);
     }
   } else {
-    // Replace Japanese Pokémon names with official English names
     for (const [jaName, enName] of Object.entries(pokemonLookup.ja_to_en)) {
       corrected = corrected.replace(new RegExp(jaName, 'g'), enName);
     }
@@ -146,6 +187,10 @@ export async function POST(request: NextRequest) {
       const targetLanguageName = translateTo === 'ja' ? 'Japanese' : 'English';
       const sourceLanguageName = detectedLanguage === 'ja' ? 'Japanese' : 'English';
 
+      // Find Pokémon names in source text and build hint for the AI
+      const foundPokemonNames = contextMode === 'pokemon' ? findPokemonNames(text, detectedLanguage) : [];
+      const pokemonHint = buildPokemonNameHint(foundPokemonNames);
+
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -157,7 +202,7 @@ Translate the following ${sourceLanguageName} text to ${targetLanguageName}.
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${targetLanguageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation.`,
+For very short phrases or single words, provide the most natural translation.${pokemonHint}`,
           },
           {
             role: 'user',
@@ -169,7 +214,7 @@ For very short phrases or single words, provide the most natural translation.`,
       });
 
       const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
-      const translation = correctPokemonNames(rawTranslation, translateTo, contextMode as ContextMode);
+      const translation = correctPokemonNames(rawTranslation, translateTo, contextMode as ContextMode, foundPokemonNames);
 
       return NextResponse.json({
         detectedLanguage,
@@ -198,7 +243,11 @@ For very short phrases or single words, provide the most natural translation.`,
     }
 
     const languageName = targetLanguage === 'ja' ? 'Japanese' : 'English';
-    const sourceLanguage = targetLanguage === 'ja' ? 'English' : 'Japanese';
+    const sourceLanguage = targetLanguage === 'ja' ? 'en' : 'ja';
+
+    // Find Pokémon names in source text and build hint for the AI
+    const foundPokemonNames = contextMode === 'pokemon' ? findPokemonNames(text, sourceLanguage) : [];
+    const pokemonHint = buildPokemonNameHint(foundPokemonNames);
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -207,11 +256,11 @@ For very short phrases or single words, provide the most natural translation.`,
           role: 'system',
           content: `${translationContext}
 
-Translate the following ${sourceLanguage} text to ${languageName}. 
+Translate the following ${sourceLanguage === 'en' ? 'English' : 'Japanese'} text to ${languageName}. 
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${languageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation.`,
+For very short phrases or single words, provide the most natural translation.${pokemonHint}`,
         },
         {
           role: 'user',
@@ -223,7 +272,7 @@ For very short phrases or single words, provide the most natural translation.`,
     });
 
     const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
-    const translation = correctPokemonNames(rawTranslation, targetLanguage as 'en' | 'ja', contextMode as ContextMode);
+    const translation = correctPokemonNames(rawTranslation, targetLanguage as 'en' | 'ja', contextMode as ContextMode, foundPokemonNames);
 
     return NextResponse.json({ translation, isPlaceholder: false });
   } catch (error) {
