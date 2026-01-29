@@ -728,6 +728,38 @@ export const updateComment = async (
   });
 };
 
+export const updateCommentTranslation = async (
+  boardId: string,
+  cardId: string,
+  commentId: string,
+  language: 'en' | 'ja',
+  translatedContent: string,
+  translatorUid: string,
+  translatorDisplayName: string
+) => {
+  const commentRef = doc(db, 'boards', boardId, 'cards', cardId, 'comments', commentId);
+  
+  const updateData: Record<string, unknown> = {
+    updatedAt: Timestamp.now(),
+  };
+  
+  if (language === 'en') {
+    updateData.contentEn = translatedContent;
+    updateData.translatorEn = {
+      uid: translatorUid,
+      displayName: translatorDisplayName,
+    };
+  } else {
+    updateData.contentJa = translatedContent;
+    updateData.translatorJa = {
+      uid: translatorUid,
+      displayName: translatorDisplayName,
+    };
+  }
+  
+  await updateDoc(commentRef, updateData);
+};
+
 export const deleteComment = async (
   boardId: string,
   cardId: string,

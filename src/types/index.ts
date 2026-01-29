@@ -101,6 +101,11 @@ export interface Checklist {
   items: ChecklistItem[];
 }
 
+export interface TranslatorInfo {
+  uid: string;
+  displayName: string;
+}
+
 export interface Comment {
   id: string;
   cardId: string;
@@ -108,6 +113,8 @@ export interface Comment {
   contentEn: string; // English version
   contentJa: string; // Japanese version
   detectedLanguage: 'en' | 'ja'; // Which language was originally typed
+  translatorEn?: TranslatorInfo; // Who manually edited the EN translation (undefined = auto-translated)
+  translatorJa?: TranslatorInfo; // Who manually edited the JA translation (undefined = auto-translated)
   createdAt: Timestamp;
   updatedAt: Timestamp;
   createdBy: string;
