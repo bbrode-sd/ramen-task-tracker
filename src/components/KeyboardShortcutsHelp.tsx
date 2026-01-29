@@ -23,6 +23,7 @@ const shortcuts: { category: string; items: ShortcutItem[] }[] = [
     items: [
       { keys: ['n'], description: 'Add new card in focused column' },
       { keys: ['e'], description: 'Edit focused card' },
+      { keys: ['c'], description: 'Archive hovered card' },
     ],
   },
   {

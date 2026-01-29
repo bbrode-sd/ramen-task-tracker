@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef, memo, useMemo } from 'react';
+import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
 import { Draggable, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Card as CardType } from '@/types';
 import { useFilter } from '@/contexts/FilterContext';
+import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
 import { getUserProfiles } from '@/lib/firestore';
@@ -224,10 +225,20 @@ function CardComponent({
   'data-onboarding': dataOnboarding 
 }: CardProps) {
   const { searchQuery } = useFilter();
+  const { setHoveredCardId } = useKeyboardShortcuts();
   const hasAttachments = card.attachments && card.attachments.length > 0;
   const [showLongPressIndicator, setShowLongPressIndicator] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const cardRef = useRef<HTMLElement>(null);
+
+  // Handle hover tracking for keyboard shortcuts
+  const handleMouseEnter = useCallback(() => {
+    setHoveredCardId(card.id);
+  }, [card.id, setHoveredCardId]);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredCardId(null);
+  }, [setHoveredCardId]);
 
   // Touch event handlers for long-press feedback
   const handleTouchStart = () => {
@@ -359,6 +370,8 @@ function CardComponent({
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           data-card-id={card.id}
           data-onboarding={dataOnboarding}
           tabIndex={isFocused ? 0 : -1}

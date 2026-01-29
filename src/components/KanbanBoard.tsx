@@ -7,6 +7,7 @@ import { DragDropContext, Droppable, DropResult, DragStart, DragUpdate } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useFilter } from '@/contexts/FilterContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Board, Column as ColumnType, Card as CardType, BoardBackground } from '@/types';
 import {
   subscribeToColumns,
@@ -16,6 +17,8 @@ import {
   reorderCards,
   updateBoard,
   logActivity,
+  archiveCard,
+  restoreCard,
 } from '@/lib/firestore';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -81,7 +84,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     setTriggerAddCard,
     expandSearchCallback,
     isInputFocused,
+    hoveredCardId,
   } = useKeyboardShortcuts();
+  const { showToast } = useToast();
   const router = useRouter();
   const [board, setBoard] = useState<Board | null>(null);
   const [columns, setColumns] = useState<ColumnType[]>([]);
@@ -589,6 +594,39 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
           }, 0);
           break;
           
+        case 'c':
+        case 'C':
+          // Archive the hovered card
+          if (hoveredCardId) {
+            e.preventDefault();
+            const cardToArchive = cards.find(c => c.id === hoveredCardId);
+            if (cardToArchive) {
+              archiveCard(boardId, hoveredCardId).then(() => {
+                showToast('success', 'Card archived', {
+                  undoAction: async () => {
+                    await restoreCard(boardId, hoveredCardId);
+                  },
+                });
+                
+                // Log activity
+                if (user) {
+                  logActivity(boardId, {
+                    cardId: hoveredCardId,
+                    cardTitle: cardToArchive.titleEn,
+                    type: 'card_archived',
+                    userId: user.uid,
+                    userName: user.displayName || 'Anonymous',
+                    userPhoto: user.photoURL,
+                  });
+                }
+              }).catch((error) => {
+                console.error('Failed to archive card:', error);
+                showToast('error', 'Failed to archive card');
+              });
+            }
+          }
+          break;
+          
         case 'Escape':
           e.preventDefault();
           setFocusedColumnIndex(null);
@@ -620,6 +658,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     searchInputRef,
     expandSearchCallback,
     handleCardClick,
+    hoveredCardId,
+    boardId,
+    showToast,
+    user,
   ]);
 
   // Show access error state

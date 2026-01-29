@@ -8,6 +8,10 @@ interface KeyboardShortcutsContextType {
   focusedCardIndex: number | null;
   isHelpModalOpen: boolean;
   
+  // Hover state for card actions
+  hoveredCardId: string | null;
+  setHoveredCardId: (cardId: string | null) => void;
+  
   // Navigation methods
   setFocusedColumnIndex: (index: number | null) => void;
   setFocusedCardIndex: (index: number | null) => void;
@@ -49,6 +53,7 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
   const [columnCount, setColumnCount] = useState(0);
   const [cardsPerColumn, setCardsPerColumn] = useState<Map<number, number>>(new Map());
   const [triggerAddCard, setTriggerAddCard] = useState<number | null>(null);
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const addCardInputRefs = useRef<Map<number, HTMLTextAreaElement | null>>(new Map());
@@ -159,6 +164,8 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
         focusedColumnIndex,
         focusedCardIndex,
         isHelpModalOpen,
+        hoveredCardId,
+        setHoveredCardId,
         setFocusedColumnIndex,
         setFocusedCardIndex,
         focusNextColumn,
