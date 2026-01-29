@@ -73,7 +73,7 @@ export function BoardList({ onSelectBoard }: BoardListProps) {
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
                 placeholder="Board name..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 text-gray-900 placeholder:text-gray-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 text-gray-900 placeholder:text-slate-500"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleCreateBoard();

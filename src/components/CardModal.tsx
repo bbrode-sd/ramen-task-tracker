@@ -366,7 +366,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 placeholder:text-slate-500"
                   placeholder="Enter title in English..."
                 />
               </div>
@@ -397,7 +397,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all text-slate-800 placeholder:text-slate-500"
                   placeholder="日本語でタイトルを入力..."
                 />
               </div>
@@ -424,7 +424,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={descriptionEn}
                   onChange={(e) => setDescriptionEn(e.target.value)}
                   onBlur={() => handleDescriptionEnChange(descriptionEn)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 min-h-[130px] resize-y transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 min-h-[130px] resize-y transition-all text-slate-800 placeholder:text-slate-500"
                   placeholder="Add a description in English..."
                 />
               </div>
@@ -448,7 +448,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={descriptionJa}
                   onChange={(e) => setDescriptionJa(e.target.value)}
                   onBlur={() => handleDescriptionJaChange(descriptionJa)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-h-[130px] resize-y transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-h-[130px] resize-y transition-all text-slate-800 placeholder:text-slate-500"
                   placeholder="日本語で説明を追加..."
                 />
               </div>
@@ -532,7 +532,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Write a comment..."
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all placeholder:text-slate-300"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all text-slate-800 placeholder:text-slate-500"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                         handleAddComment();
@@ -540,7 +540,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     }}
                   />
                   <div className="flex items-center justify-between mt-3">
-                    <span className="text-xs text-slate-400">Press ⌘+Enter to submit</span>
+                    <span className="text-xs text-slate-500">Press ⌘+Enter to submit</span>
                     <button
                       onClick={handleAddComment}
                       disabled={!newComment.trim() || isAddingComment}
@@ -612,7 +612,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste link URL..."
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 placeholder:text-slate-300"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 text-slate-800 placeholder:text-slate-500"
                   autoFocus
                 />
                 <input
@@ -620,7 +620,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
                   placeholder="Link name (optional)"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 placeholder:text-slate-300"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 text-slate-800 placeholder:text-slate-500"
                 />
                 <div className="flex gap-2">
                   <button

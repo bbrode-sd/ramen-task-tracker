@@ -75,13 +75,13 @@ html {
 
 /* Improve placeholder text readability across the site */
 ::placeholder {
-  color: var(--text-muted);
+  color: #64748b; /* slate-500 - good contrast */
   opacity: 1;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--text-muted);
+  color: #64748b; /* slate-500 */
   opacity: 1;
 }
 
