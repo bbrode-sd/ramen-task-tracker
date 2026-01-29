@@ -176,31 +176,34 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
         <Header boardName={board?.name} onBackToBoards={onBackToBoards} />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-14 w-14 border-4 border-orange-200 border-t-orange-500"></div>
+            <span className="absolute inset-0 flex items-center justify-center text-xl">🍜</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 flex flex-col">
       <Header
         boardName={board?.name}
         onBoardNameChange={handleBoardNameChange}
         onBackToBoards={onBackToBoards}
       />
       
-      <main className="flex-1 overflow-x-auto p-4">
+      <main className="flex-1 overflow-x-auto p-4 sm:p-6">
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="board" type="column" direction="horizontal">
             {(provided) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="flex gap-4 h-full items-start"
+                className="flex gap-5 h-full items-start pb-4"
               >
                 {columns.map((column, index) => (
                   <Column
@@ -215,15 +218,15 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
                 {provided.placeholder}
 
                 {/* Add column button */}
-                <div className="flex-shrink-0 w-72">
+                <div className="flex-shrink-0 w-[300px]">
                   {isAddingColumn ? (
-                    <div className="bg-white rounded-xl shadow-md p-3">
+                    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-4">
                       <input
                         type="text"
                         value={newColumnName}
                         onChange={(e) => setNewColumnName(e.target.value)}
                         placeholder="Enter list name..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-2"
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-3 placeholder:text-slate-400"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleAddColumn();
@@ -237,7 +240,7 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
                         <button
                           onClick={handleAddColumn}
                           disabled={!newColumnName.trim()}
-                          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
                         >
                           Add List
                         </button>
@@ -246,7 +249,7 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
                             setIsAddingColumn(false);
                             setNewColumnName('');
                           }}
-                          className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                          className="px-4 py-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
                         >
                           Cancel
                         </button>
@@ -255,22 +258,24 @@ export function KanbanBoard({ boardId, onBackToBoards }: KanbanBoardProps) {
                   ) : (
                     <button
                       onClick={() => setIsAddingColumn(true)}
-                      className="w-full px-4 py-3 bg-white/50 hover:bg-white rounded-xl text-gray-600 hover:text-gray-800 transition-all flex items-center gap-2 shadow-md"
+                      className="w-full px-4 py-3.5 bg-white/60 hover:bg-white backdrop-blur-sm rounded-2xl text-slate-500 hover:text-slate-700 transition-all flex items-center gap-3 shadow-sm hover:shadow-md border border-slate-200/50 hover:border-slate-200 group"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      Add another list
+                      <span className="w-8 h-8 flex items-center justify-center bg-slate-100 group-hover:bg-orange-100 rounded-xl transition-colors">
+                        <svg
+                          className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                      </span>
+                      <span className="font-medium">Add another list</span>
                     </button>
                   )}
                 </div>

@@ -12,8 +12,11 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 to-red-500">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-400 via-orange-500 to-red-500">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-white/30 border-t-white"></div>
+          <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
+        </div>
       </div>
     );
   }

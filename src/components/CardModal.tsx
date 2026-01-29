@@ -269,8 +269,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-white/30 border-t-white"></div>
+          <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
+        </div>
       </div>
     );
   }
@@ -281,38 +284,43 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-8 px-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-6 sm:py-10 px-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-3xl"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-6 h-6 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-            <span className="text-sm text-gray-500">Card Details</span>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
+              <svg
+                className="w-5 h-5 text-orange-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">Card Details</h2>
+              <p className="text-xs text-slate-400">Edit titles, descriptions, and more</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-xl transition-colors group"
           >
             <svg
-              className="w-6 h-6 text-gray-500"
+              className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -329,16 +337,22 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
         <div className="flex flex-col lg:flex-row">
           {/* Main Content */}
-          <div className="flex-1 p-4 space-y-6">
+          <div className="flex-1 p-5 sm:p-6 space-y-6">
             {/* Bilingual Title Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* English Title */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-blue-600">
-                  <span className="px-1.5 py-0.5 bg-blue-100 rounded text-xs">EN</span>
+              <div className="space-y-2.5">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-md border border-blue-100">EN</span>
                   Title (English)
                   {isTranslating === 'titleEn' && (
-                    <span className="animate-pulse text-xs text-gray-500">Translating...</span>
+                    <span className="animate-pulse text-xs text-slate-400 flex items-center gap-1">
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Translating...
+                    </span>
                   )}
                 </label>
                 <input
@@ -352,18 +366,24 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-slate-300"
                   placeholder="Enter title in English..."
                 />
               </div>
 
               {/* Japanese Title */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-red-600">
-                  <span className="px-1.5 py-0.5 bg-red-100 rounded text-xs">JP</span>
+              <div className="space-y-2.5">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-red-600 bg-red-50 rounded-md border border-red-100">JP</span>
                   Title (日本語)
                   {isTranslating === 'titleJa' && (
-                    <span className="animate-pulse text-xs text-gray-500">翻訳中...</span>
+                    <span className="animate-pulse text-xs text-slate-400 flex items-center gap-1">
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      翻訳中...
+                    </span>
                   )}
                 </label>
                 <input
@@ -377,46 +397,58 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       (e.target as HTMLInputElement).blur();
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all placeholder:text-slate-300"
                   placeholder="日本語でタイトルを入力..."
                 />
               </div>
             </div>
 
             {/* Bilingual Description Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* English Description */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-blue-600">
-                  <span className="px-1.5 py-0.5 bg-blue-100 rounded text-xs">EN</span>
+              <div className="space-y-2.5">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-md border border-blue-100">EN</span>
                   Description (English)
                   {isTranslating === 'descriptionEn' && (
-                    <span className="animate-pulse text-xs text-gray-500">Translating...</span>
+                    <span className="animate-pulse text-xs text-slate-400 flex items-center gap-1">
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Translating...
+                    </span>
                   )}
                 </label>
                 <textarea
                   value={descriptionEn}
                   onChange={(e) => setDescriptionEn(e.target.value)}
                   onBlur={() => handleDescriptionEnChange(descriptionEn)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] resize-y"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 min-h-[130px] resize-y transition-all placeholder:text-slate-300"
                   placeholder="Add a description in English..."
                 />
               </div>
 
               {/* Japanese Description */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-red-600">
-                  <span className="px-1.5 py-0.5 bg-red-100 rounded text-xs">JP</span>
+              <div className="space-y-2.5">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-red-600 bg-red-50 rounded-md border border-red-100">JP</span>
                   Description (日本語)
                   {isTranslating === 'descriptionJa' && (
-                    <span className="animate-pulse text-xs text-gray-500">翻訳中...</span>
+                    <span className="animate-pulse text-xs text-slate-400 flex items-center gap-1">
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      翻訳中...
+                    </span>
                   )}
                 </label>
                 <textarea
                   value={descriptionJa}
                   onChange={(e) => setDescriptionJa(e.target.value)}
                   onBlur={() => handleDescriptionJaChange(descriptionJa)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[120px] resize-y"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 min-h-[130px] resize-y transition-all placeholder:text-slate-300"
                   placeholder="日本語で説明を追加..."
                 />
               </div>
@@ -424,22 +456,27 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Attachments */}
             {card.attachments && card.attachments.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                    />
-                  </svg>
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                      />
+                    </svg>
+                  </div>
                   Attachments
+                  <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {card.attachments.length}
+                  </span>
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {card.attachments.map((attachment) => (
@@ -454,22 +491,29 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             )}
 
             {/* Comments */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                  />
-                </svg>
-                Comments
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <svg
+                    className="w-4 h-4 text-slate-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                    />
+                  </svg>
+                </div>
+                Activity
+                {comments.length > 0 && (
+                  <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {comments.length}
+                  </span>
+                )}
               </h4>
 
               {/* Add comment */}
@@ -478,9 +522,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <Image
                     src={user.photoURL}
                     alt={user.displayName || 'User'}
-                    width={32}
-                    height={32}
-                    className="rounded-full flex-shrink-0"
+                    width={36}
+                    height={36}
+                    className="rounded-full flex-shrink-0 ring-2 ring-slate-100"
                   />
                 )}
                 <div className="flex-1">
@@ -488,25 +532,28 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Write a comment..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[80px] resize-y"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all placeholder:text-slate-300"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                         handleAddComment();
                       }
                     }}
                   />
-                  <button
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim() || isAddingComment}
-                    className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                  >
-                    {isAddingComment ? 'Posting...' : 'Save'}
-                  </button>
+                  <div className="flex items-center justify-between mt-3">
+                    <span className="text-xs text-slate-400">Press ⌘+Enter to submit</span>
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim() || isAddingComment}
+                      className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-sm active:scale-[0.98]"
+                    >
+                      {isAddingComment ? 'Posting...' : 'Post Comment'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Comment list */}
-              <div className="space-y-4">
+              <div className="space-y-4 pt-2">
                 {comments.map((comment) => (
                   <CommentItem
                     key={comment.id}
@@ -520,8 +567,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:w-48 p-4 bg-gray-50 lg:rounded-br-xl space-y-3">
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="lg:w-56 p-5 bg-gradient-to-b from-slate-50 to-slate-100/50 lg:rounded-br-2xl space-y-4 border-t lg:border-t-0 lg:border-l border-slate-100">
+            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Add to card
             </h4>
 
@@ -537,33 +584,35 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="w-full px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm text-left flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl text-sm text-left flex items-center gap-3 transition-all disabled:opacity-50 group shadow-sm"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                />
-              </svg>
-              {isUploading ? 'Uploading...' : 'Attachment'}
+              <span className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-orange-100 flex items-center justify-center transition-colors">
+                <svg
+                  className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  />
+                </svg>
+              </span>
+              <span className="text-slate-600 font-medium">{isUploading ? 'Uploading...' : 'Attachment'}</span>
             </button>
 
             {/* Add link */}
             {showLinkInput ? (
-              <div className="space-y-2">
+              <div className="space-y-2.5 p-3 bg-white rounded-xl border border-slate-200">
                 <input
                   type="url"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste link URL..."
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 placeholder:text-slate-300"
                   autoFocus
                 />
                 <input
@@ -571,13 +620,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
                   placeholder="Link name (optional)"
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 placeholder:text-slate-300"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleAddLink}
                     disabled={!linkUrl.trim()}
-                    className="flex-1 px-2 py-1 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                    className="flex-1 px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition-all"
                   >
                     Add
                   </button>
@@ -587,7 +636,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       setLinkUrl('');
                       setLinkName('');
                     }}
-                    className="px-2 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors"
+                    className="px-3 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
                   >
                     Cancel
                   </button>
@@ -596,10 +645,40 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             ) : (
               <button
                 onClick={() => setShowLinkInput(true)}
-                className="w-full px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm text-left flex items-center gap-2 transition-colors"
+                className="w-full px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
               >
+                <span className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+                  <svg
+                    className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    />
+                  </svg>
+                </span>
+                <span className="text-slate-600 font-medium">Link</span>
+              </button>
+            )}
+
+            <hr className="border-slate-200" />
+
+            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Actions
+            </h4>
+
+            <button
+              onClick={handleArchive}
+              className="w-full px-4 py-2.5 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
+            >
+              <span className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-red-100 flex items-center justify-center transition-colors">
                 <svg
-                  className="w-4 h-4"
+                  className="w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -608,37 +687,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                   />
                 </svg>
-                Link
-              </button>
-            )}
-
-            <hr className="border-gray-300" />
-
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </h4>
-
-            <button
-              onClick={handleArchive}
-              className="w-full px-3 py-2 bg-gray-200 hover:bg-red-100 hover:text-red-700 rounded text-sm text-left flex items-center gap-2 transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                />
-              </svg>
-              Archive
+              </span>
+              <span className="text-slate-600 group-hover:text-red-600 font-medium transition-colors">Archive</span>
             </button>
           </div>
         </div>
@@ -659,7 +712,7 @@ function AttachmentItem({
   const isLink = attachment.type === 'link';
 
   return (
-    <div className="relative group bg-gray-100 rounded-lg overflow-hidden">
+    <div className="relative group bg-slate-50 rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors">
       {isImage ? (
         <a
           href={attachment.url}
@@ -667,42 +720,45 @@ function AttachmentItem({
           rel="noopener noreferrer"
           className="block"
         >
-          <div className="relative h-24">
+          <div className="relative h-28">
             <Image
               src={attachment.url}
               alt={attachment.name}
               fill
-              className="object-cover"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
-          <p className="p-2 text-xs text-gray-600 truncate">{attachment.name}</p>
+          <p className="px-3 py-2 text-xs text-slate-600 truncate font-medium">{attachment.name}</p>
         </a>
       ) : isLink ? (
         <a
           href={attachment.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block p-3 hover:bg-gray-200 transition-colors"
+          className="block p-3.5 hover:bg-slate-100 transition-colors"
         >
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-8 h-8 text-blue-500 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-              />
-            </svg>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg
+                className="w-5 h-5 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
+              </svg>
+            </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-blue-600 truncate">
                 {attachment.name}
               </p>
-              <p className="text-xs text-gray-500 truncate">{attachment.url}</p>
+              <p className="text-xs text-slate-400 truncate">{attachment.url}</p>
             </div>
           </div>
         </a>
@@ -711,23 +767,25 @@ function AttachmentItem({
           href={attachment.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block p-3 hover:bg-gray-200 transition-colors"
+          className="block p-3.5 hover:bg-slate-100 transition-colors"
         >
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-8 h-8 text-gray-500 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              />
-            </svg>
-            <p className="text-sm text-gray-700 truncate">{attachment.name}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+              <svg
+                className="w-5 h-5 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <p className="text-sm text-slate-700 truncate font-medium">{attachment.name}</p>
           </div>
         </a>
       )}
@@ -738,9 +796,9 @@ function AttachmentItem({
           e.preventDefault();
           onRemove();
         }}
-        className="absolute top-1 right-1 p-1 bg-white/80 hover:bg-red-500 hover:text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+        className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-all border border-slate-200 hover:border-red-500"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -766,28 +824,28 @@ function CommentItem({
   const isOwner = currentUserId === comment.createdBy;
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 group">
       {comment.createdByPhoto ? (
         <Image
           src={comment.createdByPhoto}
           alt={comment.createdByName}
-          width={32}
-          height={32}
-          className="rounded-full flex-shrink-0"
+          width={36}
+          height={36}
+          className="rounded-full flex-shrink-0 ring-2 ring-slate-100"
         />
       ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
-          <span className="text-sm text-gray-600">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <span className="text-sm font-medium text-white">
             {comment.createdByName.charAt(0).toUpperCase()}
           </span>
         </div>
       )}
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium text-gray-800">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-semibold text-slate-800">
             {comment.createdByName}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-slate-400">
             {comment.createdAt instanceof Timestamp
               ? format(comment.createdAt.toDate(), 'MMM d, yyyy h:mm a')
               : ''}
@@ -795,14 +853,14 @@ function CommentItem({
           {isOwner && (
             <button
               onClick={onDelete}
-              className="text-xs text-red-500 hover:text-red-700 transition-colors"
+              className="text-xs text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
             >
               Delete
             </button>
           )}
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-3">
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+        <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+          <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
         </div>
       </div>
     </div>
