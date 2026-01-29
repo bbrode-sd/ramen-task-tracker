@@ -397,12 +397,11 @@ service cloud.firestore {
             isValidLength(request.resource.data.createdByName, 100) &&
             // Attachments limit
             request.resource.data.attachments.size() <= 10 &&
-            // Prevent extra fields
-            request.resource.data.keys().hasOnly(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'createdByPhoto', 'attachments']);
+            // Prevent extra fields (translatorEn and translatorJa are optional)
+            request.resource.data.keys().hasOnly(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'createdByPhoto', 'attachments', 'translatorEn', 'translatorJa']);
           
-          // Update: only comment creator can update
+          // Update: board members can update translations, only creator can update original content
           allow update: if isBoardMember(boardId) &&
-            isResourceOwner(resource) &&
             // cardId cannot be changed
             request.resource.data.cardId == resource.data.cardId &&
             // createdBy cannot be changed
@@ -413,6 +412,8 @@ service cloud.firestore {
             request.resource.data.createdByName == resource.data.createdByName &&
             // createdByPhoto cannot be changed
             request.resource.data.createdByPhoto == resource.data.createdByPhoto &&
+            // detectedLanguage cannot be changed
+            request.resource.data.detectedLanguage == resource.data.detectedLanguage &&
             // Must update updatedAt
             isTimestamp(request.resource.data.updatedAt) &&
             // Field length limits
@@ -421,8 +422,14 @@ service cloud.firestore {
             isValidLength(request.resource.data.contentJa, 5000) &&
             // Attachments limit
             request.resource.data.attachments.size() <= 10 &&
-            // Prevent extra fields
-            request.resource.data.keys().hasOnly(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'createdByPhoto', 'attachments']);
+            // Prevent extra fields (include translatorEn and translatorJa)
+            request.resource.data.keys().hasOnly(['cardId', 'content', 'contentEn', 'contentJa', 'detectedLanguage', 'createdAt', 'updatedAt', 'createdBy', 'createdByName', 'createdByPhoto', 'attachments', 'translatorEn', 'translatorJa']) &&
+            // Only the comment creator can update the original content and attachments
+            // Non-creators can only update translations (contentEn, contentJa, translatorEn, translatorJa)
+            (isResourceOwner(resource) || (
+              request.resource.data.content == resource.data.content &&
+              request.resource.data.attachments == resource.data.attachments
+            ));
           
           // Delete: comment creator OR board owner can delete
           allow delete: if isBoardMember(boardId) && 
