@@ -1,23 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import {
   User as FirebaseUser,
   onAuthStateChanged,
   signInWithPopup,
   signOut as firebaseSignOut,
+  signInAnonymously,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { saveUserProfile } from '@/lib/firestore';
 import { User } from '@/types';
-
-// Mock user for testing when NEXT_PUBLIC_SKIP_AUTH is enabled
-const MOCK_TEST_USER: User = {
-  uid: 'test-user-123',
-  email: 'test@example.com',
-  displayName: 'Test User',
-  photoURL: null,
-};
 
 interface AuthContextType {
   user: User | null;
@@ -31,38 +24,52 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const anonymousSignInAttempted = useRef(false);
 
   // Check if auth should be skipped for testing
   const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
 
   useEffect(() => {
-    // If skip auth is enabled, immediately set mock user
-    if (skipAuth) {
-      setUser(MOCK_TEST_USER);
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        const userData = {
+        // User is signed in (could be anonymous or Google)
+        const userData: User = {
           uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
+          email: firebaseUser.email || (skipAuth ? 'test@example.com' : null),
+          displayName: firebaseUser.displayName || (skipAuth ? 'Test User' : null),
           photoURL: firebaseUser.photoURL,
         };
         setUser(userData);
         
         // Save/update user profile in Firestore for member lookup
-        try {
-          await saveUserProfile(userData);
-        } catch (error) {
-          console.error('Error saving user profile:', error);
+        // Only save if we have an email (skip for pure anonymous without email)
+        if (userData.email) {
+          try {
+            await saveUserProfile(userData);
+          } catch (error) {
+            console.error('Error saving user profile:', error);
+          }
         }
+        setLoading(false);
       } else {
-        setUser(null);
+        // No user signed in
+        if (skipAuth && !anonymousSignInAttempted.current) {
+          // In skip auth mode, sign in anonymously to get a real Firebase auth session
+          anonymousSignInAttempted.current = true;
+          console.log('[Skip Auth] Signing in anonymously for test mode...');
+          try {
+            await signInAnonymously(auth);
+            // onAuthStateChanged will fire again with the anonymous user
+          } catch (error) {
+            console.error('[Skip Auth] Anonymous sign-in failed:', error);
+            setUser(null);
+            setLoading(false);
+          }
+        } else {
+          setUser(null);
+          setLoading(false);
+        }
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
