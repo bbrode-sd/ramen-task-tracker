@@ -1180,8 +1180,8 @@ export function Header({
             <>
               {/* User info container - visible on all screen sizes */}
               <div 
-                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-xl backdrop-blur-sm"
-                aria-label={`Signed in as ${user.displayName || user.email}`}
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/20 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/10 transition-colors"
+                aria-label={`Signed in as ${user.displayName || user.email || t('common.anonymous')}`}
               >
                 {user.photoURL ? (
                   <Image
@@ -1194,14 +1194,14 @@ export function Header({
                   />
                 ) : (
                   <div 
-                    className="w-7 h-7 rounded-full ring-2 ring-white/30 bg-white/20 flex items-center justify-center text-white text-xs font-semibold"
+                    className="w-7 h-7 rounded-full ring-2 ring-white/30 bg-white/30 flex items-center justify-center text-white text-xs font-semibold"
                     aria-hidden="true"
                   >
-                    {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : 'G'}
                   </div>
                 )}
-                <span className="text-white/90 text-sm font-medium max-w-[120px] sm:max-w-[150px] truncate">
-                  {user.displayName || user.email}
+                <span className="text-white text-sm font-medium max-w-[120px] sm:max-w-[150px] truncate">
+                  {user.displayName || user.email || t('common.anonymous')}
                 </span>
               </div>
               <button

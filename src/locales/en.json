@@ -21,7 +21,9 @@
     "back": "Back",
     "next": "Next",
     "signOut": "Sign Out",
-    "settings": "Settings"
+    "settings": "Settings",
+    "anonymous": "Guest",
+    "menu": "Menu"
   },
   "app": {
     "title": "Ramen Task Tracker",
