@@ -11,6 +11,14 @@ import { auth, googleProvider } from '@/lib/firebase';
 import { saveUserProfile } from '@/lib/firestore';
 import { User } from '@/types';
 
+// Mock user for testing when NEXT_PUBLIC_SKIP_AUTH is enabled
+const MOCK_TEST_USER: User = {
+  uid: 'test-user-123',
+  email: 'test@example.com',
+  displayName: 'Test User',
+  photoURL: null,
+};
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -24,7 +32,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check if auth should be skipped for testing
+  const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+
   useEffect(() => {
+    // If skip auth is enabled, immediately set mock user
+    if (skipAuth) {
+      setUser(MOCK_TEST_USER);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const userData = {
@@ -48,9 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [skipAuth]);
 
   const signInWithGoogle = async () => {
+    // In skip auth mode, user is already logged in
+    if (skipAuth) {
+      console.log('[Skip Auth] Already logged in as test user');
+      return;
+    }
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
@@ -60,6 +83,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // In skip auth mode, don't actually sign out
+    if (skipAuth) {
+      console.log('[Skip Auth] Sign out disabled in test mode');
+      return;
+    }
     try {
       await firebaseSignOut(auth);
     } catch (error) {
