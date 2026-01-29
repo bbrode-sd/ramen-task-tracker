@@ -627,7 +627,13 @@ export const Column = memo(ColumnComponent, (prevProps, nextProps) => {
       prevCard.id !== nextCard.id ||
       prevCard.order !== nextCard.order ||
       prevCard.titleEn !== nextCard.titleEn ||
-      prevCard.titleJa !== nextCard.titleJa
+      prevCard.titleJa !== nextCard.titleJa ||
+      JSON.stringify(prevCard.coverImage) !== JSON.stringify(nextCard.coverImage) ||
+      JSON.stringify(prevCard.labels) !== JSON.stringify(nextCard.labels) ||
+      JSON.stringify(prevCard.attachments) !== JSON.stringify(nextCard.attachments) ||
+      prevCard.dueDate !== nextCard.dueDate ||
+      JSON.stringify(prevCard.checklists) !== JSON.stringify(nextCard.checklists) ||
+      JSON.stringify(prevCard.assigneeIds) !== JSON.stringify(nextCard.assigneeIds)
     ) {
       return false;
     }
