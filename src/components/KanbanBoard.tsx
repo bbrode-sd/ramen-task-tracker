@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { DragDropContext, Droppable, DropResult, DragStart, DragUpdate } from '@hello-pangea/dnd';
@@ -489,7 +490,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         order: index,
       }));
 
-      setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
+      flushSync(() => {
+        setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
+      });
       reorderColumns(boardId, columnUpdates).catch(console.error);
       announceToScreenReader(`List ${removed.name} moved to position ${destination.index + 1}.`);
       return;
@@ -548,20 +551,23 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       });
     });
 
-    // Optimistic update
-    setCards((prevCards) =>
-      prevCards.map((card) => {
-        const update = cardUpdates.find((u) => u.id === card.id);
-        if (update) {
-          return {
-            ...card,
-            order: update.order,
-            columnId: update.columnId || card.columnId,
-          };
-        }
-        return card;
-      })
-    );
+    // Optimistic update - use flushSync to force immediate render
+    // This prevents React 18's automatic batching from deferring the visual update
+    flushSync(() => {
+      setCards((prevCards) =>
+        prevCards.map((card) => {
+          const update = cardUpdates.find((u) => u.id === card.id);
+          if (update) {
+            return {
+              ...card,
+              order: update.order,
+              columnId: update.columnId || card.columnId,
+            };
+          }
+          return card;
+        })
+      );
+    });
 
     // Save to Firestore (fire and forget)
     // Clear pending updates after Firestore confirms
