@@ -382,10 +382,9 @@ function ColumnComponent({
           aria-describedby={`column-drag-instructions-${column.id}`}
           style={{
             ...provided.draggableProps.style,
-            // Combine library's positioning transform with our rotation effect when dragging
-            transform: snapshot.isDragging
-              ? `${provided.draggableProps.style?.transform || ''} rotate(2deg)`
-              : provided.draggableProps.style?.transform,
+            // IMPORTANT: Do NOT add rotate() or scale() transforms here - they conflict with
+            // the library's cursor-based positioning and cause the element to appear offset.
+            // Visual effects are handled via the column-dragging CSS class.
             transition: snapshot.isDragging 
               ? 'none' 
               : snapshot.isDropAnimating 

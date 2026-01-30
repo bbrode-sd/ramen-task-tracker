@@ -497,6 +497,9 @@ function CardComponent({
 
   // Get drag styles based on snapshot
   // Let the library handle all transform/transition during drag/drop
+  // IMPORTANT: Do NOT add scale() or rotate() transforms here - they conflict with
+  // the library's cursor-based positioning and cause the card to appear offset.
+  // Visual effects (elevation, glow) are handled via the card-dragging CSS class.
   const getDragStyle = (snapshot: DraggableStateSnapshot, draggableStyle: React.CSSProperties | undefined) => {
     // During drop animation, don't interfere with the library's animation
     if (snapshot.isDropAnimating) {
@@ -511,11 +514,9 @@ function CardComponent({
       return draggableStyle;
     }
 
-    // When dragging, combine the library's translate transform with our rotation/scale
-    const libraryTransform = draggableStyle?.transform || '';
+    // When dragging, only disable transitions - let the library control all transforms
     return {
       ...draggableStyle,
-      transform: `${libraryTransform} rotate(3deg) scale(1.02)`,
       transition: 'none',
     };
   };
