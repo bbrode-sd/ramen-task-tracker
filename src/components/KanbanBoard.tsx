@@ -852,25 +852,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                   </div>
                 )}
 
-                {columns.map((column, index) => (
-                  <Column
-                    key={column.id}
-                    column={column}
-                    cards={getCardsForColumn(column.id)}
-                    index={index}
-                    boardId={boardId}
-                    onCardClick={handleCardClick}
-                    hasActiveFilters={hasActiveFilters}
-                    matchesFilter={(card) => matchesFilter(card, user?.uid)}
-                    isFocused={focusedColumnIndex === index}
-                    focusedCardIndex={focusedColumnIndex === index ? focusedCardIndex : null}
-                    selectedCards={selectedCards}
-                    onCardSelectToggle={handleCardSelectToggle}
-                  />
-                ))}
-                {provided.placeholder}
-
-                {/* Add column button */}
+                {/* Add column button - positioned on the left */}
                 <div className="flex-shrink-0 w-[300px]">
                   {isAddingColumn ? (
                     <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/40 p-4">
@@ -933,6 +915,24 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                     </button>
                   )}
                 </div>
+
+                {columns.map((column, index) => (
+                  <Column
+                    key={column.id}
+                    column={column}
+                    cards={getCardsForColumn(column.id)}
+                    index={index}
+                    boardId={boardId}
+                    onCardClick={handleCardClick}
+                    hasActiveFilters={hasActiveFilters}
+                    matchesFilter={(card) => matchesFilter(card, user?.uid)}
+                    isFocused={focusedColumnIndex === index}
+                    focusedCardIndex={focusedColumnIndex === index ? focusedCardIndex : null}
+                    selectedCards={selectedCards}
+                    onCardSelectToggle={handleCardSelectToggle}
+                  />
+                ))}
+                {provided.placeholder}
               </div>
             )}
           </Droppable>
