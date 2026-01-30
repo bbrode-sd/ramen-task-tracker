@@ -318,7 +318,7 @@ service cloud.firestore {
           // Labels limit
           request.resource.data.labels.size() <= 20 &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority']);
         
         // Update: must be board member
         allow update: if isBoardMember(boardId) &&
@@ -341,8 +341,11 @@ service cloud.firestore {
           request.resource.data.labels.size() <= 20 &&
           // Checklists limit (if present)
           (!('checklists' in request.resource.data) || request.resource.data.checklists.size() <= 20) &&
+          // Priority must be a valid value (if present)
+          (!('priority' in request.resource.data) || request.resource.data.priority == null ||
+            isOneOf(request.resource.data.priority, ['low', 'medium', 'high', 'urgent'])) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority']);
         
         // Delete: must be board member
         // RATE LIMITING NOTE: Cascade delete of comments should be handled
