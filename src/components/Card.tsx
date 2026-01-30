@@ -5,6 +5,7 @@ import { Draggable, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Card as CardType } from '@/types';
 import { useFilter } from '@/contexts/FilterContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Tooltip } from './Tooltip';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
@@ -448,6 +449,12 @@ function CardComponent({
 }: CardProps) {
   const { searchQuery } = useFilter();
   const { setHoveredCardId } = useKeyboardShortcuts();
+  const { user } = useAuth();
+  
+  // Check if current user is watching this card
+  const isWatching = useMemo(() => {
+    return user && card.watcherIds ? card.watcherIds.includes(user.uid) : false;
+  }, [user, card.watcherIds]);
   const hasAttachments = card.attachments && card.attachments.length > 0;
   const [showLongPressIndicator, setShowLongPressIndicator] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -792,6 +799,29 @@ function CardComponent({
                   isTranslating={!card.titleJa && !!card.titleEn}
                 />
 
+                {/* Watching indicator */}
+                {isWatching && (
+                  <div 
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-50 text-cyan-600 border border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800"
+                    title="You are watching this card"
+                  >
+                    <svg className="w-3 h-3" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  </div>
+                )}
+
                 {/* Description indicator */}
                 {(card.descriptionEn || card.descriptionJa) && (
                   <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500" title="Has description">
@@ -942,6 +972,7 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     shallowArrayEqual(prevProps.card.labels, nextProps.card.labels) &&
     checklistsEqual(prevProps.card.checklists, nextProps.card.checklists) &&
     prevProps.card.attachments?.length === nextProps.card.attachments?.length &&
-    shallowArrayEqual(prevProps.card.assigneeIds, nextProps.card.assigneeIds)
+    shallowArrayEqual(prevProps.card.assigneeIds, nextProps.card.assigneeIds) &&
+    shallowArrayEqual(prevProps.card.watcherIds, nextProps.card.watcherIds)
   );
 });

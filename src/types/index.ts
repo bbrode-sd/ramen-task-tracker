@@ -82,6 +82,7 @@ export interface Card {
   checklists?: Checklist[];
   coverImage?: CardCover;
   priority?: CardPriority;
+  watcherIds?: string[];
 }
 
 export interface Attachment {
@@ -99,6 +100,8 @@ export interface ChecklistItem {
   text: string;
   isCompleted: boolean;
   order: number;
+  assigneeId?: string;  // User ID of assigned member
+  dueDate?: Timestamp | null;  // Due date for this item
 }
 
 export interface Checklist {
@@ -177,7 +180,11 @@ export type ActivityType =
   | 'checklist_completed' 
   | 'assignee_added' 
   | 'due_date_set'
-  | 'attachment_added';
+  | 'attachment_added'
+  | 'card_watched'
+  | 'card_unwatched'
+  | 'checklist_item_assigned'
+  | 'checklist_item_due_date_set';
 
 export interface Activity {
   id: string;

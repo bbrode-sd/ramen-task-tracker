@@ -66,6 +66,9 @@ export {
   deleteChecklistItem,
   reorderChecklistItems,
   permanentlyDeleteCard,
+  toggleCardWatch,
+  addCardWatcher,
+  removeCardWatcher,
 } from './cards';
 
 // Comment operations

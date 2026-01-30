@@ -536,7 +536,7 @@ export const updateChecklistItem = async (
   cardId: string,
   checklistId: string,
   itemId: string,
-  updates: Partial<Pick<ChecklistItem, 'text' | 'isCompleted'>>
+  updates: Partial<Pick<ChecklistItem, 'text' | 'isCompleted' | 'assigneeId' | 'dueDate'>>
 ): Promise<void> => {
   const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
   const cardDoc = await getDoc(cardRef);
@@ -620,6 +620,90 @@ export const reorderChecklistItems = async (
       checklists: updatedChecklists,
       updatedAt: Timestamp.now(),
     });
+  }
+};
+
+// ============================================================================
+// WATCH/SUBSCRIBE
+// ============================================================================
+
+/**
+ * Toggle watch status for a user on a card
+ * Returns true if now watching, false if unwatched
+ */
+export const toggleCardWatch = async (
+  boardId: string,
+  cardId: string,
+  userId: string
+): Promise<boolean> => {
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  const cardDoc = await getDoc(cardRef);
+  
+  if (cardDoc.exists()) {
+    const currentWatchers: string[] = cardDoc.data().watcherIds || [];
+    const isWatching = currentWatchers.includes(userId);
+    
+    let updatedWatchers: string[];
+    if (isWatching) {
+      // Remove user from watchers
+      updatedWatchers = currentWatchers.filter(id => id !== userId);
+    } else {
+      // Add user to watchers
+      updatedWatchers = [...currentWatchers, userId];
+    }
+    
+    await updateDoc(cardRef, {
+      watcherIds: updatedWatchers,
+      updatedAt: Timestamp.now(),
+    });
+    
+    return !isWatching; // Return new watch status
+  }
+  
+  return false;
+};
+
+/**
+ * Add a user as a watcher to a card
+ */
+export const addCardWatcher = async (
+  boardId: string,
+  cardId: string,
+  userId: string
+): Promise<void> => {
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  const cardDoc = await getDoc(cardRef);
+  
+  if (cardDoc.exists()) {
+    const currentWatchers: string[] = cardDoc.data().watcherIds || [];
+    if (!currentWatchers.includes(userId)) {
+      await updateDoc(cardRef, {
+        watcherIds: [...currentWatchers, userId],
+        updatedAt: Timestamp.now(),
+      });
+    }
+  }
+};
+
+/**
+ * Remove a user as a watcher from a card
+ */
+export const removeCardWatcher = async (
+  boardId: string,
+  cardId: string,
+  userId: string
+): Promise<void> => {
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  const cardDoc = await getDoc(cardRef);
+  
+  if (cardDoc.exists()) {
+    const currentWatchers: string[] = cardDoc.data().watcherIds || [];
+    if (currentWatchers.includes(userId)) {
+      await updateDoc(cardRef, {
+        watcherIds: currentWatchers.filter(id => id !== userId),
+        updatedAt: Timestamp.now(),
+      });
+    }
   }
 };
 

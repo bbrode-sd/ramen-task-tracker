@@ -29,6 +29,7 @@ import {
   subscribeToCardActivities,
   updateCardCover,
   removeCardCover,
+  toggleCardWatch,
 } from '@/lib/firestore';
 import { useToast } from '@/contexts/ToastContext';
 import { uploadFile, uploadFromPaste, getFileType } from '@/lib/storage';
@@ -127,6 +128,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [editingChecklistTitle, setEditingChecklistTitle] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemText, setEditingItemText] = useState('');
+  // Checklist item assignee and due date pickers
+  const [activeItemAssigneePickerId, setActiveItemAssigneePickerId] = useState<string | null>(null);
+  const [activeItemDueDatePickerId, setActiveItemDueDatePickerId] = useState<string | null>(null);
 
   // Template state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
@@ -138,6 +142,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Cover image
   const [showCoverPicker, setShowCoverPicker] = useState(false);
+
+  // Watchers
+  const [isWatching, setIsWatching] = useState(false);
+  const [watchers, setWatchers] = useState<BoardMember[]>([]);
+  const [isTogglingWatch, setIsTogglingWatch] = useState(false);
 
   // Track last saved values to avoid re-translating unchanged content
   const [lastSavedTitleEn, setLastSavedTitleEn] = useState('');
@@ -247,6 +256,47 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     };
     loadAssignees();
   }, [card?.assigneeIds, boardMembers]);
+
+  // Load watchers and check if current user is watching
+  useEffect(() => {
+    const loadWatchers = async () => {
+      if (!card?.watcherIds?.length) {
+        setWatchers([]);
+        setIsWatching(false);
+        return;
+      }
+      
+      // Check if current user is watching
+      setIsWatching(user ? card.watcherIds.includes(user.uid) : false);
+      
+      // First try to get from board members
+      const watcherList = card.watcherIds
+        .map(id => boardMembers.find(m => m.uid === id))
+        .filter((m): m is BoardMember => m !== undefined);
+      
+      // If some watchers aren't in board members (edge case), fetch them
+      if (watcherList.length < card.watcherIds.length) {
+        const missingIds = card.watcherIds.filter(
+          id => !boardMembers.some(m => m.uid === id)
+        );
+        if (missingIds.length > 0) {
+          const profiles = await getUserProfiles(missingIds);
+          profiles.forEach((profile) => {
+            watcherList.push({
+              uid: profile.uid,
+              email: profile.email,
+              displayName: profile.displayName,
+              photoURL: profile.photoURL,
+              isOwner: false,
+            });
+          });
+        }
+      }
+      
+      setWatchers(watcherList);
+    };
+    loadWatchers();
+  }, [card?.watcherIds, boardMembers, user]);
 
   // Accessibility: Store the previously focused element and focus the modal
   useEffect(() => {
@@ -590,6 +640,117 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     }));
   };
 
+  // Checklist item assignee handler
+  const handleChecklistItemAssignee = async (checklistId: string, itemId: string, assigneeId: string | undefined) => {
+    await updateChecklistItem(boardId, cardId, checklistId, itemId, { assigneeId });
+    setChecklists(checklists.map(cl => {
+      if (cl.id === checklistId) {
+        return {
+          ...cl,
+          items: cl.items.map(item => 
+            item.id === itemId ? { ...item, assigneeId } : item
+          ),
+        };
+      }
+      return cl;
+    }));
+    setActiveItemAssigneePickerId(null);
+    
+    // Log activity if assigning (not unassigning)
+    if (assigneeId && user) {
+      const assignee = boardMembers.find(m => m.uid === assigneeId);
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: card?.titleEn || '',
+        type: 'checklist_item_assigned',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+        metadata: { 
+          assigneeId, 
+          assigneeName: assignee?.displayName || assignee?.email || 'Unknown',
+          checklistId,
+          itemId,
+        },
+      });
+    }
+  };
+
+  // Checklist item due date handler
+  const handleChecklistItemDueDate = async (checklistId: string, itemId: string, dueDate: Timestamp | null) => {
+    await updateChecklistItem(boardId, cardId, checklistId, itemId, { dueDate });
+    setChecklists(checklists.map(cl => {
+      if (cl.id === checklistId) {
+        return {
+          ...cl,
+          items: cl.items.map(item => 
+            item.id === itemId ? { ...item, dueDate } : item
+          ),
+        };
+      }
+      return cl;
+    }));
+    setActiveItemDueDatePickerId(null);
+  };
+
+  // Helper to get due date status for checklist items
+  const getChecklistItemDueDateStatus = (dueDate: Timestamp | null | undefined): { 
+    label: string; 
+    className: string;
+    isOverdue: boolean;
+    isDueToday: boolean;
+    isDueTomorrow: boolean;
+  } => {
+    if (!dueDate) {
+      return { label: '', className: '', isOverdue: false, isDueToday: false, isDueTomorrow: false };
+    }
+    
+    const dueDateObj = dueDate.toDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dueDateDay = new Date(dueDateObj);
+    dueDateDay.setHours(0, 0, 0, 0);
+    
+    const diffMs = dueDateDay.getTime() - today.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return {
+        label: format(dueDateObj, 'MMM d'),
+        className: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
+        isOverdue: true,
+        isDueToday: false,
+        isDueTomorrow: false,
+      };
+    } else if (diffDays === 0) {
+      return {
+        label: 'Today',
+        className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+        isOverdue: false,
+        isDueToday: true,
+        isDueTomorrow: false,
+      };
+    } else if (diffDays === 1) {
+      return {
+        label: 'Tomorrow',
+        className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
+        isOverdue: false,
+        isDueToday: false,
+        isDueTomorrow: true,
+      };
+    } else {
+      return {
+        label: format(dueDateObj, 'MMM d'),
+        className: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+        isOverdue: false,
+        isDueToday: false,
+        isDueTomorrow: false,
+      };
+    }
+  };
+
   // Cover colors (matching board background colors)
   const coverColors = [
     '#ef4444', // red
@@ -860,6 +1021,37 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     } catch (error) {
       console.error('Failed to archive card:', error);
       showToast('error', 'Failed to archive card');
+    }
+  };
+
+  const handleToggleWatch = async () => {
+    if (!user) return;
+    
+    setIsTogglingWatch(true);
+    try {
+      const nowWatching = await toggleCardWatch(boardId, cardId, user.uid);
+      setIsWatching(nowWatching);
+      
+      // Log activity
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: card?.titleEn || '',
+        type: nowWatching ? 'card_watched' : 'card_unwatched',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+      });
+      
+      // Refresh card to get updated watchers
+      const updatedCard = await getCard(boardId, cardId);
+      if (updatedCard) setCard(updatedCard);
+      
+      showToast('success', nowWatching ? 'Now watching this card' : 'Stopped watching this card');
+    } catch (error) {
+      console.error('Failed to toggle watch:', error);
+      showToast('error', 'Failed to update watch status');
+    } finally {
+      setIsTogglingWatch(false);
     }
   };
 
@@ -1226,71 +1418,287 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       
                       {/* Checklist items */}
                       <div className="space-y-1.5">
-                        {checklist.items.sort((a, b) => a.order - b.order).map((item) => (
-                          <div
-                            key={item.id}
-                            className={`flex items-start gap-2.5 p-2 rounded-lg group transition-colors ${
-                              item.isCompleted ? 'bg-green-50/50 dark:bg-green-900/20' : 'hover:bg-white dark:hover:bg-slate-700'
-                            }`}
-                          >
-                            <button
-                              onClick={() => handleToggleChecklistItem(checklist.id, item.id, item.isCompleted)}
-                              className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                                item.isCompleted
-                                  ? 'bg-green-500 border-green-500 text-white'
-                                  : 'border-slate-300 hover:border-green-400'
+                        {checklist.items.sort((a, b) => a.order - b.order).map((item) => {
+                          const itemAssignee = item.assigneeId ? boardMembers.find(m => m.uid === item.assigneeId) : null;
+                          const dueDateStatus = getChecklistItemDueDateStatus(item.dueDate);
+                          const isCurrentUserAssigned = item.assigneeId === user?.uid;
+                          
+                          return (
+                            <div
+                              key={item.id}
+                              className={`flex items-start gap-2.5 p-2 rounded-lg group transition-colors relative ${
+                                item.isCompleted 
+                                  ? 'bg-green-50/50 dark:bg-green-900/20' 
+                                  : isCurrentUserAssigned 
+                                    ? 'bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                                    : 'hover:bg-white dark:hover:bg-slate-700'
                               }`}
                             >
-                              {item.isCompleted && (
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </button>
-                            
-                            {editingItemId === item.id ? (
-                              <input
-                                type="text"
-                                value={editingItemText}
-                                onChange={(e) => setEditingItemText(e.target.value)}
-                                onBlur={() => handleUpdateChecklistItemText(checklist.id, item.id)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleUpdateChecklistItemText(checklist.id, item.id);
-                                  if (e.key === 'Escape') {
-                                    setEditingItemId(null);
-                                    setEditingItemText('');
-                                  }
-                                }}
-                                className="flex-1 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
-                                autoFocus
-                              />
-                            ) : (
-                              <span
-                                onClick={() => {
-                                  setEditingItemId(item.id);
-                                  setEditingItemText(item.text);
-                                }}
-                                className={`flex-1 text-sm cursor-pointer transition-all ${
+                              <button
+                                onClick={() => handleToggleChecklistItem(checklist.id, item.id, item.isCompleted)}
+                                className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                                   item.isCompleted
-                                    ? 'text-slate-400 dark:text-slate-500 line-through'
-                                    : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white'
+                                    ? 'bg-green-500 border-green-500 text-white'
+                                    : 'border-slate-300 hover:border-green-400'
                                 }`}
                               >
-                                {item.text}
-                              </span>
-                            )}
-                            
-                            <button
-                              onClick={() => handleDeleteChecklistItem(checklist.id, item.id)}
-                              className="p-1 text-slate-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
-                              title="Delete item"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
+                                {item.isCompleted && (
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </button>
+                              
+                              {/* Item text */}
+                              <div className="flex-1 min-w-0">
+                                {editingItemId === item.id ? (
+                                  <input
+                                    type="text"
+                                    value={editingItemText}
+                                    onChange={(e) => setEditingItemText(e.target.value)}
+                                    onBlur={() => handleUpdateChecklistItemText(checklist.id, item.id)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleUpdateChecklistItemText(checklist.id, item.id);
+                                      if (e.key === 'Escape') {
+                                        setEditingItemId(null);
+                                        setEditingItemText('');
+                                      }
+                                    }}
+                                    className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span
+                                      onClick={() => {
+                                        setEditingItemId(item.id);
+                                        setEditingItemText(item.text);
+                                      }}
+                                      className={`text-sm cursor-pointer transition-all ${
+                                        item.isCompleted
+                                          ? 'text-slate-400 dark:text-slate-500 line-through'
+                                          : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white'
+                                      }`}
+                                    >
+                                      {item.text}
+                                    </span>
+                                    
+                                    {/* Due date badge */}
+                                    {item.dueDate && dueDateStatus.label && (
+                                      <span 
+                                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded ${
+                                          item.isCompleted ? 'opacity-50 line-through' : ''
+                                        } ${dueDateStatus.className}`}
+                                      >
+                                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        {dueDateStatus.label}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Action buttons container */}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {/* Assignee picker button/avatar */}
+                                <div className="relative">
+                                  {itemAssignee ? (
+                                    <button
+                                      onClick={() => setActiveItemAssigneePickerId(
+                                        activeItemAssigneePickerId === item.id ? null : item.id
+                                      )}
+                                      className="w-6 h-6 rounded-full overflow-hidden border-2 border-white dark:border-slate-600 shadow-sm hover:ring-2 hover:ring-blue-400 transition-all"
+                                      title={itemAssignee.displayName || itemAssignee.email}
+                                    >
+                                      {itemAssignee.photoURL ? (
+                                        <Image
+                                          src={itemAssignee.photoURL}
+                                          alt={itemAssignee.displayName || 'Assignee'}
+                                          width={24}
+                                          height={24}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div 
+                                          className="w-full h-full flex items-center justify-center text-[10px] font-semibold text-white"
+                                          style={{ backgroundColor: getAvatarColor(itemAssignee.displayName || itemAssignee.email) }}
+                                        >
+                                          {getInitials(itemAssignee.displayName || itemAssignee.email)}
+                                        </div>
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => setActiveItemAssigneePickerId(
+                                        activeItemAssigneePickerId === item.id ? null : item.id
+                                      )}
+                                      className="w-6 h-6 rounded-full border border-dashed border-slate-300 dark:border-slate-500 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                                      title="Assign member"
+                                    >
+                                      <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  
+                                  {/* Assignee dropdown */}
+                                  {activeItemAssigneePickerId === item.id && (
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 z-20 py-1 max-h-48 overflow-y-auto">
+                                      {item.assigneeId && (
+                                        <button
+                                          onClick={() => handleChecklistItemAssignee(checklist.id, item.id, undefined)}
+                                          className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                          </svg>
+                                          Unassign
+                                        </button>
+                                      )}
+                                      {boardMembers.map((member) => (
+                                        <button
+                                          key={member.uid}
+                                          onClick={() => handleChecklistItemAssignee(checklist.id, item.id, member.uid)}
+                                          className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center gap-2 ${
+                                            item.assigneeId === member.uid ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                                          }`}
+                                        >
+                                          <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                            {member.photoURL ? (
+                                              <Image
+                                                src={member.photoURL}
+                                                alt={member.displayName || 'Member'}
+                                                width={20}
+                                                height={20}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ) : (
+                                              <div 
+                                                className="w-full h-full flex items-center justify-center text-[8px] font-semibold text-white"
+                                                style={{ backgroundColor: getAvatarColor(member.displayName || member.email) }}
+                                              >
+                                                {getInitials(member.displayName || member.email)}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <span className="truncate text-slate-700 dark:text-slate-200">
+                                            {member.displayName || member.email}
+                                          </span>
+                                          {item.assigneeId === member.uid && (
+                                            <svg className="w-4 h-4 ml-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Due date picker button */}
+                                <div className="relative">
+                                  {item.dueDate ? (
+                                    <button
+                                      onClick={() => setActiveItemDueDatePickerId(
+                                        activeItemDueDatePickerId === item.id ? null : item.id
+                                      )}
+                                      className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                                        dueDateStatus.isOverdue 
+                                          ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400'
+                                          : dueDateStatus.isDueToday
+                                            ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'
+                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-600 dark:text-slate-400'
+                                      } hover:ring-2 hover:ring-orange-400`}
+                                      title={`Due: ${dueDateStatus.label}`}
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => setActiveItemDueDatePickerId(
+                                        activeItemDueDatePickerId === item.id ? null : item.id
+                                      )}
+                                      className="w-6 h-6 rounded border border-dashed border-slate-300 dark:border-slate-500 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all"
+                                      title="Set due date"
+                                    >
+                                      <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  
+                                  {/* Due date picker dropdown */}
+                                  {activeItemDueDatePickerId === item.id && (
+                                    <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 z-20 p-3">
+                                      <div className="space-y-2">
+                                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Due date</label>
+                                        <input
+                                          type="date"
+                                          value={item.dueDate ? format(item.dueDate.toDate(), 'yyyy-MM-dd') : ''}
+                                          onChange={(e) => {
+                                            if (e.target.value) {
+                                              const date = new Date(e.target.value + 'T00:00:00');
+                                              handleChecklistItemDueDate(checklist.id, item.id, Timestamp.fromDate(date));
+                                            }
+                                          }}
+                                          className="w-full px-2 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-200"
+                                        />
+                                        
+                                        {/* Quick date options */}
+                                        <div className="flex flex-wrap gap-1 pt-1">
+                                          {[
+                                            { label: 'Today', days: 0 },
+                                            { label: 'Tomorrow', days: 1 },
+                                            { label: 'Next week', days: 7 },
+                                          ].map((opt) => {
+                                            const targetDate = new Date();
+                                            targetDate.setDate(targetDate.getDate() + opt.days);
+                                            return (
+                                              <button
+                                                key={opt.label}
+                                                onClick={() => handleChecklistItemDueDate(checklist.id, item.id, Timestamp.fromDate(targetDate))}
+                                                className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                                              >
+                                                {opt.label}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                        
+                                        {item.dueDate && (
+                                          <button
+                                            onClick={() => handleChecklistItemDueDate(checklist.id, item.id, null)}
+                                            className="w-full mt-2 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center justify-center gap-1"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Remove due date
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Delete button */}
+                                <button
+                                  onClick={() => handleDeleteChecklistItem(checklist.id, item.id)}
+                                  className="p-1 text-slate-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                  title="Delete item"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                       
                       {/* Add item input */}
@@ -2025,6 +2433,91 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Actions
             </h4>
+
+            {/* Watch/Subscribe button */}
+            <button
+              onClick={handleToggleWatch}
+              disabled={isTogglingWatch}
+              title={isWatching ? 'Stop watching this card' : 'Watch this card for updates'}
+              className={`w-full px-4 py-2.5 border rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm ${
+                isWatching
+                  ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/30'
+                  : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:border-cyan-200 dark:hover:border-cyan-800'
+              } disabled:opacity-50`}
+            >
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                isWatching
+                  ? 'bg-cyan-100 dark:bg-cyan-900/40'
+                  : 'bg-slate-100 dark:bg-slate-600 group-hover:bg-cyan-100 dark:group-hover:bg-cyan-900/40'
+              }`}>
+                <svg
+                  className={`w-4 h-4 transition-colors ${
+                    isWatching
+                      ? 'text-cyan-600 dark:text-cyan-400'
+                      : 'text-slate-400 dark:text-slate-300 group-hover:text-cyan-500'
+                  }`}
+                  fill={isWatching ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              </span>
+              <span className={`font-medium transition-colors ${
+                isWatching
+                  ? 'text-cyan-700 dark:text-cyan-300'
+                  : 'text-slate-600 dark:text-slate-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400'
+              }`}>
+                {isTogglingWatch ? 'Updating...' : isWatching ? 'Watching' : 'Watch'}
+              </span>
+              {isWatching && (
+                <svg className="w-4 h-4 text-cyan-600 dark:text-cyan-400 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+
+            {/* Watchers display */}
+            {watchers.length > 0 && (
+              <div className="space-y-2 p-3 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600">
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {watchers.length} Watching
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {watchers.slice(0, 5).map((watcher) => (
+                    <UserAvatar
+                      key={watcher.uid}
+                      user={watcher}
+                      size="sm"
+                      showTooltip={true}
+                    />
+                  ))}
+                  {watchers.length > 5 && (
+                    <div 
+                      className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center"
+                      title={`+${watchers.length - 5} more watchers`}
+                    >
+                      <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300">+{watchers.length - 5}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => setShowSaveTemplateModal(true)}
