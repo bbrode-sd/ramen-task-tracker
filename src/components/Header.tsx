@@ -60,65 +60,6 @@ const LanguageSettingsModal = dynamic(() => import('./LanguageSettingsModal').th
   loading: () => null,
 });
 
-function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-
-  const cycleTheme = () => {
-    const themeOrder = ['light', 'dark', 'system'] as const;
-    const currentIndex = themeOrder.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeOrder.length;
-    setTheme(themeOrder[nextIndex]);
-  };
-
-  const getTooltip = () => {
-    switch (theme) {
-      case 'system':
-        return 'Theme: System (auto)';
-      case 'light':
-        return 'Theme: Light';
-      case 'dark':
-        return 'Theme: Dark';
-    }
-  };
-
-  // Get the icon to show based on current state
-  const getIcon = () => {
-    if (theme === 'system') {
-      // System mode - show a computer/auto icon
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      );
-    }
-    if (resolvedTheme === 'dark') {
-      // Dark mode - show sun (click to go light)
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      );
-    }
-    // Light mode - show moon (click to go dark)
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-      </svg>
-    );
-  };
-
-  return (
-    <button
-      onClick={cycleTheme}
-      className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 relative group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-      aria-label={getTooltip()}
-      title={getTooltip()}
-    >
-      {getIcon()}
-    </button>
-  );
-}
-
 interface DueDateStats {
   overdue: number;
   today: number;
@@ -152,6 +93,7 @@ export function Header({
   dueDateStats,
 }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const { t } = useLocale();
   // Use optional filter hook - returns null when not in a FilterProvider (e.g., on home page)
   const filterContext = useFilterOptional();
@@ -183,10 +125,12 @@ export function Header({
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [archivedCount, setArchivedCount] = useState(0);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const localSearchInputRef = useRef<HTMLInputElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
@@ -341,6 +285,9 @@ export function Header({
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setShowMobileMenu(false);
       }
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setShowAccountMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -374,6 +321,38 @@ export function Header({
     setSearchQuery('');
     localSearchInputRef.current?.focus();
   }, [setSearchQuery]);
+
+  const cycleTheme = useCallback(() => {
+    const themeOrder = ['light', 'dark', 'system'] as const;
+    const currentIndex = themeOrder.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themeOrder.length;
+    setTheme(themeOrder[nextIndex]);
+  }, [setTheme, theme]);
+
+  const themeLabel = theme === 'system'
+    ? 'Theme: System (auto)'
+    : theme === 'light'
+      ? 'Theme: Light'
+      : 'Theme: Dark';
+
+  const themeIcon = theme === 'system' ? (
+    <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ) : resolvedTheme === 'dark' ? (
+    <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  ) : (
+    <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
+  );
+
+  const openKeyboardShortcuts = useCallback(() => {
+    const event = new KeyboardEvent('keydown', { key: '?' });
+    document.dispatchEvent(event);
+  }, []);
 
   const showSearchAndFilters = !!boardId;
 
@@ -1137,72 +1116,109 @@ export function Header({
         
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
           <SyncIndicator />
-          
-          {/* Help button with keyboard shortcut hint - hidden on small mobile */}
-          <div className="relative hidden sm:block">
-            <Tip
-              id="keyboard-shortcuts"
-              tip="Press ? for keyboard shortcuts"
-              shortcut="?"
-              position="bottom"
-            >
-              <button
-                onClick={() => {
-                  // Trigger keyboard shortcuts help modal by simulating ? key
-                  const event = new KeyboardEvent('keydown', { key: '?' });
-                  document.dispatchEvent(event);
-                }}
-                className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-                aria-label="Keyboard shortcuts"
-                title="Keyboard shortcuts (?)"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </Tip>
-            {/* Subtle shortcut hint badge */}
-            <kbd className="absolute -bottom-1 -right-1 px-1 py-0.5 text-[9px] font-bold bg-white/90 text-orange-600 rounded shadow-sm pointer-events-none">
-              ?
-            </kbd>
-          </div>
-          
-          <ThemeToggle />
           {user && (
             <>
-              {/* User info container - visible on all screen sizes */}
-              <div 
-                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/20 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/10 transition-colors"
-                aria-label={`Signed in as ${user.displayName || user.email || t('common.anonymous')}`}
-              >
-                {user.photoURL ? (
-                  <Image
-                    src={user.photoURL}
-                    alt=""
-                    width={28}
-                    height={28}
-                    className="rounded-full ring-2 ring-white/30"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <div 
-                    className="w-7 h-7 rounded-full ring-2 ring-white/30 bg-white/30 flex items-center justify-center text-white text-xs font-semibold"
-                    aria-hidden="true"
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  onClick={() => setShowAccountMenu(!showAccountMenu)}
+                  className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/20 hover:bg-white/25 rounded-xl backdrop-blur-sm border border-white/10 transition-colors"
+                  aria-label={`Signed in as ${user.displayName || user.email || t('common.anonymous')}`}
+                  aria-expanded={showAccountMenu}
+                  aria-haspopup="menu"
+                >
+                  {user.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="rounded-full ring-2 ring-white/30"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <div 
+                      className="w-7 h-7 rounded-full ring-2 ring-white/30 bg-white/30 flex items-center justify-center text-white text-xs font-semibold"
+                      aria-hidden="true"
+                    >
+                      {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : 'G'}
+                    </div>
+                  )}
+                  <span className="text-white text-sm font-medium max-w-[120px] sm:max-w-[150px] truncate">
+                    {user.displayName || user.email || t('common.anonymous')}
+                  </span>
+                  <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showAccountMenu && (
+                  <div
+                    role="menu"
+                    className="absolute top-full right-0 mt-2 w-60 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
                   >
-                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : 'G'}
+                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        {user.displayName || user.email || t('common.anonymous')}
+                      </div>
+                    </div>
+
+                    <div className="py-1">
+                      <Tip
+                        id="keyboard-shortcuts-menu"
+                        tip="Press ? for keyboard shortcuts"
+                        shortcut="?"
+                        position="left"
+                      >
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            openKeyboardShortcuts();
+                            setShowAccountMenu(false);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Keyboard shortcuts</span>
+                          <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">?</span>
+                        </button>
+                      </Tip>
+
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          cycleTheme();
+                          setShowAccountMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                        aria-label={themeLabel}
+                        title={themeLabel}
+                      >
+                        {themeIcon}
+                        <span>{themeLabel}</span>
+                      </button>
+
+                      <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
+
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          setShowAccountMenu(false);
+                          signOut();
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                        aria-label={t('common.signOut')}
+                      >
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+                        </svg>
+                        <span>{t('common.signOut')}</span>
+                      </button>
+                    </div>
                   </div>
                 )}
-                <span className="text-white text-sm font-medium max-w-[120px] sm:max-w-[150px] truncate">
-                  {user.displayName || user.email || t('common.anonymous')}
-                </span>
               </div>
-              <button
-                onClick={signOut}
-                aria-label={t('common.signOut')}
-                className="hidden sm:flex px-3 md:px-4 py-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-sm font-medium rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/10 hover:border-white/20 touch-manipulation min-h-[44px] items-center justify-center"
-              >
-                {t('common.signOut')}
-              </button>
             </>
           )}
         </div>
