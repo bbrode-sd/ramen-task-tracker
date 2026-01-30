@@ -544,9 +544,14 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     // Updates expire after 10 seconds as a safety net
     const expiresAt = Date.now() + 10000;
     cardUpdates.forEach((update) => {
+      // For each card, use the new columnId if specified, otherwise preserve the card's existing columnId
+      // Bug fix: Previously used draggedCard.columnId as fallback, which incorrectly moved
+      // other cards to the source column when dragging between columns
+      const existingCard = cards.find(c => c.id === update.id);
+      const columnId = update.columnId !== undefined ? update.columnId : existingCard?.columnId;
       pendingCardUpdatesRef.current.set(update.id, {
         order: update.order,
-        columnId: update.columnId || draggedCard.columnId,
+        columnId: columnId!,
         expiresAt,
       });
     });
