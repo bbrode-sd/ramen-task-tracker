@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { DragDropContext, Droppable, DropResult, DragStart, DragUpdate } from '@hello-pangea/dnd';
@@ -503,14 +504,14 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         order: index,
       }));
 
-      // Optimistic update for columns
-      setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
+      // Optimistic update for columns - use flushSync to force immediate re-render
+      // This ensures the DnD library's snapshot state updates before we return
+      flushSync(() => {
+        setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
+      });
       
       // Re-enable subscription updates after optimistic update is applied
-      // Use setTimeout to ensure React has processed the state update
-      setTimeout(() => {
-        isDraggingRef.current = false;
-      }, 50);
+      isDraggingRef.current = false;
       
       // Fire and forget - don't block the UI
       reorderColumns(boardId, columnUpdates).catch(console.error);
@@ -574,26 +575,26 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       });
     });
 
-    // Optimistic update - immediate UI response
-    setCards((prevCards) =>
-      prevCards.map((card) => {
-        const update = cardUpdates.find((u) => u.id === card.id);
-        if (update) {
-          return {
-            ...card,
-            order: update.order,
-            columnId: update.columnId || card.columnId,
-          };
-        }
-        return card;
-      })
-    );
+    // Optimistic update - use flushSync to force immediate re-render
+    // This ensures the DnD library's snapshot state updates before we return
+    flushSync(() => {
+      setCards((prevCards) =>
+        prevCards.map((card) => {
+          const update = cardUpdates.find((u) => u.id === card.id);
+          if (update) {
+            return {
+              ...card,
+              order: update.order,
+              columnId: update.columnId || card.columnId,
+            };
+          }
+          return card;
+        })
+      );
+    });
 
     // Re-enable subscription updates after optimistic update is applied
-    // Use setTimeout to ensure React has processed the state update
-    setTimeout(() => {
-      isDraggingRef.current = false;
-    }, 50);
+    isDraggingRef.current = false;
 
     // Fire and forget - don't await, let it happen in the background
     // The subscription will eventually sync, and pending updates prevent flickering
