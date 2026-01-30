@@ -515,7 +515,7 @@ function ColumnComponent({
                 {...provided.droppableProps}
                 className={`flex-1 overflow-y-auto px-2 py-2 min-h-[60px] transition-all duration-200 column-drop-zone rounded-lg ${
                   snapshot.isDraggingOver 
-                    ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 shadow-inner' 
+                    ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 dark:from-orange-900/30 dark:to-orange-800/20 shadow-inner' 
                     : ''
                 }`}
                 style={{

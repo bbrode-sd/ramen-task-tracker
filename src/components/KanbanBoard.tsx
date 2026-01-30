@@ -967,7 +967,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                             setIsAddingColumn(false);
                             setNewColumnName('');
                           }}
-                          className="px-4 py-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                          className="px-4 py-2.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-xl transition-colors"
                         >
                           Cancel
                         </button>
@@ -978,7 +978,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
                 {/* Search empty state when filters active but no results */}
                 {columns.length > 0 && hasActiveFilters && matchingCardsCount === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-xl">
+                  <div className="absolute inset-0 flex items-center justify-center bg-[var(--surface-overlay)] backdrop-blur-sm z-10 rounded-xl">
                     <SearchEmptyState
                       searchQuery={searchInputRef.current?.value || 'filter'}
                       onClearSearch={() => {
@@ -1044,7 +1044,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                               setIsAddingColumn(false);
                               setNewColumnName('');
                             }}
-                            className="px-4 py-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                            className="px-4 py-2.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-xl transition-colors"
                           >
                             Cancel
                           </button>
@@ -1054,11 +1054,11 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                       <button
                         onClick={() => setIsAddingColumn(true)}
                         data-onboarding="add-column"
-                        className="w-full px-4 py-3.5 bg-white/40 hover:bg-white/70 backdrop-blur-sm rounded-2xl text-slate-600 hover:text-slate-800 transition-all flex items-center gap-3 shadow-sm hover:shadow-md border border-white/30 hover:border-white/50 group"
+                        className="w-full px-4 py-3.5 bg-[var(--surface)]/80 hover:bg-[var(--surface)] backdrop-blur-sm rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-3 shadow-sm hover:shadow-md border border-[var(--border-subtle)] hover:border-[var(--border)] group"
                       >
-                        <span className="w-8 h-8 flex items-center justify-center bg-slate-100 group-hover:bg-orange-100 rounded-xl transition-colors">
+                        <span className="w-8 h-8 flex items-center justify-center bg-[var(--surface-hover)] group-hover:bg-[var(--primary-light)] rounded-xl transition-colors">
                           <svg
-                            className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors"
+                            className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-colors"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
