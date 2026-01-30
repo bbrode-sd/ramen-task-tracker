@@ -460,7 +460,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     }));
   }, [getCardsForColumn, matchesFilter, user?.uid]);
 
-  const handleDragEnd = async (result: DropResult) => {
+  const handleDragEnd = (result: DropResult) => {
     setIsDragging(false);
     stopEdgeScroll();
     
@@ -491,8 +491,11 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         order: index,
       }));
 
+      // Optimistic update for columns
       setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
-      await reorderColumns(boardId, columnUpdates);
+      
+      // Fire and forget - don't block the UI
+      reorderColumns(boardId, columnUpdates).catch(console.error);
       
       // Accessibility: Announce column move
       announceToScreenReader(`List ${removed.name} moved to position ${destination.index + 1}.`);
@@ -542,7 +545,18 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       }
     });
 
-    // Optimistic update
+    // Register pending updates BEFORE optimistic update
+    // This prevents the Firestore subscription from overwriting our changes
+    const now = Date.now();
+    cardUpdates.forEach((update) => {
+      pendingCardUpdatesRef.current.set(update.id, {
+        order: update.order,
+        columnId: update.columnId || cards.find(c => c.id === update.id)?.columnId || destColumnId,
+        timestamp: now,
+      });
+    });
+
+    // Optimistic update - immediate UI response
     setCards((prevCards) =>
       prevCards.map((card) => {
         const update = cardUpdates.find((u) => u.id === card.id);
@@ -557,14 +571,29 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       })
     );
 
-    await reorderCards(boardId, cardUpdates);
+    // Fire and forget - don't await, let it happen in the background
+    // The subscription will eventually sync, and pending updates prevent flickering
+    reorderCards(boardId, cardUpdates)
+      .then(() => {
+        // Clear pending updates after successful save
+        cardUpdates.forEach((update) => {
+          pendingCardUpdatesRef.current.delete(update.id);
+        });
+      })
+      .catch((error) => {
+        console.error('Failed to save card reorder:', error);
+        // Clear pending updates on error too - subscription will restore correct state
+        cardUpdates.forEach((update) => {
+          pendingCardUpdatesRef.current.delete(update.id);
+        });
+      });
     
-    // Log activity if card was moved to a different column
+    // Log activity if card was moved to a different column (fire and forget)
     if (sourceColumnId !== destColumnId && user) {
       const sourceColumn = columns.find(c => c.id === sourceColumnId);
       const destColumn = columns.find(c => c.id === destColumnId);
       
-      await logActivity(boardId, {
+      logActivity(boardId, {
         cardId: draggableId,
         cardTitle: draggedCard.titleEn,
         type: 'card_moved',
@@ -575,7 +604,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
           from: sourceColumn?.name || 'Unknown',
           to: destColumn?.name || 'Unknown',
         },
-      });
+      }).catch(console.error);
       
       // Accessibility: Announce card move to different column
       announceToScreenReader(`Card ${draggedCard.titleEn} moved from ${sourceColumn?.name} to ${destColumn?.name}.`);
