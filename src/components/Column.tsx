@@ -392,7 +392,7 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-[var(--surface)]/95 backdrop-blur-md rounded-2xl flex flex-col max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-130px)] border ${
+          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-[var(--surface)]/95 backdrop-blur-md rounded-2xl flex flex-col border ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
               : 'shadow-md transition-all duration-300'
@@ -507,14 +507,13 @@ function ColumnComponent({
             </div>
           </div>
 
-          {/* Cards - Note: overflow-y-auto is needed but causes nested scroll warning */}
-          {/* The warning is acceptable - the DnD library still works, just suboptimally */}
+          {/* Cards */}
           <Droppable droppableId={column.id} type="card">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 min-h-[60px] transition-colors duration-200 column-drop-zone rounded-lg ${
+                className={`flex-1 px-2 py-2 min-h-[60px] transition-colors duration-200 column-drop-zone rounded-lg ${
                   snapshot.isDraggingOver 
                     ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 dark:from-orange-900/30 dark:to-orange-800/20' 
                     : ''
