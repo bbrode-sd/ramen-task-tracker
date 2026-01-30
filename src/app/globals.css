@@ -523,6 +523,11 @@ button, a, input, textarea, select {
 /* Drag handle cursor */
 .drag-handle {
   cursor: grab;
+  /* Required for @hello-pangea/dnd touch dragging to work */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .drag-handle:active {
@@ -896,15 +901,16 @@ button, a, input, textarea, select {
 
 /* Touch-friendly drag and drop */
 @media (hover: none) and (pointer: coarse) {
-  .drag-handle {
-    touch-action: none;
-  }
-  
   .card-dragging {
     transform: scale(1.03);
     box-shadow: 
       0 25px 50px -12px rgba(0, 0, 0, 0.3),
       0 0 0 3px rgba(249, 115, 22, 0.5);
+  }
+  
+  /* Ensure draggable columns also work on touch */
+  [data-rbd-draggable-context-id] {
+    touch-action: none;
   }
 }
 
