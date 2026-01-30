@@ -232,8 +232,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         // CRITICAL: Skip ALL subscription updates while dragging
         // The optimistic update already has the correct state
         if (isDraggingRef.current) {
+          console.log('[DnD] Subscription update SKIPPED (dragging)');
           return;
         }
+        console.log('[DnD] Subscription update applied');
         
         const now = Date.now();
         const pendingUpdates = pendingCardUpdatesRef.current;
