@@ -220,11 +220,20 @@ textarea::placeholder {
 /* Ensure readable text color for all form inputs */
 input, textarea, select {
   color: #111827 !important; /* gray-900 - force dark text for readability */
+  background-color: white;
 }
 
 /* Allow dark mode to override input colors */
 .dark input, .dark textarea, .dark select {
   color: #f1f5f9 !important; /* slate-100 - light text for dark mode */
+  background-color: #334155; /* slate-700 */
+}
+
+/* Ensure inputs within dark mode containers also get proper colors */
+:where(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+:where(.dark) textarea,
+:where(.dark) select {
+  color: #f1f5f9 !important;
 }
 
 /* Dark mode scrollbar */

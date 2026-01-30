@@ -67,15 +67,15 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900 dark:to-violet-800 flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-violet-500"
+                className="w-5 h-5 text-violet-500 dark:text-violet-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -84,15 +84,15 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-800">Translation Settings</h2>
-              <p className="text-xs text-slate-400">Configure how translations work</p>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Translation Settings</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Configure how translations work</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
           >
-            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -102,10 +102,10 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
         <div className="p-6 space-y-6">
           {/* Primary Language */}
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-slate-700">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
               Primary Language
             </label>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               When you type, which language do you usually write in?
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -115,12 +115,12 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
                   onClick={() => setPrimaryLanguage(option.value)}
                   className={`p-3 rounded-xl border-2 transition-all text-left ${
                     primaryLanguage === option.value
-                      ? 'border-violet-500 bg-violet-50'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30'
+                      : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
                 >
-                  <div className="text-sm font-medium text-slate-800">{option.label}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{option.description}</div>
+                  <div className="text-sm font-medium text-slate-800 dark:text-white">{option.label}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{option.description}</div>
                 </button>
               ))}
             </div>
@@ -128,10 +128,10 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
 
           {/* Translation Context */}
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-slate-700">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
               Translation Context
             </label>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Choose a specialized context to improve translation accuracy
             </p>
             <div className="space-y-2">
@@ -141,14 +141,14 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
                   onClick={() => setContextMode(option.value)}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-start gap-3 ${
                     contextMode === option.value
-                      ? 'border-violet-500 bg-violet-50'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30'
+                      : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                     contextMode === option.value
                       ? 'border-violet-500 bg-violet-500'
-                      : 'border-slate-300'
+                      : 'border-slate-300 dark:border-slate-500'
                   }`}>
                     {contextMode === option.value && (
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -157,8 +157,8 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
                     )}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-800">{option.label}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">{option.description}</div>
+                    <div className="text-sm font-medium text-slate-800 dark:text-white">{option.label}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{option.description}</div>
                   </div>
                 </button>
               ))}
@@ -168,16 +168,16 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
           {/* Custom Context Input */}
           {contextMode === 'custom' && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                 Custom Context Instructions
               </label>
               <textarea
                 value={customContext}
                 onChange={(e) => setCustomContext(e.target.value)}
                 placeholder="e.g., Use formal language. Technical terms should be translated accurately. Maintain brand names in English..."
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 min-h-[100px] resize-y text-sm text-slate-800 placeholder:text-slate-400"
+                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 min-h-[100px] resize-y text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 These instructions will be included with every translation request.
               </p>
             </div>
@@ -185,10 +185,10 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors font-medium"
+            className="px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors font-medium"
           >
             Cancel
           </button>

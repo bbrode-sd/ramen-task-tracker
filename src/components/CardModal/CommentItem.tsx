@@ -107,10 +107,10 @@ export function CommentItem({
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-sm font-semibold text-slate-800">
+          <span className="text-sm font-semibold text-slate-800 dark:text-white">
             {comment.createdByName}
           </span>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-400 dark:text-slate-500">
             {comment.createdAt instanceof Timestamp
               ? format(comment.createdAt.toDate(), 'MMM d, yyyy h:mm a')
               : ''}
@@ -128,7 +128,7 @@ export function CommentItem({
         {/* Bilingual comment display - side by side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* English version */}
-          <div className={`bg-slate-50 border rounded-xl px-4 py-3 ${detectedLang === 'en' ? 'border-blue-200' : 'border-slate-100'}`}>
+          <div className={`bg-slate-50 dark:bg-slate-700/50 border rounded-xl px-4 py-3 ${detectedLang === 'en' ? 'border-blue-200 dark:border-blue-800' : 'border-slate-100 dark:border-slate-600'}`}>
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center justify-center w-6 h-5 text-[9px] font-bold text-blue-600 bg-blue-50 rounded border border-blue-100">EN</span>
               <span className={`text-[10px] font-medium ${detectedLang === 'en' ? 'text-blue-500' : 'text-slate-400'}`}>
@@ -152,7 +152,7 @@ export function CommentItem({
                 <textarea
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
-                  className="w-full text-sm text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   rows={3}
                   autoFocus
                 />
@@ -174,12 +174,12 @@ export function CommentItem({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{englishContent}</p>
+              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{englishContent}</p>
             )}
           </div>
           
           {/* Japanese version */}
-          <div className={`bg-slate-50 border rounded-xl px-4 py-3 ${detectedLang === 'ja' ? 'border-red-200' : 'border-slate-100'}`}>
+          <div className={`bg-slate-50 dark:bg-slate-700/50 border rounded-xl px-4 py-3 ${detectedLang === 'ja' ? 'border-red-200 dark:border-red-800' : 'border-slate-100 dark:border-slate-600'}`}>
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center justify-center w-6 h-5 text-[9px] font-bold text-red-600 bg-red-50 rounded border border-red-100">JP</span>
               <span className={`text-[10px] font-medium ${detectedLang === 'ja' ? 'text-red-500' : 'text-slate-400'}`}>
@@ -203,7 +203,7 @@ export function CommentItem({
                 <textarea
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
-                  className="w-full text-sm text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   rows={3}
                   autoFocus
                 />
@@ -225,7 +225,7 @@ export function CommentItem({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{japaneseContent}</p>
+              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{japaneseContent}</p>
             )}
           </div>
         </div>
