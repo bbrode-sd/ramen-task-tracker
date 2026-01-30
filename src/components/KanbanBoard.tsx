@@ -104,6 +104,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const scrollAnimationRef = useRef<number | null>(null);
   const edgeScrollRef = useRef({ left: false, right: false });
   
+  // Track pending optimistic updates to prevent subscription from overwriting them
+  const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; expiresAt: number }>>(new Map());
+  
   
   // Accessibility: Screen reader announcement state
   const [srAnnouncement, setSrAnnouncement] = useState('');
@@ -222,7 +225,38 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     const unsubscribe = subscribeToCards(
       boardId,
       (fetchedCards) => {
-        setCards(fetchedCards);
+        const now = Date.now();
+        const pending = pendingCardUpdatesRef.current;
+        
+        // Clean up expired pending updates
+        for (const [cardId, update] of pending.entries()) {
+          if (now >= update.expiresAt) {
+            pending.delete(cardId);
+          }
+        }
+        
+        // If no pending updates, use server data directly
+        if (pending.size === 0) {
+          setCards(fetchedCards);
+          setLoading(false);
+          return;
+        }
+        
+        // Merge server data with pending optimistic updates
+        // Pending updates take priority to prevent snap-back
+        const mergedCards = fetchedCards.map(card => {
+          const pendingUpdate = pending.get(card.id);
+          if (pendingUpdate) {
+            return {
+              ...card,
+              order: pendingUpdate.order,
+              columnId: pendingUpdate.columnId,
+            };
+          }
+          return card;
+        });
+        
+        setCards(mergedCards);
         setLoading(false);
       },
       {
@@ -377,7 +411,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
   // Handle drag start
   const handleDragStart = useCallback((start: DragStart) => {
-    console.log('[DnD] handleDragStart', start.draggableId, start.type);
     setIsDragging(true);
     
     // If we're dragging a card that's not selected, clear selection and select just this one
@@ -427,14 +460,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }, [getCardsForColumn, matchesFilter, user?.uid]);
 
   const handleDragEnd = (result: DropResult) => {
-    console.log('[DnD] handleDragEnd called', result);
     setIsDragging(false);
     stopEdgeScroll();
     
     const { destination, source, draggableId, type } = result;
 
     if (!destination) {
-      console.log('[DnD] No destination, cancelled');
       setSelectedCards(new Set());
       announceToScreenReader('Drop cancelled. Item returned to original position.');
       return;
@@ -444,7 +475,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
-      console.log('[DnD] Same position, no-op');
       return;
     }
 
@@ -506,6 +536,18 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       }
     });
 
+    // Register pending updates BEFORE optimistic update
+    // This prevents the Firestore subscription from overwriting our changes
+    // Updates expire after 10 seconds as a safety net
+    const expiresAt = Date.now() + 10000;
+    cardUpdates.forEach((update) => {
+      pendingCardUpdatesRef.current.set(update.id, {
+        order: update.order,
+        columnId: update.columnId || draggedCard.columnId,
+        expiresAt,
+      });
+    });
+
     // Optimistic update
     setCards((prevCards) =>
       prevCards.map((card) => {
@@ -522,8 +564,21 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     );
 
     // Save to Firestore (fire and forget)
-    console.log('[DnD] Saving to Firestore');
-    reorderCards(boardId, cardUpdates).catch(console.error);
+    // Clear pending updates after Firestore confirms
+    reorderCards(boardId, cardUpdates)
+      .then(() => {
+        // Clear the pending updates for these cards
+        cardUpdates.forEach((update) => {
+          pendingCardUpdatesRef.current.delete(update.id);
+        });
+      })
+      .catch((error) => {
+        console.error('Failed to save card reorder:', error);
+        // Clear pending on error too - subscription will restore correct state
+        cardUpdates.forEach((update) => {
+          pendingCardUpdatesRef.current.delete(update.id);
+        });
+      });
     
     // Log activity if card was moved to a different column
     if (sourceColumnId !== destColumnId && user) {
