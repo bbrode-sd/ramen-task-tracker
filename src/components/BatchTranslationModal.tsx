@@ -183,11 +183,11 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+        className="bg-[var(--surface)] rounded-2xl shadow-2xl w-full max-w-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center">
               <svg
@@ -200,15 +200,15 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-800">Batch Translation</h2>
-              <p className="text-xs text-slate-400">Translate all cards missing translations</p>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Batch Translation</h2>
+              <p className="text-xs text-[var(--text-muted)]">Translate all cards missing translations</p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 hover:bg-[var(--surface-hover)] rounded-xl transition-colors"
           >
-            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -220,7 +220,7 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
             <div className="space-y-6">
               {/* Direction selector */}
               <div className="space-y-3">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-sm font-semibold text-[var(--text-primary)]">
                   Translation Direction
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -228,45 +228,45 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
                     onClick={() => setSelectedDirection('en-to-ja')}
                     className={`p-3 rounded-xl border-2 transition-all ${
                       selectedDirection === 'en-to-ja'
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                        : 'border-[var(--border)] hover:border-[var(--border-strong)]'
                     }`}
                   >
-                    <div className="text-sm font-medium text-slate-800">EN → JP</div>
-                    <div className="text-[10px] text-slate-500">English to Japanese</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">EN → JP</div>
+                    <div className="text-[10px] text-[var(--text-tertiary)]">English to Japanese</div>
                   </button>
                   <button
                     onClick={() => setSelectedDirection('ja-to-en')}
                     className={`p-3 rounded-xl border-2 transition-all ${
                       selectedDirection === 'ja-to-en'
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                        : 'border-[var(--border)] hover:border-[var(--border-strong)]'
                     }`}
                   >
-                    <div className="text-sm font-medium text-slate-800">JP → EN</div>
-                    <div className="text-[10px] text-slate-500">Japanese to English</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">JP → EN</div>
+                    <div className="text-[10px] text-[var(--text-tertiary)]">Japanese to English</div>
                   </button>
                   <button
                     onClick={() => setSelectedDirection('both')}
                     className={`p-3 rounded-xl border-2 transition-all ${
                       selectedDirection === 'both'
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                        : 'border-[var(--border)] hover:border-[var(--border-strong)]'
                     }`}
                   >
-                    <div className="text-sm font-medium text-slate-800">Both</div>
-                    <div className="text-[10px] text-slate-500">Fill all missing</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">Both</div>
+                    <div className="text-[10px] text-[var(--text-tertiary)]">Fill all missing</div>
                   </button>
                 </div>
               </div>
 
               {/* Summary */}
-              <div className="bg-slate-50 rounded-xl p-4">
+              <div className="bg-[var(--surface-hover)] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-slate-700">Cards to translate:</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Cards to translate:</span>
                   <span className="text-lg font-bold text-emerald-600">{cardsNeedingTranslation.length}</span>
                 </div>
-                <div className="text-xs text-slate-500 space-y-1">
+                <div className="text-xs text-[var(--text-tertiary)] space-y-1">
                   <p>Total items to translate: {buildTranslationItems().length}</p>
                   <p>Translation context: <span className="font-medium capitalize">{settings.contextMode}</span></p>
                 </div>
@@ -283,13 +283,13 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
               {/* Preview of cards needing translation */}
               {cardsNeedingTranslation.length > 0 && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-slate-700">
+                  <label className="block text-sm font-semibold text-[var(--text-primary)]">
                     Cards ({cardsNeedingTranslation.length})
                   </label>
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 border border-slate-200 rounded-xl p-2">
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 border border-[var(--border)] rounded-xl p-2">
                     {cardsNeedingTranslation.slice(0, 20).map(card => (
-                      <div key={card.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg text-sm">
-                        <span className="text-slate-700 truncate flex-1">
+                      <div key={card.id} className="flex items-center gap-2 p-2 bg-[var(--surface-hover)] rounded-lg text-sm">
+                        <span className="text-[var(--text-primary)] truncate flex-1">
                           {card.titleEn || card.titleJa || 'Untitled'}
                         </span>
                         {!card.titleJa && card.titleEn && (
@@ -301,7 +301,7 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
                       </div>
                     ))}
                     {cardsNeedingTranslation.length > 20 && (
-                      <div className="text-xs text-slate-400 text-center py-1">
+                      <div className="text-xs text-[var(--text-muted)] text-center py-1">
                         And {cardsNeedingTranslation.length - 20} more...
                       </div>
                     )}
@@ -314,14 +314,14 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
               {/* Progress */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">
                     {isComplete ? 'Translation Complete' : 'Translating...'}
                   </span>
                   <span className="text-sm font-bold text-emerald-600">
                     {progress.completed} / {progress.total}
                   </span>
                 </div>
-                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-3 bg-[var(--surface-hover)] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
                       isComplete && errorCount > 0
@@ -332,7 +332,7 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
                   />
                 </div>
                 {!isComplete && progress.current && (
-                  <p className="text-xs text-slate-500 flex items-center gap-2">
+                  <p className="text-xs text-[var(--text-tertiary)] flex items-center gap-2">
                     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -344,28 +344,28 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
 
               {/* Results summary */}
               {isComplete && (
-                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                <div className="flex items-center gap-4 p-4 bg-[var(--surface-hover)] rounded-xl">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-emerald-600">{successCount}</div>
-                      <div className="text-[10px] text-slate-500">Translated</div>
+                      <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{successCount}</div>
+                      <div className="text-[10px] text-[var(--text-tertiary)]">Translated</div>
                     </div>
                   </div>
                   {errorCount > 0 && (
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
+                        <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-lg font-bold text-red-600">{errorCount}</div>
-                        <div className="text-[10px] text-slate-500">Failed</div>
+                        <div className="text-lg font-bold text-red-600 dark:text-red-400">{errorCount}</div>
+                        <div className="text-[10px] text-[var(--text-tertiary)]">Failed</div>
                       </div>
                     </div>
                   )}
@@ -373,15 +373,15 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
               )}
 
               {/* Translation items list */}
-              <div className="max-h-60 overflow-y-auto space-y-2 border border-slate-200 rounded-xl p-2">
+              <div className="max-h-60 overflow-y-auto space-y-2 border border-[var(--border)] rounded-xl p-2">
                 {translationItems.map((item, index) => (
                   <div
                     key={`${item.cardId}-${item.field}-${index}`}
                     className={`flex items-center gap-3 p-2 rounded-lg text-sm ${
-                      item.status === 'completed' ? 'bg-emerald-50' :
-                      item.status === 'error' ? 'bg-red-50' :
-                      item.status === 'translating' ? 'bg-blue-50' :
-                      'bg-slate-50'
+                      item.status === 'completed' ? 'bg-emerald-50 dark:bg-emerald-900/30' :
+                      item.status === 'error' ? 'bg-red-50 dark:bg-red-900/30' :
+                      item.status === 'translating' ? 'bg-blue-50 dark:bg-blue-900/30' :
+                      'bg-[var(--surface-hover)]'
                     }`}
                   >
                     {/* Status icon */}
@@ -403,14 +403,14 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
                         </svg>
                       )}
                       {item.status === 'pending' && (
-                        <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                        <div className="w-4 h-4 rounded-full border-2 border-[var(--border-strong)]" />
                       )}
                     </div>
                     
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="truncate text-slate-700">{item.cardTitle}</div>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="truncate text-[var(--text-primary)]">{item.cardTitle}</div>
+                      <div className="text-[10px] text-[var(--text-tertiary)]">
                         {item.field.replace(/([A-Z])/g, ' $1').trim()} → {item.targetLanguage.toUpperCase()}
                       </div>
                     </div>
@@ -422,10 +422,10 @@ export function BatchTranslationModal({ isOpen, onClose, cards, boardId }: Batch
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 flex-shrink-0">
+        <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex justify-end gap-3 flex-shrink-0">
           <button
             onClick={handleClose}
-            className="px-4 py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors font-medium"
+            className="px-4 py-2.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-xl transition-colors font-medium"
           >
             {isComplete ? 'Close' : 'Cancel'}
           </button>

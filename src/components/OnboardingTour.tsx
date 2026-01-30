@@ -121,16 +121,16 @@ function OnboardingTooltip({
   const isLastStep = stepNumber === totalSteps;
 
   const arrowStyles: Record<string, string> = {
-    top: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-white',
-    bottom: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-white',
-    left: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-white',
-    right: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-white',
+    top: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-[var(--surface)]',
+    bottom: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-[var(--surface)]',
+    left: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-[var(--surface)]',
+    right: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-[var(--surface)]',
   };
 
   return (
     <div
       ref={tooltipRef}
-      className={`fixed z-[100] w-[350px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transition-all duration-300 ${
+      className={`fixed z-[100] w-[350px] bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden transition-all duration-300 ${
         isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}
       style={{
@@ -163,13 +163,13 @@ function OnboardingTooltip({
 
       {/* Content */}
       <div className="px-5 py-4">
-        <h3 className="text-lg font-bold text-slate-800 mb-2">{step.title}</h3>
-        <p className="text-slate-600 text-sm leading-relaxed mb-4">{step.description}</p>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{step.title}</h3>
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed mb-4">{step.description}</p>
 
         {step.action && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 rounded-lg border border-orange-100 mb-4">
+          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg border border-orange-100 dark:border-orange-800 mb-4">
             <span className="text-orange-500">👆</span>
-            <span className="text-sm text-orange-700 font-medium">{step.action}</span>
+            <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">{step.action}</span>
           </div>
         )}
 
@@ -183,7 +183,7 @@ function OnboardingTooltip({
                   ? 'w-6 bg-orange-500'
                   : i + 1 < stepNumber
                   ? 'w-1.5 bg-orange-300'
-                  : 'w-1.5 bg-slate-200'
+                  : 'w-1.5 bg-[var(--border)]'
               }`}
             />
           ))}
@@ -196,8 +196,8 @@ function OnboardingTooltip({
             disabled={isFirstStep}
             className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
               isFirstStep
-                ? 'text-slate-300 cursor-not-allowed'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'text-[var(--text-muted)] cursor-not-allowed'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
             }`}
           >
             ← Back
@@ -360,7 +360,7 @@ export function ReplayTourButton({ className = '' }: { className?: string }) {
   return (
     <button
       onClick={handleReplay}
-      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all ${className}`}
+      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-xl transition-all ${className}`}
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path

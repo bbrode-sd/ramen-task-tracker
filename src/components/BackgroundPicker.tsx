@@ -148,10 +148,10 @@ export function BackgroundPicker({
       {/* Picker Panel */}
       <div
         ref={pickerRef}
-        className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200"
+        className="relative bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] w-full max-w-md mx-4 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,13 +159,13 @@ export function BackgroundPicker({
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-slate-800">Board Background</h3>
-              <p className="text-sm text-slate-500">Choose a gradient or solid color</p>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Board Background</h3>
+              <p className="text-sm text-[var(--text-tertiary)]">Choose a gradient or solid color</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -175,13 +175,13 @@ export function BackgroundPicker({
 
         {/* Tabs */}
         <div className="px-5 pt-4">
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+          <div className="flex gap-2 p-1 bg-[var(--surface-hover)] rounded-xl">
             <button
               onClick={() => setSelectedType('gradient')}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all ${
                 selectedType === 'gradient'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm'
+                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
               }`}
             >
               Gradients
@@ -190,8 +190,8 @@ export function BackgroundPicker({
               onClick={() => setSelectedType('color')}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all ${
                 selectedType === 'color'
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-[var(--surface)] text-[var(--text-primary)] shadow-sm'
+                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
               }`}
             >
               Solid Colors
@@ -202,7 +202,7 @@ export function BackgroundPicker({
         {/* Preview */}
         {previewBackground && (
           <div className="px-5 pt-4">
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Preview</div>
+            <div className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">Preview</div>
             <div
               className={`h-16 rounded-xl ${
                 previewBackground.type === 'gradient'
@@ -225,8 +225,8 @@ export function BackgroundPicker({
                   onMouseLeave={() => setPreviewBackground(null)}
                   className={`group relative rounded-xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
                     isSelected('gradient', gradient.value)
-                      ? 'ring-2 ring-orange-500 ring-offset-2'
-                      : 'ring-1 ring-slate-200 hover:ring-slate-300'
+                      ? 'ring-2 ring-orange-500 ring-offset-2 ring-offset-[var(--surface)]'
+                      : 'ring-1 ring-[var(--border)] hover:ring-[var(--border-strong)]'
                   }`}
                 >
                   <div
@@ -259,8 +259,8 @@ export function BackgroundPicker({
                   onMouseLeave={() => setPreviewBackground(null)}
                   className={`group relative aspect-square rounded-xl transition-all hover:scale-[1.05] active:scale-[0.95] ${
                     isSelected('color', color.value)
-                      ? 'ring-2 ring-orange-500 ring-offset-2'
-                      : 'ring-1 ring-slate-200 hover:ring-slate-300'
+                      ? 'ring-2 ring-orange-500 ring-offset-2 ring-offset-[var(--surface)]'
+                      : 'ring-1 ring-[var(--border)] hover:ring-[var(--border-strong)]'
                   }`}
                   style={{ backgroundColor: color.hex }}
                   title={color.name}
@@ -285,13 +285,13 @@ export function BackgroundPicker({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-          <p className="text-xs text-slate-500">
+        <div className="px-5 py-4 border-t border-[var(--border-subtle)] bg-[var(--surface-hover)] flex items-center justify-between">
+          <p className="text-xs text-[var(--text-tertiary)]">
             Changes are saved automatically
           </p>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-active)] rounded-lg transition-colors"
           >
             Done
           </button>

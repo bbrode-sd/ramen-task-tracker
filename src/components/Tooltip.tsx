@@ -264,9 +264,9 @@ export function ShortcutHint({
   className?: string;
 }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs text-slate-400 ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] ${className}`}>
       {label && <span>{label}</span>}
-      <kbd className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded border border-slate-200 font-mono text-[10px]">
+      <kbd className="px-1.5 py-0.5 bg-[var(--surface-hover)] text-[var(--text-tertiary)] rounded border border-[var(--border)] font-mono text-[10px]">
         {shortcut}
       </kbd>
     </span>

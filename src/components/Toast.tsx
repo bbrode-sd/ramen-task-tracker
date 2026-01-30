@@ -187,7 +187,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
           className="flex-shrink-0 p-1 rounded-lg hover:bg-black/5 transition-colors"
         >
           <svg
-            className="w-4 h-4 text-gray-400 hover:text-gray-600"
+            className="w-4 h-4 text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
