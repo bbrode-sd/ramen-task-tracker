@@ -829,7 +829,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-500 ${getBackgroundClasses()}`}>
+    <div className={`min-h-screen transition-colors duration-500 ${getBackgroundClasses()}`}>
       <Header
         boardName={board?.name}
         onBoardNameChange={handleBoardNameChange}
@@ -856,7 +856,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       <main 
         id="main-content"
         ref={boardContainerRef}
-        className="flex-1 overflow-x-auto p-4 sm:p-6"
+        className="overflow-x-auto p-4 sm:p-6"
         aria-label={`${board?.name || 'Board'} with ${columns.length} lists and ${cards.length} cards`}
       >
         {/* Edge scroll indicators */}
