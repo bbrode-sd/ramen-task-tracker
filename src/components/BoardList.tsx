@@ -135,7 +135,7 @@ export function BoardList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <Header />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
@@ -149,16 +149,16 @@ export function BoardList() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
         <Header />
         <div className="flex items-center justify-center h-[calc(100vh-64px)] p-4">
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 max-w-md w-full text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
               <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-slate-800 mb-2">{t('boards.errorLoading')}</h2>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">{t('boards.errorLoading')}</h2>
             <p className="text-slate-600 mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
@@ -173,18 +173,18 @@ export function BoardList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <Header />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">{t('boards.title')}</h2>
-          <p className="text-gray-500">{t('boards.subtitle')}</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">{t('boards.title')}</h2>
+          <p className="text-gray-500 dark:text-gray-400">{t('boards.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* Create new board card */}
           {showTemplatePicker ? (
-            <div className="bg-white rounded-2xl shadow-lg p-5 border-2 border-purple-400 ring-4 ring-purple-100 col-span-1 sm:col-span-2 md:col-span-2">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-5 border-2 border-purple-400 dark:border-purple-500 ring-4 ring-purple-100 dark:ring-purple-900/30 col-span-1 sm:col-span-2 md:col-span-2">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center">
@@ -278,7 +278,7 @@ export function BoardList() {
               )}
             </div>
           ) : isCreating ? (
-            <div className="bg-white rounded-2xl shadow-lg p-5 border-2 border-orange-400 ring-4 ring-orange-100">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-5 border-2 border-orange-400 dark:border-orange-500 ring-4 ring-orange-100 dark:ring-orange-900/30">
               {selectedTemplate && getTemplateInfo(selectedTemplate) && (
                 <div className="mb-4 p-3 bg-purple-50 rounded-xl border border-purple-100">
                   <div className="flex items-center gap-2 text-sm">
@@ -334,7 +334,7 @@ export function BoardList() {
             <button
               onClick={() => setShowTemplatePicker(true)}
               data-onboarding="create-board"
-              className="bg-white/60 hover:bg-white rounded-2xl shadow-md hover:shadow-xl p-6 border-2 border-dashed border-gray-200 hover:border-orange-400 transition-all duration-200 group flex flex-col items-center justify-center min-h-[140px] backdrop-blur-sm"
+              className="bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 rounded-2xl shadow-md hover:shadow-xl p-6 border-2 border-dashed border-gray-200 dark:border-slate-600 hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-200 group flex flex-col items-center justify-center min-h-[140px] backdrop-blur-sm"
             >
               <div className="w-14 h-14 rounded-2xl bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center mb-3 transition-colors">
                 <svg

@@ -258,3 +258,10 @@ export function useFilter() {
   }
   return context;
 }
+
+// Optional version that returns null when not in a FilterProvider
+// Use this for components that may be rendered outside of board context (e.g., Header)
+export function useFilterOptional(): FilterContextType | null {
+  const context = useContext(FilterContext);
+  return context ?? null;
+}

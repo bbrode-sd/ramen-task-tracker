@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFilter } from '@/contexts/FilterContext';
+import { useFilterOptional } from '@/contexts/FilterContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { SyncIndicator } from './SyncIndicator';
@@ -153,20 +153,20 @@ export function Header({
 }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { t } = useLocale();
-  const { 
-    searchQuery, 
-    setSearchQuery, 
-    selectedLabels, 
-    toggleLabel, 
-    selectedPriorities,
-    togglePriority,
-    hasActiveFilters, 
-    clearFilters,
-    sortBy,
-    sortOrder,
-    setSortBy,
-    setSortOrder,
-  } = useFilter();
+  // Use optional filter hook - returns null when not in a FilterProvider (e.g., on home page)
+  const filterContext = useFilterOptional();
+  const searchQuery = filterContext?.searchQuery ?? '';
+  const setSearchQuery = filterContext?.setSearchQuery ?? (() => {});
+  const selectedLabels = filterContext?.selectedLabels ?? [];
+  const toggleLabel = filterContext?.toggleLabel ?? (() => {});
+  const selectedPriorities = filterContext?.selectedPriorities ?? [];
+  const togglePriority = filterContext?.togglePriority ?? (() => {});
+  const hasActiveFilters = filterContext?.hasActiveFilters ?? false;
+  const clearFilters = filterContext?.clearFilters ?? (() => {});
+  const sortBy = filterContext?.sortBy ?? 'priority';
+  const sortOrder = filterContext?.sortOrder ?? 'desc';
+  const setSortBy = filterContext?.setSortBy ?? (() => {});
+  const setSortOrder = filterContext?.setSortOrder ?? (() => {});
   const { searchInputRef: keyboardSearchInputRef, expandSearchCallback } = useKeyboardShortcuts();
   
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
