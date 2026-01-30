@@ -64,7 +64,7 @@ function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const cycleTheme = () => {
-    const themeOrder = ['system', 'light', 'dark'] as const;
+    const themeOrder = ['light', 'dark', 'system'] as const;
     const currentIndex = themeOrder.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themeOrder.length;
     setTheme(themeOrder[nextIndex]);
@@ -73,12 +73,38 @@ function ThemeToggle() {
   const getTooltip = () => {
     switch (theme) {
       case 'system':
-        return 'Theme: System';
+        return 'Theme: System (auto)';
       case 'light':
         return 'Theme: Light';
       case 'dark':
         return 'Theme: Dark';
     }
+  };
+
+  // Get the icon to show based on current state
+  const getIcon = () => {
+    if (theme === 'system') {
+      // System mode - show a computer/auto icon
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      );
+    }
+    if (resolvedTheme === 'dark') {
+      // Dark mode - show sun (click to go light)
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      );
+    }
+    // Light mode - show moon (click to go dark)
+    return (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+    );
   };
 
   return (
@@ -88,42 +114,7 @@ function ThemeToggle() {
       aria-label={getTooltip()}
       title={getTooltip()}
     >
-      {/* Sun icon - shown in dark mode */}
-      <svg
-        className={`w-5 h-5 transition-all duration-300 ${
-          resolvedTheme === 'dark' ? 'opacity-100 rotate-0' : 'opacity-0 rotate-90 absolute'
-        }`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-        />
-      </svg>
-      {/* Moon icon - shown in light mode */}
-      <svg
-        className={`w-5 h-5 transition-all duration-300 ${
-          resolvedTheme === 'light' ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90 absolute'
-        }`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-        />
-      </svg>
-      {/* System indicator dot */}
-      {theme === 'system' && (
-        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-white rounded-full shadow-sm" />
-      )}
+      {getIcon()}
     </button>
   );
 }

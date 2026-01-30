@@ -603,15 +603,15 @@ function CardComponent({
           aria-grabbed={snapshot.isDragging}
           aria-selected={isSelected}
           style={getDragStyle(snapshot, provided.draggableProps.style)}
-          className={`relative bg-white rounded-xl mb-2.5 cursor-pointer border group drag-handle
+          className={`relative bg-white dark:bg-slate-800 rounded-xl mb-2.5 cursor-pointer border group drag-handle
             ${snapshot.isDragging 
               ? 'card-dragging drag-shadow z-50' 
-              : 'shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-200'
+              : 'shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-200 dark:hover:border-slate-600'
             }
             ${snapshot.isDropAnimating ? 'animate-drop' : ''}
-            ${isDimmed ? 'opacity-40 scale-[0.98] border-slate-100' : ''} 
-            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 shadow-md' : 'border-slate-100'}
-            ${isSelected && !snapshot.isDragging ? 'ring-2 ring-orange-500 bg-orange-50/50' : ''}
+            ${isDimmed ? 'opacity-40 scale-[0.98] border-slate-100 dark:border-slate-700' : ''} 
+            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 dark:border-orange-600 shadow-md' : 'border-slate-100 dark:border-slate-700'}
+            ${isSelected && !snapshot.isDragging ? 'ring-2 ring-orange-500 bg-orange-50/50 dark:bg-orange-900/20' : ''}
           `}
         >
           {/* Screen reader drag instructions */}
@@ -651,7 +651,7 @@ function CardComponent({
                     e.stopPropagation();
                     onClick();
                   }}
-                  className="p-2 sm:p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 text-slate-500 hover:text-orange-600 hover:bg-orange-50 hover:border-orange-200 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                  className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:border-orange-200 dark:hover:border-orange-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                   aria-label="Edit card (e)"
                 >
                   <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -668,7 +668,7 @@ function CardComponent({
                       e.stopPropagation();
                       onDuplicate(card.id);
                     }}
-                    className="p-2 sm:p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                    className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                     aria-label="Duplicate card"
                   >
                     <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -686,7 +686,7 @@ function CardComponent({
                       e.stopPropagation();
                       onArchive(card.id);
                     }}
-                    className="p-2 sm:p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                    className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:border-red-200 dark:hover:border-red-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                     aria-label="Archive card (c)"
                   >
                     <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -741,7 +741,7 @@ function CardComponent({
                 <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded mt-0.5 border border-blue-100">
                   EN
                 </span>
-                <p className="text-sm text-slate-800 leading-relaxed font-medium">
+                <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
                     {card.titleEn ? <HighlightedText text={card.titleEn} searchQuery={searchQuery} /> : '—'}
                   </p>
               </div>
@@ -751,11 +751,11 @@ function CardComponent({
                 <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-red-600 bg-red-50 rounded mt-0.5 border border-red-100">
                   JP
                 </span>
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                   {card.titleJa ? (
                     <HighlightedText text={card.titleJa} searchQuery={searchQuery} />
                   ) : (
-                    <span className="text-slate-300 italic flex items-center gap-1">
+                    <span className="text-slate-300 dark:text-slate-600 italic flex items-center gap-1">
                       <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -769,7 +769,7 @@ function CardComponent({
 
             {/* Card metadata */}
             {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0)) && (
-              <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100">
+              <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700">
                 {/* Priority badge */}
                 <PriorityBadge priority={card.priority} />
 
@@ -790,7 +790,7 @@ function CardComponent({
 
                 {/* Description indicator */}
                 {(card.descriptionEn || card.descriptionJa) && (
-                  <div className="flex items-center gap-1.5 text-slate-400" title="Has description">
+                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500" title="Has description">
                     <svg
                       className="w-4 h-4"
                       fill="none"
@@ -809,7 +809,7 @@ function CardComponent({
 
                 {/* Attachments indicator */}
                 {hasAttachments && (
-                  <div className="flex items-center gap-1.5 text-slate-400" title="Has attachments">
+                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500" title="Has attachments">
                     <svg
                       className="w-4 h-4"
                       fill="none"

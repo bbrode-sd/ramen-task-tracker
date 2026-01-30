@@ -388,12 +388,12 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-white/80 backdrop-blur-sm rounded-2xl flex flex-col max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-130px)] border ${
+          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl flex flex-col max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-130px)] border ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
               : 'shadow-sm transition-all duration-200'
           } ${snapshot.isDropAnimating ? 'animate-drop' : ''} ${
-            isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 shadow-lg' : 'border-white/40'
+            isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 dark:border-orange-600 shadow-lg' : 'border-white/40 dark:border-slate-700/60'
           }`}
         >
           {/* Screen reader drag instructions for column */}
@@ -403,7 +403,7 @@ function ColumnComponent({
           {/* Column Header */}
           <div
             {...provided.dragHandleProps}
-            className="px-3 py-3 flex items-center justify-between border-b border-slate-200/50"
+            className="px-3 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50"
           >
             {isEditing ? (
               <input
@@ -418,16 +418,16 @@ function ColumnComponent({
                     setIsEditing(false);
                   }
                 }}
-                className="flex-1 px-3 py-1.5 text-sm font-semibold bg-white rounded-lg border border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="flex-1 px-3 py-1.5 text-sm font-semibold bg-white dark:bg-slate-700 dark:text-white rounded-lg border border-orange-300 dark:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 autoFocus
               />
             ) : (
               <h3
                 onClick={() => setIsEditing(true)}
-                className="flex-1 px-2 py-1 text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-200/70 rounded-lg transition-colors flex items-center gap-2"
+                className="flex-1 px-2 py-1 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-700/70 rounded-lg transition-colors flex items-center gap-2"
               >
                 <span className="truncate">{column.name}</span>
-                <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-slate-500 bg-slate-200/80 rounded-full">
+                <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-700/80 rounded-full">
                   {cards.length}
                 </span>
               </h3>
@@ -440,7 +440,7 @@ function ColumnComponent({
                 aria-expanded={showMenu}
                 aria-haspopup="menu"
                 aria-label={`${column.name} list actions menu`}
-                className="p-2.5 sm:p-1.5 hover:bg-slate-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                className="p-2.5 sm:p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
               >
                 <svg
                   className="w-5 h-5 text-slate-400"
@@ -462,7 +462,7 @@ function ColumnComponent({
                 <div 
                   role="menu"
                   aria-label={`Actions for ${column.name} list`}
-                  className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-10 overflow-hidden"
+                  className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-10 overflow-hidden"
                 >
                   <button
                     role="menuitem"
@@ -470,9 +470,9 @@ function ColumnComponent({
                       setIsEditing(true);
                       setShowMenu(false);
                     }}
-                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
+                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
                   >
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Rename list
@@ -480,18 +480,18 @@ function ColumnComponent({
                   <button
                     role="menuitem"
                     onClick={handleArchiveAllCards}
-                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
+                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
                   >
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                     Archive all cards
                   </button>
-                  <hr className="my-1.5 border-gray-100" aria-hidden="true" />
+                  <hr className="my-1.5 border-gray-100 dark:border-slate-700" aria-hidden="true" />
                   <button
                     role="menuitem"
                     onClick={handleArchive}
-                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
+                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -552,7 +552,7 @@ function ColumnComponent({
           {/* Add Card */}
           <div className="px-2 pb-2 pt-1">
             {isAddingCard ? (
-              <div className="bg-white rounded-xl shadow-md border border-slate-200 p-3" role="form" aria-label="Add new card">
+              <div className="bg-white dark:bg-slate-700 rounded-xl shadow-md border border-slate-200 dark:border-slate-600 p-3" role="form" aria-label="Add new card">
                 <label htmlFor={`add-card-${column.id}`} className="sr-only">
                   Enter card title in English
                 </label>
@@ -563,7 +563,7 @@ function ColumnComponent({
                   onChange={(e) => setNewCardTitleEn(e.target.value)}
                   placeholder="Enter a title for this card (English)..."
                   aria-describedby={`add-card-help-${column.id}`}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none placeholder:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none placeholder:text-slate-500 dark:placeholder:text-slate-400"
                   rows={2}
                   autoFocus
                   onKeyDown={(e) => {
@@ -595,7 +595,7 @@ function ColumnComponent({
                       setNewCardTitleEn('');
                     }}
                     aria-label="Cancel adding card"
-                    className="p-2.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                    className="p-2.5 sm:p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                   >
                     <svg
                       className="w-5 h-5"
@@ -620,9 +620,9 @@ function ColumnComponent({
                   onClick={() => setIsAddingCard(true)}
                   data-onboarding="add-card"
                   aria-label={`Add a card to ${column.name}`}
-                  className="w-full px-3 py-3 sm:py-2.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
+                  className="w-full px-3 py-3 sm:py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
                 >
-                  <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 group-hover:bg-orange-100 rounded-lg transition-colors" aria-hidden="true">
+                  <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 dark:bg-slate-700/80 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/40 rounded-lg transition-colors" aria-hidden="true">
                     <svg
                       className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors"
                       fill="none"
@@ -648,9 +648,9 @@ function ColumnComponent({
                     aria-expanded={showTemplateDropdown}
                     aria-haspopup="menu"
                     aria-label="Create card from template"
-                    className="w-full px-3 py-2.5 sm:py-2 text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-200/40 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[44px] sm:min-h-0"
+                    className="w-full px-3 py-2.5 sm:py-2 text-sm text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/40 dark:hover:bg-slate-700/40 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[44px] sm:min-h-0"
                   >
-                    <span className="w-6 h-6 flex items-center justify-center bg-slate-200/60 group-hover:bg-purple-100 rounded-lg transition-colors">
+                    <span className="w-6 h-6 flex items-center justify-center bg-slate-200/60 dark:bg-slate-700/60 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 rounded-lg transition-colors">
                       <svg
                         className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors"
                         fill="none"
@@ -669,9 +669,9 @@ function ColumnComponent({
                   </button>
                   
                   {showTemplateDropdown && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-20">
-                      <div className="px-3 py-2 border-b border-slate-100 bg-slate-50">
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Card Templates</h4>
+                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20">
+                      <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+                        <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Card Templates</h4>
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {isLoadingTemplates ? (
@@ -693,9 +693,9 @@ function ColumnComponent({
                               key={template.id}
                               onClick={() => handleCreateFromTemplate(template)}
                               disabled={isCreatingFromTemplate}
-                              className="w-full px-4 py-3 sm:py-2.5 text-left hover:bg-slate-50 transition-colors disabled:opacity-50 border-b border-slate-50 last:border-0 min-h-[48px] sm:min-h-0"
+                              className="w-full px-4 py-3 sm:py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 border-b border-slate-50 dark:border-slate-700/50 last:border-0 min-h-[48px] sm:min-h-0"
                             >
-                              <p className="text-sm font-medium text-slate-700 truncate">{template.name}</p>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{template.name}</p>
                               <p className="text-xs text-slate-400 truncate">{template.titleEn}</p>
                             </button>
                           ))
