@@ -108,6 +108,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; timestamp: number }>>(new Map());
   const OPTIMISTIC_UPDATE_TTL = 3000; // How long to protect optimistic updates (ms)
   
+  // Track if we're in the middle of a drag operation - skip ALL subscription updates during drag
+  const isDraggingRef = useRef(false);
+  
   // Accessibility: Screen reader announcement state
   const [srAnnouncement, setSrAnnouncement] = useState('');
   
@@ -219,13 +222,19 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }, [boardId, board, accessError]);
 
   // Subscribe to cards - only if we have board access
-  // Respects pending optimistic updates to prevent UI flickering
+  // CRITICAL: Skip updates during drag operations to prevent UI flickering
   useEffect(() => {
     if (!board || accessError) return;
     
     const unsubscribe = subscribeToCards(
       boardId,
       (fetchedCards) => {
+        // CRITICAL: Skip ALL subscription updates while dragging
+        // The optimistic update already has the correct state
+        if (isDraggingRef.current) {
+          return;
+        }
+        
         const now = Date.now();
         const pendingUpdates = pendingCardUpdatesRef.current;
         
@@ -413,6 +422,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   // Handle drag start
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
+    isDraggingRef.current = true; // Block subscription updates during drag
     
     // If we're dragging a card that's not selected, clear selection and select just this one
     if (start.type === 'card' && !selectedCards.has(start.draggableId)) {
@@ -468,6 +478,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
     if (!destination) {
       setSelectedCards(new Set());
+      isDraggingRef.current = false; // Re-enable subscription updates
       // Accessibility: Announce drop cancelled
       announceToScreenReader('Drop cancelled. Item returned to original position.');
       return;
@@ -477,6 +488,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
+      isDraggingRef.current = false; // Re-enable subscription updates
       return;
     }
 
@@ -493,6 +505,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
       // Optimistic update for columns
       setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
+      
+      // Re-enable subscription updates after optimistic update is applied
+      // Use setTimeout to ensure React has processed the state update
+      setTimeout(() => {
+        isDraggingRef.current = false;
+      }, 50);
       
       // Fire and forget - don't block the UI
       reorderColumns(boardId, columnUpdates).catch(console.error);
@@ -570,6 +588,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         return card;
       })
     );
+
+    // Re-enable subscription updates after optimistic update is applied
+    // Use setTimeout to ensure React has processed the state update
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 50);
 
     // Fire and forget - don't await, let it happen in the background
     // The subscription will eventually sync, and pending updates prevent flickering
