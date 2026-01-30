@@ -52,11 +52,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: 'add-column',
-    title: 'Add a Column',
-    description: 'Columns represent different stages of your workflow, like "To Do", "In Progress", and "Done".',
+    title: 'Add a List',
+    description: 'Lists represent different stages of your workflow, like "To Do", "In Progress", and "Done".',
     targetSelector: '[data-onboarding="add-column"]',
     position: 'left',
-    action: 'Click to add a column',
+    action: 'Click to add a list',
   },
   {
     id: 'add-card',

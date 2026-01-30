@@ -12,8 +12,8 @@ const shortcuts: { category: string; items: ShortcutItem[] }[] = [
   {
     category: 'Navigation',
     items: [
-      { keys: ['←', '→'], description: 'Navigate between columns' },
-      { keys: ['↑', '↓'], description: 'Navigate between cards in column' },
+      { keys: ['←', '→'], description: 'Navigate between lists' },
+      { keys: ['↑', '↓'], description: 'Navigate between cards in list' },
       { keys: ['Enter'], description: 'Open focused card' },
       { keys: ['/'], description: 'Focus search bar' },
     ],
@@ -21,7 +21,7 @@ const shortcuts: { category: string; items: ShortcutItem[] }[] = [
   {
     category: 'Actions',
     items: [
-      { keys: ['n'], description: 'Add new card in focused column' },
+      { keys: ['n'], description: 'Add new card in focused list' },
       { keys: ['e'], description: 'Edit focused card' },
       { keys: ['c'], description: 'Archive hovered card' },
     ],
