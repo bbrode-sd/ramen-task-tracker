@@ -377,6 +377,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
   // Handle drag start
   const handleDragStart = useCallback((start: DragStart) => {
+    console.log('[DnD] handleDragStart', start.draggableId, start.type);
     setIsDragging(true);
     
     // If we're dragging a card that's not selected, clear selection and select just this one
@@ -425,13 +426,15 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     }));
   }, [getCardsForColumn, matchesFilter, user?.uid]);
 
-  const handleDragEnd = async (result: DropResult) => {
+  const handleDragEnd = (result: DropResult) => {
+    console.log('[DnD] handleDragEnd called', result);
     setIsDragging(false);
     stopEdgeScroll();
     
     const { destination, source, draggableId, type } = result;
 
     if (!destination) {
+      console.log('[DnD] No destination, cancelled');
       setSelectedCards(new Set());
       announceToScreenReader('Drop cancelled. Item returned to original position.');
       return;
@@ -441,6 +444,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
+      console.log('[DnD] Same position, no-op');
       return;
     }
 
@@ -456,7 +460,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       }));
 
       setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
-      await reorderColumns(boardId, columnUpdates);
+      reorderColumns(boardId, columnUpdates).catch(console.error);
       announceToScreenReader(`List ${removed.name} moved to position ${destination.index + 1}.`);
       return;
     }
@@ -517,8 +521,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       })
     );
 
-    // Save to Firestore
-    await reorderCards(boardId, cardUpdates);
+    // Save to Firestore (fire and forget)
+    console.log('[DnD] Saving to Firestore');
+    reorderCards(boardId, cardUpdates).catch(console.error);
     
     // Log activity if card was moved to a different column
     if (sourceColumnId !== destColumnId && user) {
