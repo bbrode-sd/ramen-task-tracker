@@ -743,7 +743,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     } else {
       return {
         label: format(dueDateObj, 'MMM d'),
-        className: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+        className: 'bg-slate-100 text-slate-600 dark:bg-slate-900/70 dark:text-slate-300',
         isOverdue: false,
         isDueToday: false,
         isDueTomorrow: false,
@@ -1098,7 +1098,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-0 sm:py-6 md:py-10 px-0 sm:px-4"
+      className="fixed inset-0 bg-slate-950/70 backdrop-blur-md backdrop-saturate-150 flex items-start justify-center z-50 overflow-y-auto py-0 sm:py-6 md:py-10 px-0 sm:px-4"
       onClick={onClose}
       role="presentation"
     >
@@ -1115,16 +1115,16 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         aria-modal="true"
         aria-labelledby="card-modal-title"
         aria-describedby="card-modal-description"
-        className="bg-white dark:bg-slate-900 rounded-none sm:rounded-2xl shadow-2xl w-full min-h-screen sm:min-h-0 sm:max-w-[1230px] sm:my-0 animate-in fade-in sm:zoom-in-95 duration-200"
+        className="bg-white dark:bg-slate-950/95 rounded-none sm:rounded-2xl shadow-2xl dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.85)] w-full min-h-screen sm:min-h-0 sm:max-w-[1230px] sm:my-0 animate-in fade-in sm:zoom-in-95 duration-200 border border-slate-200/70 dark:border-slate-800/80 ring-1 ring-black/5 dark:ring-white/5"
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
       >
         {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-500/20 dark:to-orange-500/5 dark:ring-1 dark:ring-orange-400/20 flex items-center justify-center flex-shrink-0 shadow-sm" aria-hidden="true">
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 dark:text-orange-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1146,11 +1146,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-2.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+            className="p-2.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:shadow-sm rounded-xl transition-all group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
             aria-label="Close card details dialog"
           >
             <svg
-              className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors"
+              className="w-5 h-5 text-slate-400 dark:text-slate-300 group-hover:text-slate-600 dark:group-hover:text-white transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1188,7 +1188,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             {/* Quick remove cover button */}
             <button
               onClick={handleRemoveCover}
-              className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg shadow-sm transition-all border border-slate-200 hover:border-red-500 text-slate-500"
+              className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg shadow-sm transition-all border border-slate-200 hover:border-red-500 text-slate-500 dark:bg-slate-900/80 dark:border-slate-700/70 dark:text-slate-300 dark:hover:bg-red-500/90 dark:hover:border-red-500"
               title="Remove cover"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1207,7 +1207,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* English Title */}
               <div className="space-y-2.5">
                 <label htmlFor="card-title-en" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-md border border-blue-100" aria-hidden="true">EN</span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                    EN
+                  </span>
                   Title (English)
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.titleEn] || false}
@@ -1230,10 +1233,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   }}
                   aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                     translationState.errors[fieldKeys.titleEn]
                       ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-600 focus:ring-blue-500/20 focus:border-blue-400'
+                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
                   }`}
                   placeholder="Enter title in English..."
                 />
@@ -1245,7 +1248,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* Japanese Title */}
               <div className="space-y-2.5">
                 <label htmlFor="card-title-ja" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-red-600 bg-red-50 rounded-md border border-red-100" aria-hidden="true">JP</span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                    JP
+                  </span>
                   Title (日本語)
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.titleJa] || false}
@@ -1268,10 +1274,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   }}
                   aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                     translationState.errors[fieldKeys.titleJa]
                       ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-600 focus:ring-red-500/20 focus:border-red-400'
+                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
                   }`}
                   placeholder="日本語でタイトルを入力..."
                 />
@@ -1287,7 +1293,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* English Description */}
               <div className="space-y-2.5">
                 <label htmlFor="card-description-en" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-md border border-blue-100" aria-hidden="true">EN</span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                    EN
+                  </span>
                   Description (English)
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionEn] || false}
@@ -1303,10 +1312,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   onBlur={() => handleDescriptionEnChange(descriptionEn)}
                   aria-describedby={translationState.errors[fieldKeys.descriptionEn] ? 'desc-en-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.descriptionEn]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                     translationState.errors[fieldKeys.descriptionEn]
                       ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-600 focus:ring-blue-500/20 focus:border-blue-400'
+                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
                   }`}
                   placeholder="Add a description in English..."
                 />
@@ -1315,7 +1324,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* Japanese Description */}
               <div className="space-y-2.5">
                 <label htmlFor="card-description-ja" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center justify-center w-8 h-6 text-[10px] font-bold text-red-600 bg-red-50 rounded-md border border-red-100" aria-hidden="true">JP</span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                    JP
+                  </span>
                   Description (日本語)
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionJa] || false}
@@ -1331,10 +1343,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   onBlur={() => handleDescriptionJaChange(descriptionJa)}
                   aria-describedby={translationState.errors[fieldKeys.descriptionJa] ? 'desc-ja-error' : undefined}
                   aria-invalid={!!translationState.errors[fieldKeys.descriptionJa]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                     translationState.errors[fieldKeys.descriptionJa]
                       ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-600 focus:ring-red-500/20 focus:border-red-400'
+                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
                   }`}
                   placeholder="日本語で説明を追加..."
                 />
@@ -1372,7 +1384,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                   setEditingChecklistTitle('');
                                 }
                               }}
-                              className="flex-1 px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-white border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-700"
+                              className="flex-1 px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-900/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                               autoFocus
                             />
                           ) : (
@@ -1464,7 +1476,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                         setEditingItemText('');
                                       }
                                     }}
-                                    className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                    className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-700/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-900/70 text-slate-900 dark:text-white shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                                     autoFocus
                                   />
                                 ) : (
@@ -1545,7 +1557,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                   
                                   {/* Assignee dropdown */}
                                   {activeItemAssigneePickerId === item.id && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 z-20 py-1 max-h-48 overflow-y-auto">
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-900/80 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700/70 z-20 py-1 max-h-48 overflow-y-auto">
                                       {item.assigneeId && (
                                         <button
                                           onClick={() => handleChecklistItemAssignee(checklist.id, item.id, undefined)}
@@ -1633,7 +1645,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                   
                                   {/* Due date picker dropdown */}
                                   {activeItemDueDatePickerId === item.id && (
-                                    <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-slate-200 dark:border-slate-600 z-20 p-3">
+                                    <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-slate-900/80 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700/70 z-20 p-3">
                                       <div className="space-y-2">
                                         <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Due date</label>
                                         <input
@@ -1712,7 +1724,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                               if (e.key === 'Enter') handleAddChecklistItem(checklist.id);
                             }}
                             placeholder="Add an item..."
-                            className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white"
+                            className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-900/70 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                           />
                           <button
                             onClick={() => handleAddChecklistItem(checklist.id)}
@@ -1733,9 +1745,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             {card.attachments && card.attachments.length > 0 && (
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 dark:ring-1 dark:ring-slate-700/70 flex items-center justify-center">
                     <svg
-                      className="w-4 h-4 text-slate-500 dark:text-slate-400"
+                      className="w-4 h-4 text-slate-500 dark:text-slate-300"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1749,7 +1761,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     </svg>
                   </div>
                   Attachments
-                  <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-slate-400 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 dark:ring-1 dark:ring-slate-700/70 px-2 py-0.5 rounded-full">
                     {card.attachments.length}
                   </span>
                 </h4>
@@ -1768,9 +1780,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             {/* Unified Activity Section */}
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 dark:ring-1 dark:ring-slate-700/70 flex items-center justify-center">
                   <svg
-                    className="w-4 h-4 text-slate-500 dark:text-slate-400"
+                    className="w-4 h-4 text-slate-500 dark:text-slate-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1785,7 +1797,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </div>
                 Activity
                 {(comments.length + activities.filter(a => a.type !== 'comment_added').length) > 0 && (
-                  <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-slate-400 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 dark:ring-1 dark:ring-slate-700/70 px-2 py-0.5 rounded-full">
                     {comments.length + activities.filter(a => a.type !== 'comment_added').length}
                   </span>
                 )}
@@ -1799,7 +1811,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     alt={user.displayName || 'User'}
                     width={36}
                     height={36}
-                    className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 object-cover"
+                    className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800/80 object-cover"
                   />
                 )}
                 <div className="flex-1 min-w-0">
@@ -1810,7 +1822,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Write a comment..."
-                        className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                        className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 min-h-[90px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                             handleAddComment();
@@ -1862,7 +1874,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:w-56 p-4 sm:p-5 bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-800 dark:to-slate-800/50 sm:rounded-br-2xl space-y-4 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-700">
+          <div className="lg:w-56 p-4 sm:p-5 bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-900 dark:to-slate-950/80 sm:rounded-br-2xl space-y-4 border-t lg:border-t-0 lg:border-l border-slate-200/70 dark:border-slate-800/80">
             <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Add to card
             </h4>
@@ -1881,7 +1893,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               aria-label={isUploading ? 'Uploading file...' : 'Add file attachment'}
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-xl text-sm text-left flex items-center gap-3 transition-all disabled:opacity-50 group shadow-sm"
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-3 transition-all disabled:opacity-50 group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
             >
               <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/40 flex items-center justify-center transition-colors">
                 <svg
@@ -1903,7 +1915,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Add link */}
             {showLinkInput ? (
-              <div className="space-y-2.5 p-3 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600">
+              <div className="space-y-2.5 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <input
                   type="url"
                   value={linkUrl}
@@ -1942,7 +1954,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             ) : (
               <button
                 onClick={() => setShowLinkInput(true)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
               >
                 <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 flex items-center justify-center transition-colors">
                   <svg
@@ -1965,7 +1977,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Add checklist */}
             {showChecklistInput ? (
-              <div className="space-y-2.5 p-3 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600">
+              <div className="space-y-2.5 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <input
                   type="text"
                   value={newChecklistTitle}
@@ -2003,7 +2015,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             ) : (
               <button
                 onClick={() => setShowChecklistInput(true)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
               >
                 <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-green-100 dark:group-hover:bg-green-900/40 flex items-center justify-center transition-colors">
                   <svg
@@ -2026,7 +2038,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Cover */}
             {showCoverPicker ? (
-              <div className="space-y-3 p-3 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600">
+              <div className="space-y-3 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cover</span>
                   <button
@@ -2112,7 +2124,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             ) : (
               <button
                 onClick={() => setShowCoverPicker(true)}
-                className="w-full px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
               >
                 <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/40 flex items-center justify-center transition-colors">
                   <svg
@@ -2175,7 +2187,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   aria-expanded={showAssigneeDropdown}
                   aria-haspopup="listbox"
                   aria-label="Add assignee to card"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 rounded-xl text-sm text-left flex items-center gap-2 transition-all group shadow-sm"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-2 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                 >
                   <svg
                     className="w-4 h-4 text-slate-400 dark:text-slate-300 group-hover:text-orange-500 transition-colors"
@@ -2197,7 +2209,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <div 
                     role="listbox"
                     aria-label="Available team members"
-                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/70 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto"
                   >
                     {boardMembers.filter(m => !card?.assigneeIds?.includes(m.uid)).length === 0 ? (
                       <div className="px-3 py-2 text-sm text-slate-400 dark:text-slate-500 text-center">
@@ -2360,7 +2372,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={dueDate}
                   onChange={(e) => handleDueDateChange(e.target.value)}
                   aria-describedby="due-date-help"
-                  className="w-full px-3 py-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm"
+                  className="w-full px-3 py-3 bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                 />
                 <span id="due-date-help" className="sr-only">Select a due date for this card</span>
               </div>
@@ -2442,7 +2454,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               className={`w-full px-4 py-2.5 border rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm ${
                 isWatching
                   ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/30'
-                  : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:border-cyan-200 dark:hover:border-cyan-800'
+                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-700/70 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:border-cyan-200 dark:hover:border-cyan-800'
               } disabled:opacity-50`}
             >
               <span className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -2490,7 +2502,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Watchers display */}
             {watchers.length > 0 && (
-              <div className="space-y-2 p-3 bg-white dark:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600">
+              <div className="space-y-2 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2521,7 +2533,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             <button
               onClick={() => setShowSaveTemplateModal(true)}
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-slate-200 dark:border-slate-600 hover:border-purple-200 dark:hover:border-purple-800 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-slate-200 dark:border-slate-700/70 hover:border-purple-200 dark:hover:border-purple-800 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
             >
               <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 flex items-center justify-center transition-colors">
                 <svg
@@ -2543,7 +2555,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             <button
               onClick={handleArchive}
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-900/20 border border-slate-200 dark:border-slate-600 hover:border-red-200 dark:hover:border-red-800 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm"
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-red-50 dark:hover:bg-red-900/20 border border-slate-200 dark:border-slate-700/70 hover:border-red-200 dark:hover:border-red-800 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
             >
               <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-red-100 dark:group-hover:bg-red-900/40 flex items-center justify-center transition-colors">
                 <svg
@@ -2608,7 +2620,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
                   placeholder="e.g., Bug Report, Feature Request..."
-                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && templateName.trim()) {
@@ -2622,7 +2634,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 />
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-700 rounded-xl p-4 space-y-2">
+              <div className="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-4 space-y-2 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Will include:</p>
                 <div className="flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs text-slate-600 dark:text-slate-200 border border-slate-200 dark:border-slate-500">

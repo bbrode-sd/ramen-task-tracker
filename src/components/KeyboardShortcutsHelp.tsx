@@ -37,7 +37,7 @@ const shortcuts: { category: string; items: ShortcutItem[] }[] = [
 
 function KeyboardKey({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-mono font-medium text-slate-700 shadow-sm">
+    <kbd className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-mono font-medium text-slate-700 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
       {children}
     </kbd>
   );
@@ -66,15 +66,15 @@ export function KeyboardShortcutsHelp() {
       onClick={closeHelpModal}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95 duration-200 overflow-hidden dark:bg-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center dark:from-orange-500/20 dark:to-orange-400/10">
               <svg
-                className="w-5 h-5 text-orange-500"
+                className="w-5 h-5 text-orange-500 dark:text-orange-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -88,16 +88,20 @@ export function KeyboardShortcutsHelp() {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-800">Keyboard Shortcuts</h2>
-              <p className="text-xs text-slate-400">Navigate quickly with your keyboard</p>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                Keyboard Shortcuts
+              </h2>
+              <p className="text-xs text-slate-400 dark:text-slate-400">
+                Navigate quickly with your keyboard
+              </p>
             </div>
           </div>
           <button
             onClick={closeHelpModal}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors group"
+            className="p-2 hover:bg-slate-100 rounded-xl transition-colors group dark:hover:bg-slate-800"
           >
             <svg
-              className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors"
+              className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors dark:text-slate-400 dark:group-hover:text-slate-200"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -116,16 +120,18 @@ export function KeyboardShortcutsHelp() {
         <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
           {shortcuts.map((section) => (
             <div key={section.category}>
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 dark:text-slate-400">
                 {section.category}
               </h3>
               <div className="space-y-2">
                 {section.items.map((item, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
                   >
-                    <span className="text-sm text-slate-600">{item.description}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-200">
+                      {item.description}
+                    </span>
                     <div className="flex items-center gap-1.5">
                       {item.keys.map((key, keyIndex) => (
                         <KeyboardKey key={keyIndex}>{key}</KeyboardKey>
@@ -139,8 +145,8 @@ export function KeyboardShortcutsHelp() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
-          <p className="text-xs text-slate-500 text-center">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 dark:bg-slate-900/60 dark:border-slate-800">
+          <p className="text-xs text-slate-500 text-center dark:text-slate-400">
             Press <KeyboardKey>Esc</KeyboardKey> to close
           </p>
         </div>

@@ -88,15 +88,15 @@ export function CommentItem({
     }
   };
 
-  return (
-    <div className="flex gap-3 group">
+  const renderHeader = () => (
+    <div className="flex items-center gap-2 mb-2">
       {comment.createdByPhoto ? (
         <Image
           src={comment.createdByPhoto}
           alt={comment.createdByName}
           width={36}
           height={36}
-          className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 object-cover"
+          className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800/80 object-cover"
         />
       ) : (
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -105,40 +105,47 @@ export function CommentItem({
           </span>
         </div>
       )}
+      <span className="text-sm font-semibold text-slate-800 dark:text-white">
+        {comment.createdByName}
+      </span>
+      <span className="text-xs text-slate-400 dark:text-slate-400">
+        {comment.createdAt instanceof Timestamp
+          ? format(comment.createdAt.toDate(), 'MMM d, yyyy h:mm a')
+          : ''}
+      </span>
+      {isOwner && (
+        <button
+          onClick={onDelete}
+          className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+        >
+          Delete
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex gap-3 group">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-sm font-semibold text-slate-800 dark:text-white">
-            {comment.createdByName}
-          </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            {comment.createdAt instanceof Timestamp
-              ? format(comment.createdAt.toDate(), 'MMM d, yyyy h:mm a')
-              : ''}
-          </span>
-          {isOwner && (
-            <button
-              onClick={onDelete}
-              className="text-xs text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-            >
-              Delete
-            </button>
-          )}
-        </div>
-        
         {/* Bilingual comment display - side by side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* English version */}
-          <div className={`bg-slate-50 dark:bg-slate-700/50 border rounded-xl px-4 py-3 ${detectedLang === 'en' ? 'border-blue-200 dark:border-blue-800' : 'border-slate-100 dark:border-slate-600'}`}>
+          <div>
+            {renderHeader()}
+            <div className={`bg-slate-50 dark:bg-slate-900/70 border rounded-xl px-4 py-3 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${detectedLang === 'en' ? 'border-blue-200 dark:border-blue-700/70' : 'border-slate-100 dark:border-slate-700/80'}`}>
             <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center justify-center w-6 h-5 text-[9px] font-bold text-blue-600 bg-blue-50 rounded border border-blue-100">EN</span>
-              <span className={`text-[10px] font-medium ${detectedLang === 'en' ? 'text-blue-500' : 'text-slate-400'}`}>
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                EN
+              </span>
+              <span className={`text-[10px] font-medium ${detectedLang === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
                 {getTranslationLabel('en')}
               </span>
               {/* Edit button for translated content (not original) */}
               {detectedLang !== 'en' && editingLang !== 'en' && currentUserId && (
                 <button
                   onClick={() => handleStartEdit('en')}
-                  className="ml-auto text-[10px] text-slate-400 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100"
+                  className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition-colors opacity-0 group-hover:opacity-100"
                   title="Edit translation"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +159,7 @@ export function CommentItem({
                 <textarea
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
-                  className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                   rows={3}
                   autoFocus
                 />
@@ -160,7 +167,7 @@ export function CommentItem({
                   <button
                     onClick={handleCancelEdit}
                     disabled={isSaving}
-                    className="text-xs px-3 py-1.5 text-slate-600 hover:text-slate-800 transition-colors"
+                    className="text-xs px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
@@ -176,57 +183,64 @@ export function CommentItem({
             ) : (
               <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{englishContent}</p>
             )}
+            </div>
           </div>
           
           {/* Japanese version */}
-          <div className={`bg-slate-50 dark:bg-slate-700/50 border rounded-xl px-4 py-3 ${detectedLang === 'ja' ? 'border-red-200 dark:border-red-800' : 'border-slate-100 dark:border-slate-600'}`}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center justify-center w-6 h-5 text-[9px] font-bold text-red-600 bg-red-50 rounded border border-red-100">JP</span>
-              <span className={`text-[10px] font-medium ${detectedLang === 'ja' ? 'text-red-500' : 'text-slate-400'}`}>
-                {getTranslationLabel('ja')}
-              </span>
-              {/* Edit button for translated content (not original) */}
-              {detectedLang !== 'ja' && editingLang !== 'ja' && currentUserId && (
-                <button
-                  onClick={() => handleStartEdit('ja')}
-                  className="ml-auto text-[10px] text-slate-400 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100"
-                  title="Edit translation"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
+          <div>
+            {renderHeader()}
+            <div className={`bg-slate-50 dark:bg-slate-900/70 border rounded-xl px-4 py-3 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${detectedLang === 'ja' ? 'border-red-200 dark:border-red-700/70' : 'border-slate-100 dark:border-slate-700/80'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                  JP
+                </span>
+                <span className={`text-[10px] font-medium ${detectedLang === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                  {getTranslationLabel('ja')}
+                </span>
+                {/* Edit button for translated content (not original) */}
+                {detectedLang !== 'ja' && editingLang !== 'ja' && currentUserId && (
+                  <button
+                    onClick={() => handleStartEdit('ja')}
+                  className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition-colors opacity-0 group-hover:opacity-100"
+                    title="Edit translation"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {editingLang === 'ja' ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                  className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                    rows={3}
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isSaving}
+                    className="text-xs px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmEdit}
+                      disabled={isSaving || !editingContent.trim()}
+                      className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? 'Saving...' : 'Confirm'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{japaneseContent}</p>
               )}
             </div>
-            {editingLang === 'ja' ? (
-              <div className="space-y-2">
-                <textarea
-                  value={editingContent}
-                  onChange={(e) => setEditingContent(e.target.value)}
-                  className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                  rows={3}
-                  autoFocus
-                />
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={handleCancelEdit}
-                    disabled={isSaving}
-                    className="text-xs px-3 py-1.5 text-slate-600 hover:text-slate-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirmEdit}
-                    disabled={isSaving || !editingContent.trim()}
-                    className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
-                  >
-                    {isSaving ? 'Saving...' : 'Confirm'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{japaneseContent}</p>
-            )}
           </div>
         </div>
       </div>
