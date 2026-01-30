@@ -496,19 +496,22 @@ function CardComponent({
   };
 
   // Get drag styles based on snapshot
-  // Combines library's positioning transform with our visual effects
+  // Let the library handle all transform/transition during drag/drop
   const getDragStyle = (snapshot: DraggableStateSnapshot, draggableStyle: React.CSSProperties | undefined) => {
-    if (!snapshot.isDragging) {
+    // During drop animation, don't interfere with the library's animation
+    if (snapshot.isDropAnimating) {
       return {
         ...draggableStyle,
-        transition: snapshot.isDropAnimating 
-          ? 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)' 
-          : draggableStyle?.transition,
+        // Force the drop animation to complete quickly
+        transitionDuration: '0.001s',
       };
+    }
+    
+    if (!snapshot.isDragging) {
+      return draggableStyle;
     }
 
     // When dragging, combine the library's translate transform with our rotation/scale
-    // This prevents CSS class transforms from conflicting with inline positioning
     const libraryTransform = draggableStyle?.transform || '';
     return {
       ...draggableStyle,
@@ -619,7 +622,7 @@ function CardComponent({
               ? 'card-dragging drag-shadow z-50' 
               : 'shadow-sm hover:shadow-lg transition-all duration-200 hover:border-[var(--border-strong)]'
             }
-            ${snapshot.isDropAnimating ? 'animate-drop' : ''}
+            ${'' /* removed animate-drop - was causing visual hangs */}
             ${isDimmed ? 'opacity-40 scale-[0.98] border-[var(--border-subtle)]' : ''} 
             ${isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-lg' : 'border-[var(--border)]'}
             ${isSelected && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]' : ''}
