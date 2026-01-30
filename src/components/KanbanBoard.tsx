@@ -821,73 +821,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                   boardSnapshot.isDraggingOver ? 'gap-6' : ''
                 }`}
               >
-                {/* Add column button - positioned on the left */}
-                <div className="flex-shrink-0 w-[300px]">
-                  {isAddingColumn ? (
-                    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/40 p-4">
-                      <input
-                        type="text"
-                        value={newColumnName}
-                        onChange={(e) => setNewColumnName(e.target.value)}
-                        placeholder="Enter list name..."
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-3 placeholder:text-slate-500"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleAddColumn();
-                          if (e.key === 'Escape') {
-                            setIsAddingColumn(false);
-                            setNewColumnName('');
-                          }
-                        }}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleAddColumn}
-                          disabled={!newColumnName.trim()}
-                          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
-                        >
-                          Add List
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsAddingColumn(false);
-                            setNewColumnName('');
-                          }}
-                          className="px-4 py-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setIsAddingColumn(true)}
-                      data-onboarding="add-column"
-                      className="w-full px-4 py-3.5 bg-white/40 hover:bg-white/70 backdrop-blur-sm rounded-2xl text-slate-600 hover:text-slate-800 transition-all flex items-center gap-3 shadow-sm hover:shadow-md border border-white/30 hover:border-white/50 group"
-                    >
-                      <span className="w-8 h-8 flex items-center justify-center bg-slate-100 group-hover:bg-orange-100 rounded-xl transition-colors">
-                        <svg
-                          className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
-                      </span>
-                      <span className="font-medium">Add another list</span>
-                    </button>
-                  )}
-                </div>
-
                 {/* Empty state when no columns */}
                 {columns.length === 0 && (
-                  <div className="flex items-center justify-center flex-1 min-h-[300px]">
+                  <div className="flex items-center justify-center w-full min-h-[300px]">
                     <EmptyState
                       variant="columns"
                       title="No columns yet"
@@ -933,6 +869,72 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                   />
                 ))}
                 {provided.placeholder}
+
+                {/* Add column button - positioned after all columns */}
+                {columns.length > 0 && (
+                  <div className="flex-shrink-0 w-[300px]">
+                    {isAddingColumn ? (
+                      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/40 dark:border-slate-700/60 p-4">
+                        <input
+                          type="text"
+                          value={newColumnName}
+                          onChange={(e) => setNewColumnName(e.target.value)}
+                          placeholder="Enter list name..."
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-3 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddColumn();
+                            if (e.key === 'Escape') {
+                              setIsAddingColumn(false);
+                              setNewColumnName('');
+                            }
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleAddColumn}
+                            disabled={!newColumnName.trim()}
+                            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
+                          >
+                            Add List
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsAddingColumn(false);
+                              setNewColumnName('');
+                            }}
+                            className="px-4 py-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setIsAddingColumn(true)}
+                        data-onboarding="add-column"
+                        className="w-full px-4 py-3.5 bg-white/40 hover:bg-white/70 backdrop-blur-sm rounded-2xl text-slate-600 hover:text-slate-800 transition-all flex items-center gap-3 shadow-sm hover:shadow-md border border-white/30 hover:border-white/50 group"
+                      >
+                        <span className="w-8 h-8 flex items-center justify-center bg-slate-100 group-hover:bg-orange-100 rounded-xl transition-colors">
+                          <svg
+                            className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                        </span>
+                        <span className="font-medium">Add another list</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </Droppable>
