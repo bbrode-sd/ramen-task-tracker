@@ -507,22 +507,18 @@ function ColumnComponent({
             </div>
           </div>
 
-          {/* Cards */}
+          {/* Cards - Note: overflow-y-auto is needed but causes nested scroll warning */}
+          {/* The warning is acceptable - the DnD library still works, just suboptimally */}
           <Droppable droppableId={column.id} type="card">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 overflow-y-auto px-2 py-2 min-h-[60px] transition-all duration-200 column-drop-zone rounded-lg ${
+                className={`flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 min-h-[60px] transition-colors duration-200 column-drop-zone rounded-lg ${
                   snapshot.isDraggingOver 
-                    ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 dark:from-orange-900/30 dark:to-orange-800/20 shadow-inner' 
+                    ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 dark:from-orange-900/30 dark:to-orange-800/20' 
                     : ''
                 }`}
-                style={{
-                  boxShadow: snapshot.isDraggingOver 
-                    ? 'inset 0 2px 8px rgba(249, 115, 22, 0.1)' 
-                    : undefined,
-                }}
               >
                 {cards.length === 0 ? (
                   <ColumnEmptyState 

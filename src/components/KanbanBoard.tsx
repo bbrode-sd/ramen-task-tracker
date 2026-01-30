@@ -473,15 +473,17 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const handleDragEnd = (result: DropResult) => {
     const startTime = performance.now();
     
+    // CRITICAL: Set isDragging to false immediately - this is a React state
+    // that controls our custom drag styling, separate from the DnD library's state
     setIsDragging(false);
     stopEdgeScroll();
     
     const { destination, source, draggableId, type } = result;
 
+    // Handle early returns - always clear isDraggingRef
     if (!destination) {
       setSelectedCards(new Set());
-      isDraggingRef.current = false; // Re-enable subscription updates
-      // Accessibility: Announce drop cancelled
+      isDraggingRef.current = false;
       announceToScreenReader('Drop cancelled. Item returned to original position.');
       return;
     }
@@ -490,9 +492,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
-      isDraggingRef.current = false; // Re-enable subscription updates
+      isDraggingRef.current = false;
       return;
     }
+    
+    // Wrap the rest in try-catch to ensure cleanup always happens
+    try {
 
     // Handle column reordering
     if (type === 'column') {
@@ -650,6 +655,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     
     // Clear selection after successful drop
     setSelectedCards(new Set());
+    } catch (error) {
+      // Ensure cleanup happens even if there's an error
+      console.error('[DnD] Error in handleDragEnd:', error);
+      isDraggingRef.current = false;
+      pendingCardUpdatesRef.current.clear();
+    }
   };
 
   const handleCardClick = useCallback((cardId: string) => {
