@@ -787,8 +787,8 @@ function CardComponent({
 
                 {/* Translation status badge */}
                 <TranslationStatusBadge
-                  hasEn={!!card.titleEn && !!card.descriptionEn}
-                  hasJa={!!card.titleJa}
+                  hasEn={!!card.titleEn && (!card.descriptionJa || !!card.descriptionEn)}
+                  hasJa={!!card.titleJa && (!card.descriptionEn || !!card.descriptionJa)}
                   isTranslating={!card.titleJa && !!card.titleEn}
                 />
 
