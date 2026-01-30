@@ -821,37 +821,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                   boardSnapshot.isDraggingOver ? 'gap-6' : ''
                 }`}
               >
-                {/* Empty state when no columns */}
-                {columns.length === 0 && (
-                  <div className="flex items-center justify-center w-full min-h-[300px]">
-                    <EmptyState
-                      variant="columns"
-                      title="No columns yet"
-                      description="Add your first column to start organizing cards. Columns help you track work through different stages."
-                      action={() => setIsAddingColumn(true)}
-                      actionLabel="Add Your First Column"
-                      size="lg"
-                    />
-                  </div>
-                )}
-
-                {/* Search empty state when filters active but no results */}
-                {columns.length > 0 && hasActiveFilters && matchingCardsCount === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-xl">
-                    <SearchEmptyState
-                      searchQuery={searchInputRef.current?.value || 'filter'}
-                      onClearSearch={() => {
-                        // Clear search from header
-                        if (searchInputRef.current) {
-                          searchInputRef.current.value = '';
-                          // Trigger input event to update filter
-                          searchInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-
                 {/* Add column button - positioned on the left */}
                 <div className="flex-shrink-0 w-[300px]">
                   {isAddingColumn ? (
@@ -915,6 +884,37 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                     </button>
                   )}
                 </div>
+
+                {/* Empty state when no columns */}
+                {columns.length === 0 && (
+                  <div className="flex items-center justify-center flex-1 min-h-[300px]">
+                    <EmptyState
+                      variant="columns"
+                      title="No columns yet"
+                      description="Add your first column to start organizing cards. Columns help you track work through different stages."
+                      action={() => setIsAddingColumn(true)}
+                      actionLabel="Add Your First Column"
+                      size="lg"
+                    />
+                  </div>
+                )}
+
+                {/* Search empty state when filters active but no results */}
+                {columns.length > 0 && hasActiveFilters && matchingCardsCount === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10 rounded-xl">
+                    <SearchEmptyState
+                      searchQuery={searchInputRef.current?.value || 'filter'}
+                      onClearSearch={() => {
+                        // Clear search from header
+                        if (searchInputRef.current) {
+                          searchInputRef.current.value = '';
+                          // Trigger input event to update filter
+                          searchInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                      }}
+                    />
+                  </div>
+                )}
 
                 {columns.map((column, index) => (
                   <Column
