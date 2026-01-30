@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { DragDropContext, Droppable, DropResult, DragStart, DragUpdate } from '@hello-pangea/dnd';
@@ -504,17 +503,19 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         order: index,
       }));
 
-      // Optimistic update for columns - use flushSync to force immediate re-render
-      // This ensures the DnD library's snapshot state updates before we return
-      flushSync(() => {
-        setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
-      });
+      // Optimistic update for columns
+      setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
       
-      // Re-enable subscription updates after optimistic update is applied
-      isDraggingRef.current = false;
-      
-      // Fire and forget - don't block the UI
-      reorderColumns(boardId, columnUpdates).catch(console.error);
+      // Fire and forget - but keep subscription blocked until write completes
+      // This prevents stale subscription data from overwriting the optimistic update
+      reorderColumns(boardId, columnUpdates)
+        .then(() => {
+          isDraggingRef.current = false;
+        })
+        .catch((error) => {
+          console.error('Failed to reorder columns:', error);
+          isDraggingRef.current = false;
+        });
       
       // Accessibility: Announce column move
       announceToScreenReader(`List ${removed.name} moved to position ${destination.index + 1}.`);
@@ -575,42 +576,38 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       });
     });
 
-    // Optimistic update - use flushSync to force immediate re-render
-    // This ensures the DnD library's snapshot state updates before we return
-    flushSync(() => {
-      setCards((prevCards) =>
-        prevCards.map((card) => {
-          const update = cardUpdates.find((u) => u.id === card.id);
-          if (update) {
-            return {
-              ...card,
-              order: update.order,
-              columnId: update.columnId || card.columnId,
-            };
-          }
-          return card;
-        })
-      );
-    });
+    // Optimistic update - immediate UI response
+    setCards((prevCards) =>
+      prevCards.map((card) => {
+        const update = cardUpdates.find((u) => u.id === card.id);
+        if (update) {
+          return {
+            ...card,
+            order: update.order,
+            columnId: update.columnId || card.columnId,
+          };
+        }
+        return card;
+      })
+    );
 
-    // Re-enable subscription updates after optimistic update is applied
-    isDraggingRef.current = false;
-
-    // Fire and forget - don't await, let it happen in the background
-    // The subscription will eventually sync, and pending updates prevent flickering
+    // Fire and forget - but keep subscription blocked until write completes
+    // This prevents stale subscription data from overwriting the optimistic update
     reorderCards(boardId, cardUpdates)
       .then(() => {
-        // Clear pending updates after successful save
+        // Clear pending updates and re-enable subscription after successful save
         cardUpdates.forEach((update) => {
           pendingCardUpdatesRef.current.delete(update.id);
         });
+        isDraggingRef.current = false;
       })
       .catch((error) => {
         console.error('Failed to save card reorder:', error);
-        // Clear pending updates on error too - subscription will restore correct state
+        // Clear pending updates and re-enable subscription on error too
         cardUpdates.forEach((update) => {
           pendingCardUpdatesRef.current.delete(update.id);
         });
+        isDraggingRef.current = false;
       });
     
     // Log activity if card was moved to a different column (fire and forget)
