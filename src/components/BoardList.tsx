@@ -185,23 +185,23 @@ export function BoardList() {
           {/* Create new board card */}
           {showTemplatePicker ? (
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-5 border-2 border-purple-400 dark:border-purple-500 ring-4 ring-purple-100 dark:ring-purple-900/30 col-span-1 sm:col-span-2 md:col-span-2">
-              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-purple-50 dark:from-purple-900 dark:to-purple-800 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-800">{t('boards.templates.title')}</h3>
-                    <p className="text-xs text-slate-400">{t('boards.templates.subtitle')}</p>
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{t('boards.templates.title')}</h3>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{t('boards.templates.subtitle')}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowTemplatePicker(false)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                 >
-                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -216,15 +216,15 @@ export function BoardList() {
                   {/* Blank board option */}
                   <button
                     onClick={() => handleSelectTemplate(null)}
-                    className="p-4 rounded-xl border-2 border-slate-200 hover:border-orange-400 hover:bg-orange-50 transition-all text-left group"
+                    className="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all text-left group"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 group-hover:bg-orange-100 flex items-center justify-center mb-3 transition-colors">
-                      <svg className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/40 flex items-center justify-center mb-3 transition-colors">
+                      <svg className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-slate-700 group-hover:text-orange-600 transition-colors">{t('boards.templates.blank')}</p>
-                    <p className="text-xs text-slate-400 mt-1">{t('boards.templates.blankDescription')}</p>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{t('boards.templates.blank')}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('boards.templates.blankDescription')}</p>
                   </button>
                   
                   {/* Built-in and user templates */}
@@ -234,21 +234,21 @@ export function BoardList() {
                       onClick={() => handleSelectTemplate(template.id)}
                       className={`p-4 rounded-xl border-2 transition-all text-left group ${
                         template.isBuiltIn 
-                          ? 'border-slate-200 hover:border-blue-400 hover:bg-blue-50' 
-                          : 'border-slate-200 hover:border-purple-400 hover:bg-purple-50'
+                          ? 'border-slate-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20' 
+                          : 'border-slate-200 dark:border-slate-600 hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors ${
                         template.isBuiltIn 
-                          ? 'bg-blue-50 group-hover:bg-blue-100' 
-                          : 'bg-purple-50 group-hover:bg-purple-100'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50' 
+                          : 'bg-purple-50 dark:bg-purple-900/30 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50'
                       }`}>
                         {template.isBuiltIn ? (
-                          <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                           </svg>
                         ) : (
-                          <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                           </svg>
                         )}
@@ -256,20 +256,20 @@ export function BoardList() {
                       <div className="flex items-center gap-2 mb-1">
                         <p className={`text-sm font-semibold transition-colors ${
                           template.isBuiltIn 
-                            ? 'text-slate-700 group-hover:text-blue-600' 
-                            : 'text-slate-700 group-hover:text-purple-600'
+                            ? 'text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400' 
+                            : 'text-slate-700 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400'
                         }`}>{template.name}</p>
                         {template.isBuiltIn && (
-                          <span className="text-[10px] font-medium text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">{t('boards.templates.builtIn')}</span>
+                          <span className="text-[10px] font-medium text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-1.5 py-0.5 rounded">{t('boards.templates.builtIn')}</span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 line-clamp-2">{template.description}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2">{template.description}</p>
                       <div className="flex gap-1 mt-2 flex-wrap">
                         {template.columns.slice(0, 3).map((col, i) => (
-                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded">{col.name}</span>
+                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded">{col.name}</span>
                         ))}
                         {template.columns.length > 3 && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded">+{template.columns.length - 3}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded">+{template.columns.length - 3}</span>
                         )}
                       </div>
                     </button>
@@ -280,16 +280,16 @@ export function BoardList() {
           ) : isCreating ? (
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-5 border-2 border-orange-400 dark:border-orange-500 ring-4 ring-orange-100 dark:ring-orange-900/30">
               {selectedTemplate && getTemplateInfo(selectedTemplate) && (
-                <div className="mb-4 p-3 bg-purple-50 rounded-xl border border-purple-100">
+                <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl border border-purple-100 dark:border-purple-800">
                   <div className="flex items-center gap-2 text-sm">
-                    <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-purple-500 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                     </svg>
-                    <span className="font-medium text-purple-700">Using: {getTemplateInfo(selectedTemplate)?.name}</span>
+                    <span className="font-medium text-purple-700 dark:text-purple-300">Using: {getTemplateInfo(selectedTemplate)?.name}</span>
                   </div>
                   <div className="flex gap-1 mt-2 flex-wrap">
                     {getTemplateInfo(selectedTemplate)?.columns.map((col, i) => (
-                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">{col.name}</span>
+                      <span key={i} className="text-[10px] px-1.5 py-0.5 bg-purple-100 dark:bg-purple-800/50 text-purple-600 dark:text-purple-300 rounded">{col.name}</span>
                     ))}
                   </div>
                 </div>
@@ -299,7 +299,7 @@ export function BoardList() {
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
                 placeholder={t('boards.boardName')}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 text-gray-900 placeholder:text-slate-500"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 text-gray-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !isCreatingBoard) handleCreateBoard();
@@ -324,7 +324,7 @@ export function BoardList() {
                     setNewBoardName('');
                     setSelectedTemplate(null);
                   }}
-                  className="px-4 py-2.5 bg-gray-100 text-gray-600 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
