@@ -104,12 +104,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const scrollAnimationRef = useRef<number | null>(null);
   const edgeScrollRef = useRef({ left: false, right: false });
   
-  // Track pending optimistic updates to prevent subscription from overwriting them
-  const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; timestamp: number }>>(new Map());
-  const OPTIMISTIC_UPDATE_TTL = 3000; // How long to protect optimistic updates (ms)
-  
-  // Track if we're in the middle of a drag operation - skip ALL subscription updates during drag
-  const isDraggingRef = useRef(false);
   
   // Accessibility: Screen reader announcement state
   const [srAnnouncement, setSrAnnouncement] = useState('');
@@ -222,53 +216,13 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }, [boardId, board, accessError]);
 
   // Subscribe to cards - only if we have board access
-  // CRITICAL: Skip updates during drag operations to prevent UI flickering
   useEffect(() => {
     if (!board || accessError) return;
     
     const unsubscribe = subscribeToCards(
       boardId,
       (fetchedCards) => {
-        // CRITICAL: Skip ALL subscription updates while dragging
-        // The optimistic update already has the correct state
-        if (isDraggingRef.current) {
-          console.log('[DnD] Subscription update SKIPPED (dragging)');
-          return;
-        }
-        console.log('[DnD] Subscription update applied');
-        
-        const now = Date.now();
-        const pendingUpdates = pendingCardUpdatesRef.current;
-        
-        // Clean up expired pending updates
-        for (const [cardId, update] of pendingUpdates.entries()) {
-          if (now - update.timestamp > OPTIMISTIC_UPDATE_TTL) {
-            pendingUpdates.delete(cardId);
-          }
-        }
-        
-        // If no pending updates, just use server data directly
-        if (pendingUpdates.size === 0) {
-          setCards(fetchedCards);
-          setLoading(false);
-          return;
-        }
-        
-        // Merge server data with pending optimistic updates
-        // Pending updates take priority to prevent UI flickering
-        const mergedCards = fetchedCards.map(card => {
-          const pendingUpdate = pendingUpdates.get(card.id);
-          if (pendingUpdate) {
-            return {
-              ...card,
-              order: pendingUpdate.order,
-              columnId: pendingUpdate.columnId,
-            };
-          }
-          return card;
-        });
-        
-        setCards(mergedCards);
+        setCards(fetchedCards);
         setLoading(false);
       },
       {
@@ -424,7 +378,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   // Handle drag start
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
-    isDraggingRef.current = true; // Block subscription updates during drag
     
     // If we're dragging a card that's not selected, clear selection and select just this one
     if (start.type === 'card' && !selectedCards.has(start.draggableId)) {
@@ -472,20 +425,14 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     }));
   }, [getCardsForColumn, matchesFilter, user?.uid]);
 
-  const handleDragEnd = (result: DropResult) => {
-    const startTime = performance.now();
-    
-    // CRITICAL: Set isDragging to false immediately - this is a React state
-    // that controls our custom drag styling, separate from the DnD library's state
+  const handleDragEnd = async (result: DropResult) => {
     setIsDragging(false);
     stopEdgeScroll();
     
     const { destination, source, draggableId, type } = result;
 
-    // Handle early returns - always clear isDraggingRef
     if (!destination) {
       setSelectedCards(new Set());
-      isDraggingRef.current = false;
       announceToScreenReader('Drop cancelled. Item returned to original position.');
       return;
     }
@@ -494,12 +441,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
-      isDraggingRef.current = false;
       return;
     }
-    
-    // Wrap the rest in try-catch to ensure cleanup always happens
-    try {
 
     // Handle column reordering
     if (type === 'column') {
@@ -512,21 +455,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         order: index,
       }));
 
-      // Optimistic update for columns
       setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
-      
-      // Fire and forget - but keep subscription blocked until write completes
-      // This prevents stale subscription data from overwriting the optimistic update
-      reorderColumns(boardId, columnUpdates)
-        .then(() => {
-          isDraggingRef.current = false;
-        })
-        .catch((error) => {
-          console.error('Failed to reorder columns:', error);
-          isDraggingRef.current = false;
-        });
-      
-      // Accessibility: Announce column move
+      await reorderColumns(boardId, columnUpdates);
       announceToScreenReader(`List ${removed.name} moved to position ${destination.index + 1}.`);
       return;
     }
@@ -540,10 +470,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       sourceColumnId === destColumnId ? sourceCards : getCardsForColumn(destColumnId);
 
     const draggedCard = cards.find((c) => c.id === draggableId);
-    if (!draggedCard) {
-      isDraggingRef.current = false; // Re-enable subscription updates
-      return;
-    }
+    if (!draggedCard) return;
 
     // Remove from source
     const newSourceCards = sourceCards.filter((c) => c.id !== draggableId);
@@ -556,14 +483,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     // Calculate updates
     const cardUpdates: { id: string; order: number; columnId?: string }[] = [];
 
-    // Update source column cards
     newSourceCards.forEach((card, index) => {
       if (card.order !== index) {
         cardUpdates.push({ id: card.id, order: index });
       }
     });
 
-    // Update destination column cards
     newDestCards.forEach((card, index) => {
       const update: { id: string; order: number; columnId?: string } = {
         id: card.id,
@@ -577,24 +502,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       }
     });
 
-    // Create a Map for O(1) lookup instead of O(n) find() calls
-    const updateMap = new Map(cardUpdates.map(u => [u.id, u]));
-
-    // Register pending updates BEFORE optimistic update
-    // This prevents the Firestore subscription from overwriting our changes
-    const now = Date.now();
-    cardUpdates.forEach((update) => {
-      pendingCardUpdatesRef.current.set(update.id, {
-        order: update.order,
-        columnId: update.columnId || draggedCard.columnId,
-        timestamp: now,
-      });
-    });
-
-    // Optimistic update - immediate UI response
+    // Optimistic update
     setCards((prevCards) =>
       prevCards.map((card) => {
-        const update = updateMap.get(card.id);
+        const update = cardUpdates.find((u) => u.id === card.id);
         if (update) {
           return {
             ...card,
@@ -606,31 +517,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       })
     );
 
-    console.log(`[DnD] handleDragEnd sync portion took ${performance.now() - startTime}ms`);
-
-    // Fire and forget - but keep subscription blocked until write completes
-    // This prevents stale subscription data from overwriting the optimistic update
-    const firestoreStartTime = performance.now();
-    reorderCards(boardId, cardUpdates)
-      .then(() => {
-        console.log(`[DnD] Firestore reorderCards took ${performance.now() - firestoreStartTime}ms`);
-        // Clear pending updates and re-enable subscription after successful save
-        cardUpdates.forEach((update) => {
-          pendingCardUpdatesRef.current.delete(update.id);
-        });
-        isDraggingRef.current = false;
-      })
-      .catch((error) => {
-        console.error('Failed to save card reorder:', error);
-        console.log(`[DnD] Firestore reorderCards FAILED after ${performance.now() - firestoreStartTime}ms`);
-        // Clear pending updates and re-enable subscription on error too
-        cardUpdates.forEach((update) => {
-          pendingCardUpdatesRef.current.delete(update.id);
-        });
-        isDraggingRef.current = false;
-      });
+    // Save to Firestore
+    await reorderCards(boardId, cardUpdates);
     
-    // Log activity if card was moved to a different column (fire and forget)
+    // Log activity if card was moved to a different column
     if (sourceColumnId !== destColumnId && user) {
       const sourceColumn = columns.find(c => c.id === sourceColumnId);
       const destColumn = columns.find(c => c.id === destColumnId);
@@ -648,21 +538,12 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         },
       }).catch(console.error);
       
-      // Accessibility: Announce card move to different column
       announceToScreenReader(`Card ${draggedCard.titleEn} moved from ${sourceColumn?.name} to ${destColumn?.name}.`);
     } else {
-      // Accessibility: Announce card reorder within same column
       announceToScreenReader(`Card ${draggedCard.titleEn} moved to position ${destination.index + 1}.`);
     }
     
-    // Clear selection after successful drop
     setSelectedCards(new Set());
-    } catch (error) {
-      // Ensure cleanup happens even if there's an error
-      console.error('[DnD] Error in handleDragEnd:', error);
-      isDraggingRef.current = false;
-      pendingCardUpdatesRef.current.clear();
-    }
   };
 
   const handleCardClick = useCallback((cardId: string) => {
