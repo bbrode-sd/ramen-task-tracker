@@ -392,12 +392,12 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl flex flex-col max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-130px)] border ${
+          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-[var(--surface)]/95 backdrop-blur-md rounded-2xl flex flex-col max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-130px)] border ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
-              : 'shadow-sm transition-all duration-200'
+              : 'shadow-md transition-all duration-300'
           } ${snapshot.isDropAnimating ? 'animate-drop' : ''} ${
-            isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 dark:border-orange-600 shadow-lg' : 'border-white/40 dark:border-slate-700/60'
+            isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-lg' : 'border-[var(--border)]'
           }`}
         >
           {/* Screen reader drag instructions for column */}
@@ -407,7 +407,7 @@ function ColumnComponent({
           {/* Column Header */}
           <div
             {...provided.dragHandleProps}
-            className="px-3 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-700/50"
+            className="px-3 py-3.5 flex items-center justify-between border-b border-[var(--border-subtle)]"
           >
             {isEditing ? (
               <input
@@ -422,16 +422,16 @@ function ColumnComponent({
                     setIsEditing(false);
                   }
                 }}
-                className="flex-1 px-3 py-1.5 text-sm font-semibold bg-white dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg border border-orange-300 dark:border-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="flex-1 px-3 py-1.5 text-sm font-semibold bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
                 autoFocus
               />
             ) : (
               <h3
                 onClick={() => setIsEditing(true)}
-                className="flex-1 px-2 py-1 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-700/70 rounded-lg transition-colors flex items-center gap-2"
+                className="flex-1 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] cursor-pointer hover:bg-[var(--surface-hover)] rounded-lg transition-colors flex items-center gap-2.5"
               >
                 <span className="truncate">{column.name}</span>
-                <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-700/80 rounded-full">
+                <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-[var(--text-tertiary)] bg-[var(--surface-active)] rounded-full">
                   {cards.length}
                 </span>
               </h3>
@@ -717,6 +717,17 @@ function ColumnComponent({
   );
 }
 
+// Shallow array comparison - much faster than JSON.stringify
+function shallowArrayEqual<T>(a: T[] | undefined, b: T[] | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return a === b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 // Export memoized Column component with custom comparison
 // Only re-renders when the column itself or its cards change
 export const Column = memo(ColumnComponent, (prevProps, nextProps) => {
@@ -728,27 +739,25 @@ export const Column = memo(ColumnComponent, (prevProps, nextProps) => {
   if (prevProps.isFocused !== nextProps.isFocused) return false;
   if (prevProps.focusedCardIndex !== nextProps.focusedCardIndex) return false;
   
-  // Deep comparison for cards array - compare by ID and key properties
+  // Fast comparison for cards array - compare by ID and order only for drag/drop
+  // Individual card content changes are handled by the Card component's memo
   if (prevProps.cards.length !== nextProps.cards.length) return false;
   
   for (let i = 0; i < prevProps.cards.length; i++) {
     const prevCard = prevProps.cards[i];
     const nextCard = nextProps.cards[i];
+    // Only check identity and position - Card component handles content changes
     if (
       prevCard.id !== nextCard.id ||
       prevCard.order !== nextCard.order ||
-      prevCard.titleEn !== nextCard.titleEn ||
-      prevCard.titleJa !== nextCard.titleJa ||
-      JSON.stringify(prevCard.coverImage) !== JSON.stringify(nextCard.coverImage) ||
-      JSON.stringify(prevCard.labels) !== JSON.stringify(nextCard.labels) ||
-      JSON.stringify(prevCard.attachments) !== JSON.stringify(nextCard.attachments) ||
-      prevCard.dueDate !== nextCard.dueDate ||
-      JSON.stringify(prevCard.checklists) !== JSON.stringify(nextCard.checklists) ||
-      JSON.stringify(prevCard.assigneeIds) !== JSON.stringify(nextCard.assigneeIds)
+      prevCard.columnId !== nextCard.columnId
     ) {
       return false;
     }
   }
+  
+  // Check selectedCards set - use size comparison first for quick rejection
+  if (prevProps.selectedCards?.size !== nextProps.selectedCards?.size) return false;
   
   return true;
 });

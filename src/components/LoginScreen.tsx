@@ -9,145 +9,144 @@ export function LoginScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 dark:from-amber-600 dark:via-orange-700 dark:to-red-800">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-white/30 border-t-white"></div>
-          <span className="absolute inset-0 flex items-center justify-center text-3xl animate-bounce">🍜</span>
+          <div className="w-20 h-20 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
+          <span className="absolute inset-0 flex items-center justify-center text-4xl">🍜</span>
         </div>
       </div>
     );
   }
 
   const features = [
-    { icon: '🎯', textKey: 'login.features.dragDrop', color: 'from-orange-500 to-amber-500' },
-    { icon: '🌏', textKey: 'login.features.bilingual', color: 'from-blue-500 to-cyan-500' },
-    { icon: '💬', textKey: 'login.features.comments', color: 'from-purple-500 to-pink-500' },
-    { icon: '📦', textKey: 'login.features.archive', color: 'from-emerald-500 to-teal-500' },
+    { icon: '🎯', textKey: 'login.features.dragDrop', gradient: 'from-amber-500 to-orange-600' },
+    { icon: '🌏', textKey: 'login.features.bilingual', gradient: 'from-sky-500 to-blue-600' },
+    { icon: '💬', textKey: 'login.features.comments', gradient: 'from-violet-500 to-purple-600' },
+    { icon: '📦', textKey: 'login.features.archive', gradient: 'from-emerald-500 to-green-600' },
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden relative">
-      {/* Animated gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 dark:from-amber-600 dark:via-orange-700 dark:to-red-900">
-        {/* Animated mesh gradient overlay */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,255,255,0.3),transparent)]"></div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden relative bg-[var(--background)]">
+      {/* Premium gradient background */}
+      <div className="fixed inset-0 overflow-hidden">
+        {/* Base gradient - warm, sophisticated */}
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950"></div>
         
-        {/* Floating orbs */}
-        <div className="absolute top-20 left-[10%] w-72 h-72 bg-yellow-300/20 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute bottom-20 right-[10%] w-96 h-96 bg-red-400/20 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-300/10 rounded-full blur-3xl"></div>
+        {/* Animated gradient orbs */}
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-amber-200/40 to-orange-300/30 dark:from-amber-900/20 dark:to-orange-800/15 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-rose-200/40 to-red-300/30 dark:from-rose-900/20 dark:to-red-800/15 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-orange-100/20 via-transparent to-transparent dark:from-orange-900/10 rounded-full"></div>
         
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyem0wLTRWMjhIMjR2MmgxMnptLTE4LTJ2MkgxNnYtMmgyem0wLTR2Mkg2di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]"></div>
+        {/* Subtle noise texture */}
+        <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")'}}></div>
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" style={{backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '64px 64px'}}></div>
       </div>
       
-      {/* Main card */}
-      <div className="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 sm:p-12 max-w-md w-full mx-4 border border-white/40 dark:border-white/10">
-        {/* Decorative top gradient bar */}
-        <div className="absolute -top-px left-8 right-8 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-full"></div>
+      {/* Main card - glass morphism */}
+      <div className="relative w-full max-w-lg mx-4 animate-fade-in">
+        {/* Card glow effect */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 rounded-[28px] opacity-20 blur-xl dark:opacity-30"></div>
         
-        {/* Glow effect behind card */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-3xl opacity-20 blur-xl -z-10"></div>
-        
-        {/* Header section */}
-        <div className="text-center mb-10">
-          {/* Ramen bowl with steam animation */}
-          <div className="relative inline-block mb-6">
-            {/* Steam wisps */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex gap-1">
-              <div className="w-1 h-8 bg-gradient-to-t from-gray-400/40 to-transparent rounded-full animate-steam-1 dark:from-gray-300/30"></div>
-              <div className="w-1 h-10 bg-gradient-to-t from-gray-400/30 to-transparent rounded-full animate-steam-2 dark:from-gray-300/20"></div>
-              <div className="w-1 h-6 bg-gradient-to-t from-gray-400/40 to-transparent rounded-full animate-steam-3 dark:from-gray-300/30"></div>
+        {/* Card container */}
+        <div className="relative bg-white/90 dark:bg-stone-900/90 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 dark:border-stone-700/50 overflow-hidden">
+          {/* Top accent gradient */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500"></div>
+          
+          {/* Content */}
+          <div className="p-8 sm:p-10 lg:p-12">
+            {/* Hero section */}
+            <div className="text-center mb-10">
+              {/* Ramen bowl illustration */}
+              <div className="relative inline-block mb-8">
+                {/* Animated glow behind emoji */}
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full blur-2xl opacity-30 dark:opacity-40 scale-150 animate-pulse-soft"></div>
+                
+                {/* Steam wisps */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-none">
+                  <div className="w-1.5 h-10 bg-gradient-to-t from-stone-400/50 via-stone-300/30 to-transparent dark:from-stone-500/40 dark:via-stone-400/20 rounded-full animate-steam-1"></div>
+                  <div className="w-1 h-14 bg-gradient-to-t from-stone-400/40 via-stone-300/20 to-transparent dark:from-stone-500/30 dark:via-stone-400/15 rounded-full animate-steam-2"></div>
+                  <div className="w-1.5 h-8 bg-gradient-to-t from-stone-400/50 via-stone-300/30 to-transparent dark:from-stone-500/40 dark:via-stone-400/20 rounded-full animate-steam-3"></div>
+                </div>
+                
+                {/* Ramen emoji */}
+                <span className="relative text-7xl sm:text-8xl block select-none animate-ramen-wobble hover:animate-ramen-spin cursor-default" style={{textShadow: '0 8px 24px rgba(0,0,0,0.15)'}}>
+                  🍜
+                </span>
+                
+                {/* Reflection */}
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent rounded-full blur-sm"></div>
+              </div>
+              
+              {/* Title */}
+              <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-50 mb-3 tracking-tight">
+                {t('app.title')}
+              </h1>
+              
+              {/* Tagline */}
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-500 to-rose-500 dark:from-amber-400 dark:via-orange-400 dark:to-rose-400 mb-4">
+                Organize • Track • Accomplish
+              </p>
+              
+              {/* Description */}
+              <p className="text-stone-500 dark:text-stone-400 text-base max-w-sm mx-auto leading-relaxed">
+                {t('app.description')}
+              </p>
             </div>
-            
-            {/* Ramen emoji with wobble */}
-            <span className="text-7xl sm:text-8xl block drop-shadow-2xl animate-ramen-wobble cursor-default select-none hover:animate-ramen-spin">
-              🍜
-            </span>
-            
-            {/* Subtle reflection */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-3 bg-gradient-to-r from-transparent via-orange-400/30 to-transparent rounded-full blur-sm"></div>
-          </div>
-          
-          {/* App title */}
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
-            {t('app.title')}
-          </h1>
-          
-          {/* Tagline */}
-          <p className="text-orange-600 dark:text-orange-400 font-semibold text-sm uppercase tracking-widest mb-3">
-            Organize • Track • Accomplish
-          </p>
-          
-          {/* Description */}
-          <p className="text-gray-500 dark:text-gray-400 text-base leading-relaxed max-w-xs mx-auto">
-            {t('app.description')}
-          </p>
-        </div>
 
-        {/* Sign in button */}
-        <div className="space-y-4">
-          <button
-            onClick={signInWithGoogle}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-white dark:to-gray-100 text-white dark:text-gray-900 rounded-2xl hover:from-gray-800 hover:to-gray-700 dark:hover:from-gray-100 dark:hover:to-gray-200 active:scale-[0.98] transition-all duration-200 shadow-lg hover:shadow-xl group font-semibold text-base"
-          >
-            <svg className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:rotate-3" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                className="dark:fill-gray-900"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
-            <span>{t('auth.signInWithGoogle')}</span>
-            <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </button>
-          
-          {/* Divider with text */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent"></div>
-            <span className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Features</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent"></div>
-          </div>
-        </div>
-
-        {/* Features list */}
-        <div className="grid grid-cols-2 gap-3">
-          {features.map((feature, i) => (
-            <div 
-              key={i} 
-              className="group flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 cursor-default"
+            {/* Sign in button */}
+            <button
+              onClick={signInWithGoogle}
+              className="group w-full relative flex items-center justify-center gap-3 px-6 py-4 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-2xl font-semibold text-base overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
             >
-              <span className={`flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gradient-to-br ${feature.color} rounded-xl text-lg shadow-sm group-hover:scale-110 transition-transform duration-200`}>
-                {feature.icon}
-              </span>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 leading-tight">{t(feature.textKey)}</span>
+              {/* Button shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 dark:via-black/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              
+              <svg className="w-5 h-5 relative transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              <span className="relative">{t('auth.signInWithGoogle')}</span>
+              <svg className="w-4 h-4 relative transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+            
+            {/* Divider */}
+            <div className="flex items-center gap-4 my-8">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent"></div>
+              <span className="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wider font-medium">Features</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent"></div>
             </div>
-          ))}
-        </div>
-        
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-            </svg>
-            <span>{t('auth.secureAuth')}</span>
+
+            {/* Features grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {features.map((feature, i) => (
+                <div 
+                  key={i} 
+                  className="group flex items-center gap-3 p-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-700/50 hover:border-stone-200 dark:hover:border-stone-600 transition-all duration-200 hover:shadow-md cursor-default"
+                  style={{animationDelay: `${i * 50}ms`}}
+                >
+                  <span className={`flex-shrink-0 w-11 h-11 flex items-center justify-center bg-gradient-to-br ${feature.gradient} rounded-xl text-lg shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-200`}>
+                    {feature.icon}
+                  </span>
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300 leading-snug">{t(feature.textKey)}</span>
+                </div>
+              ))}
+            </div>
+            
+            {/* Footer */}
+            <div className="mt-8 pt-6 border-t border-stone-100 dark:border-stone-800 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-50 dark:bg-stone-800/50 text-xs text-stone-500 dark:text-stone-400">
+                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <span>{t('auth.secureAuth')}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -156,39 +155,40 @@ export function LoginScreen() {
       <style jsx>{`
         @keyframes steam-1 {
           0%, 100% { opacity: 0; transform: translateY(0) scaleX(1); }
-          50% { opacity: 1; transform: translateY(-12px) scaleX(1.2); }
+          50% { opacity: 1; transform: translateY(-16px) scaleX(1.3); }
         }
         @keyframes steam-2 {
           0%, 100% { opacity: 0; transform: translateY(0) scaleX(1); }
-          50% { opacity: 1; transform: translateY(-16px) scaleX(0.8); }
+          50% { opacity: 1; transform: translateY(-20px) scaleX(0.7); }
         }
         @keyframes steam-3 {
           0%, 100% { opacity: 0; transform: translateY(0) scaleX(1); }
-          50% { opacity: 1; transform: translateY(-10px) scaleX(1.1); }
+          50% { opacity: 1; transform: translateY(-12px) scaleX(1.2); }
         }
         @keyframes ramen-wobble {
-          0%, 100% { transform: rotate(-3deg) scale(1); }
-          50% { transform: rotate(3deg) scale(1.02); }
+          0%, 100% { transform: rotate(-2deg) scale(1); }
+          50% { transform: rotate(2deg) scale(1.02); }
         }
         @keyframes ramen-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.1); }
+          100% { transform: rotate(360deg) scale(1); }
         }
         @keyframes float-slow {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          50% { transform: translateY(-20px) translateX(10px); }
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(30px, -30px) scale(1.05); }
         }
         @keyframes float-delayed {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          50% { transform: translateY(20px) translateX(-10px); }
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-30px, 30px) scale(1.05); }
         }
-        .animate-steam-1 { animation: steam-1 2s ease-in-out infinite; }
-        .animate-steam-2 { animation: steam-2 2.5s ease-in-out infinite 0.3s; }
-        .animate-steam-3 { animation: steam-3 2.2s ease-in-out infinite 0.6s; }
-        .animate-ramen-wobble { animation: ramen-wobble 3s ease-in-out infinite; }
-        .animate-ramen-spin { animation: ramen-spin 0.5s ease-in-out; }
-        .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
-        .animate-float-delayed { animation: float-delayed 10s ease-in-out infinite 2s; }
+        .animate-steam-1 { animation: steam-1 3s ease-in-out infinite; }
+        .animate-steam-2 { animation: steam-2 3.5s ease-in-out infinite 0.4s; }
+        .animate-steam-3 { animation: steam-3 2.8s ease-in-out infinite 0.8s; }
+        .animate-ramen-wobble { animation: ramen-wobble 4s ease-in-out infinite; }
+        .animate-ramen-spin { animation: ramen-spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .animate-float-slow { animation: float-slow 12s ease-in-out infinite; }
+        .animate-float-delayed { animation: float-delayed 15s ease-in-out infinite 3s; }
       `}</style>
     </div>
   );

@@ -104,6 +104,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const scrollAnimationRef = useRef<number | null>(null);
   const edgeScrollRef = useRef({ left: false, right: false });
   
+  // Track pending optimistic updates to prevent subscription from overwriting them
+  const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; timestamp: number }>>(new Map());
+  const OPTIMISTIC_UPDATE_TTL = 3000; // How long to protect optimistic updates (ms)
+  
   // Accessibility: Screen reader announcement state
   const [srAnnouncement, setSrAnnouncement] = useState('');
   
@@ -215,13 +219,45 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }, [boardId, board, accessError]);
 
   // Subscribe to cards - only if we have board access
+  // Respects pending optimistic updates to prevent UI flickering
   useEffect(() => {
     if (!board || accessError) return;
     
     const unsubscribe = subscribeToCards(
       boardId,
       (fetchedCards) => {
-        setCards(fetchedCards);
+        const now = Date.now();
+        const pendingUpdates = pendingCardUpdatesRef.current;
+        
+        // Clean up expired pending updates
+        for (const [cardId, update] of pendingUpdates.entries()) {
+          if (now - update.timestamp > OPTIMISTIC_UPDATE_TTL) {
+            pendingUpdates.delete(cardId);
+          }
+        }
+        
+        // If no pending updates, just use server data directly
+        if (pendingUpdates.size === 0) {
+          setCards(fetchedCards);
+          setLoading(false);
+          return;
+        }
+        
+        // Merge server data with pending optimistic updates
+        // Pending updates take priority to prevent UI flickering
+        const mergedCards = fetchedCards.map(card => {
+          const pendingUpdate = pendingUpdates.get(card.id);
+          if (pendingUpdate) {
+            return {
+              ...card,
+              order: pendingUpdate.order,
+              columnId: pendingUpdate.columnId,
+            };
+          }
+          return card;
+        });
+        
+        setCards(mergedCards);
         setLoading(false);
       },
       {
@@ -272,8 +308,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   // Helper to get background classes
   const getBackgroundClasses = () => {
     if (!board?.background) {
-      // Default background with dark mode support
-      return 'bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900';
+      // Default premium background with subtle warmth
+      return 'bg-gradient-to-br from-stone-50 via-amber-50/30 to-orange-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950';
     }
     
     if (board.background.type === 'gradient') {
@@ -284,7 +320,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       return board.background.value;
     }
     
-    return 'bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900';
+    return 'bg-gradient-to-br from-stone-50 via-amber-50/30 to-orange-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950';
   };
 
   const handleAddColumn = async () => {
@@ -724,18 +760,18 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   // Show access error state
   if (accessError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-xl border border-[var(--border)] p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-[var(--error-bg)] rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">Access Denied</h2>
-          <p className="text-slate-600 mb-6">{accessError}</p>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Access Denied</h2>
+          <p className="text-[var(--text-secondary)] mb-6">{accessError}</p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm"
+            className="px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-rose-500 text-white font-medium rounded-xl hover:opacity-90 transition-all shadow-md hover:shadow-lg"
           >
             Go to My Boards
           </button>
@@ -760,8 +796,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
-            <div className="animate-spin rounded-full h-14 w-14 border-4 border-orange-200 border-t-orange-500"></div>
-            <span className="absolute inset-0 flex items-center justify-center text-xl">🍜</span>
+            <div className="w-16 h-16 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
+            <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
           </div>
         </div>
       </div>

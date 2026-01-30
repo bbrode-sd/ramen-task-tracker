@@ -607,15 +607,15 @@ function CardComponent({
           aria-grabbed={snapshot.isDragging}
           aria-selected={isSelected}
           style={getDragStyle(snapshot, provided.draggableProps.style)}
-          className={`relative bg-white dark:bg-slate-800 rounded-xl mb-2.5 cursor-pointer border group drag-handle
+          className={`relative bg-[var(--surface)] rounded-xl mb-2.5 cursor-pointer border group drag-handle
             ${snapshot.isDragging 
               ? 'card-dragging drag-shadow z-50' 
-              : 'shadow-sm hover:shadow-md transition-all duration-200 hover:border-slate-200 dark:hover:border-slate-600'
+              : 'shadow-sm hover:shadow-lg transition-all duration-200 hover:border-[var(--border-strong)]'
             }
             ${snapshot.isDropAnimating ? 'animate-drop' : ''}
-            ${isDimmed ? 'opacity-40 scale-[0.98] border-slate-100 dark:border-slate-700' : ''} 
-            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-orange-500 border-orange-300 dark:border-orange-600 shadow-md' : 'border-slate-100 dark:border-slate-700'}
-            ${isSelected && !snapshot.isDragging ? 'ring-2 ring-orange-500 bg-orange-50/50 dark:bg-orange-900/20' : ''}
+            ${isDimmed ? 'opacity-40 scale-[0.98] border-[var(--border-subtle)]' : ''} 
+            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-lg' : 'border-[var(--border)]'}
+            ${isSelected && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]' : ''}
           `}
         >
           {/* Screen reader drag instructions */}
@@ -730,7 +730,7 @@ function CardComponent({
                 {card.labels.map((label, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border border-orange-200/50"
+                    className="px-2.5 py-1 text-xs font-medium rounded-lg bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]/20"
                   >
                     {label}
                   </span>
@@ -739,27 +739,27 @@ function CardComponent({
             )}
 
             {/* Bilingual Title */}
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {/* English */}
-              <div className="flex items-start gap-2">
-                <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded mt-0.5 border border-blue-100">
+              <div className="flex items-start gap-2.5">
+                <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded-md mt-0.5 border border-sky-200/60 dark:border-sky-700/50">
                   EN
                 </span>
-                <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
+                <p className="text-sm text-[var(--text-primary)] leading-relaxed font-medium">
                     {card.titleEn ? <HighlightedText text={card.titleEn} searchQuery={searchQuery} /> : '—'}
                   </p>
               </div>
               
               {/* Japanese */}
-              <div className="flex items-start gap-2">
-                <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-red-600 bg-red-50 rounded mt-0.5 border border-red-100">
+              <div className="flex items-start gap-2.5">
+                <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded-md mt-0.5 border border-rose-200/60 dark:border-rose-700/50">
                   JP
                 </span>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                   {card.titleJa ? (
                     <HighlightedText text={card.titleJa} searchQuery={searchQuery} />
                   ) : (
-                    <span className="text-slate-300 dark:text-slate-600 italic flex items-center gap-1">
+                    <span className="text-[var(--text-muted)] italic flex items-center gap-1.5">
                       <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -885,10 +885,43 @@ function CardComponent({
   );
 }
 
+// Shallow array comparison - much faster than JSON.stringify
+function shallowArrayEqual<T>(a: T[] | undefined, b: T[] | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return a === b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+// Shallow object comparison for coverImage
+function coverImageEqual(a: CardType['coverImage'], b: CardType['coverImage']): boolean {
+  if (a === b) return true;
+  if (!a || !b) return a === b;
+  return a.attachmentId === b.attachmentId && a.color === b.color;
+}
+
+// Compare checklists by their IDs and item completion status only
+function checklistsEqual(a: CardType['checklists'], b: CardType['checklists']): boolean {
+  if (a === b) return true;
+  if (!a || !b) return a === b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].id !== b[i].id || a[i].items.length !== b[i].items.length) return false;
+    // Only check completion status changed, not every property
+    for (let j = 0; j < a[i].items.length; j++) {
+      if (a[i].items[j].isCompleted !== b[i].items[j].isCompleted) return false;
+    }
+  }
+  return true;
+}
+
 // Export memoized Card component - only re-renders when props change
 // React DevTools Profiler: This component should highlight less frequently after memoization
 export const Card = memo(CardComponent, (prevProps, nextProps) => {
-  // Custom comparison for better performance
+  // Custom comparison for better performance - avoid JSON.stringify
   // Only re-render if these specific props change
   return (
     prevProps.card.id === nextProps.card.id &&
@@ -896,7 +929,7 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevProps.card.titleJa === nextProps.card.titleJa &&
     prevProps.card.columnId === nextProps.card.columnId &&
     prevProps.card.order === nextProps.card.order &&
-    JSON.stringify(prevProps.card.coverImage) === JSON.stringify(nextProps.card.coverImage) &&
+    coverImageEqual(prevProps.card.coverImage, nextProps.card.coverImage) &&
     prevProps.card.dueDate === nextProps.card.dueDate &&
     prevProps.card.priority === nextProps.card.priority &&
     prevProps.index === nextProps.index &&
@@ -906,9 +939,9 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevProps.selectedCount === nextProps.selectedCount &&
     prevProps.onArchive === nextProps.onArchive &&
     prevProps.onDuplicate === nextProps.onDuplicate &&
-    JSON.stringify(prevProps.card.labels) === JSON.stringify(nextProps.card.labels) &&
-    JSON.stringify(prevProps.card.checklists) === JSON.stringify(nextProps.card.checklists) &&
-    JSON.stringify(prevProps.card.attachments) === JSON.stringify(nextProps.card.attachments) &&
-    JSON.stringify(prevProps.card.assigneeIds) === JSON.stringify(nextProps.card.assigneeIds)
+    shallowArrayEqual(prevProps.card.labels, nextProps.card.labels) &&
+    checklistsEqual(prevProps.card.checklists, nextProps.card.checklists) &&
+    prevProps.card.attachments?.length === nextProps.card.attachments?.length &&
+    shallowArrayEqual(prevProps.card.assigneeIds, nextProps.card.assigneeIds)
   );
 });
