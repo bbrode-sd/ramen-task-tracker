@@ -219,7 +219,12 @@ textarea::placeholder {
 
 /* Ensure readable text color for all form inputs */
 input, textarea, select {
-  color: var(--foreground);
+  color: #111827 !important; /* gray-900 - force dark text for readability */
+}
+
+/* Allow dark mode to override input colors */
+.dark input, .dark textarea, .dark select {
+  color: #f1f5f9 !important; /* slate-100 - light text for dark mode */
 }
 
 /* Dark mode scrollbar */
