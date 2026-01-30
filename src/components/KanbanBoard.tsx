@@ -471,6 +471,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }, [getCardsForColumn, matchesFilter, user?.uid]);
 
   const handleDragEnd = (result: DropResult) => {
+    const startTime = performance.now();
+    
     setIsDragging(false);
     stopEdgeScroll();
     
@@ -531,7 +533,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       sourceColumnId === destColumnId ? sourceCards : getCardsForColumn(destColumnId);
 
     const draggedCard = cards.find((c) => c.id === draggableId);
-    if (!draggedCard) return;
+    if (!draggedCard) {
+      isDraggingRef.current = false; // Re-enable subscription updates
+      return;
+    }
 
     // Remove from source
     const newSourceCards = sourceCards.filter((c) => c.id !== draggableId);
@@ -565,13 +570,16 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       }
     });
 
+    // Create a Map for O(1) lookup instead of O(n) find() calls
+    const updateMap = new Map(cardUpdates.map(u => [u.id, u]));
+
     // Register pending updates BEFORE optimistic update
     // This prevents the Firestore subscription from overwriting our changes
     const now = Date.now();
     cardUpdates.forEach((update) => {
       pendingCardUpdatesRef.current.set(update.id, {
         order: update.order,
-        columnId: update.columnId || cards.find(c => c.id === update.id)?.columnId || destColumnId,
+        columnId: update.columnId || draggedCard.columnId,
         timestamp: now,
       });
     });
@@ -579,7 +587,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     // Optimistic update - immediate UI response
     setCards((prevCards) =>
       prevCards.map((card) => {
-        const update = cardUpdates.find((u) => u.id === card.id);
+        const update = updateMap.get(card.id);
         if (update) {
           return {
             ...card,
@@ -591,10 +599,14 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       })
     );
 
+    console.log(`[DnD] handleDragEnd sync portion took ${performance.now() - startTime}ms`);
+
     // Fire and forget - but keep subscription blocked until write completes
     // This prevents stale subscription data from overwriting the optimistic update
+    const firestoreStartTime = performance.now();
     reorderCards(boardId, cardUpdates)
       .then(() => {
+        console.log(`[DnD] Firestore reorderCards took ${performance.now() - firestoreStartTime}ms`);
         // Clear pending updates and re-enable subscription after successful save
         cardUpdates.forEach((update) => {
           pendingCardUpdatesRef.current.delete(update.id);
@@ -603,6 +615,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       })
       .catch((error) => {
         console.error('Failed to save card reorder:', error);
+        console.log(`[DnD] Firestore reorderCards FAILED after ${performance.now() - firestoreStartTime}ms`);
         // Clear pending updates and re-enable subscription on error too
         cardUpdates.forEach((update) => {
           pendingCardUpdatesRef.current.delete(update.id);
