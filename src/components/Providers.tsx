@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { FilterProvider } from '@/contexts/FilterContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { SyncProvider } from '@/contexts/SyncContext';
@@ -13,6 +12,7 @@ import { OfflineProvider } from '@/contexts/OfflineContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { ToastContainer } from './Toast';
 import { OfflineIndicator } from './OfflineIndicator';
+import { ErrorBoundary } from './ErrorBoundary';
 
 // Lazy load modal components that are only shown conditionally
 // KeyboardShortcutsHelp - shown when user presses ?
@@ -27,16 +27,22 @@ const OnboardingTour = dynamic(
   { ssr: false, loading: () => null }
 );
 
+/**
+ * Global providers for the application
+ * 
+ * Note: FilterProvider is NOT included here - it's scoped to individual board pages
+ * to prevent filter state from leaking between boards.
+ */
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <LocaleProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <TranslationProvider>
-              <SyncProvider>
-                <OfflineProvider>
-                  <FilterProvider>
+    <ErrorBoundary context="App">
+      <LocaleProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <TranslationProvider>
+                <SyncProvider>
+                  <OfflineProvider>
                     <KeyboardShortcutsProvider>
                       <OnboardingProvider>
                         <OfflineIndicator position="top" />
@@ -46,13 +52,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         <OnboardingTour />
                       </OnboardingProvider>
                     </KeyboardShortcutsProvider>
-                  </FilterProvider>
-                </OfflineProvider>
-              </SyncProvider>
-            </TranslationProvider>
-          </ToastProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </LocaleProvider>
+                  </OfflineProvider>
+                </SyncProvider>
+              </TranslationProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </LocaleProvider>
+    </ErrorBoundary>
   );
 }

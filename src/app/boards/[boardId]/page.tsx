@@ -3,8 +3,11 @@
 import { use } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { FilterProvider } from '@/contexts/FilterContext';
 import { LoginScreen } from '@/components/LoginScreen';
 import { KanbanBoard } from '@/components/KanbanBoard';
+import { ErrorBoundary, FullPageErrorFallback } from '@/components/ErrorBoundary';
+import { useRouter } from 'next/navigation';
 
 interface BoardPageProps {
   params: Promise<{
@@ -17,6 +20,7 @@ export default function BoardPage({ params }: BoardPageProps) {
   const { user, loading } = useAuth();
   const searchParams = useSearchParams();
   const cardId = searchParams.get('card');
+  const router = useRouter();
 
   if (loading) {
     return (
@@ -33,5 +37,19 @@ export default function BoardPage({ params }: BoardPageProps) {
     return <LoginScreen />;
   }
 
-  return <KanbanBoard boardId={boardId} selectedCardId={cardId} />;
+  return (
+    <ErrorBoundary 
+      context={`Board:${boardId}`}
+      fallback={
+        <FullPageErrorFallback 
+          onRetry={() => window.location.reload()}
+          onGoHome={() => router.push('/')}
+        />
+      }
+    >
+      <FilterProvider>
+        <KanbanBoard boardId={boardId} selectedCardId={cardId} />
+      </FilterProvider>
+    </ErrorBoundary>
+  );
 }
