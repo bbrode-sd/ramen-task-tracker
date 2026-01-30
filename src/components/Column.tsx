@@ -382,6 +382,10 @@ function ColumnComponent({
           aria-describedby={`column-drag-instructions-${column.id}`}
           style={{
             ...provided.draggableProps.style,
+            // Combine library's positioning transform with our rotation effect when dragging
+            transform: snapshot.isDragging
+              ? `${provided.draggableProps.style?.transform || ''} rotate(2deg)`
+              : provided.draggableProps.style?.transform,
             transition: snapshot.isDragging 
               ? 'none' 
               : snapshot.isDropAnimating 

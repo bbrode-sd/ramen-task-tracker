@@ -489,6 +489,7 @@ function CardComponent({
   };
 
   // Get drag styles based on snapshot
+  // Combines library's positioning transform with our visual effects
   const getDragStyle = (snapshot: DraggableStateSnapshot, draggableStyle: React.CSSProperties | undefined) => {
     if (!snapshot.isDragging) {
       return {
@@ -499,9 +500,12 @@ function CardComponent({
       };
     }
 
+    // When dragging, combine the library's translate transform with our rotation/scale
+    // This prevents CSS class transforms from conflicting with inline positioning
+    const libraryTransform = draggableStyle?.transform || '';
     return {
       ...draggableStyle,
-      transform: draggableStyle?.transform,
+      transform: `${libraryTransform} rotate(3deg) scale(1.02)`,
       transition: 'none',
     };
   };
