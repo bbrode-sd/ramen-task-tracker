@@ -330,7 +330,7 @@ service cloud.firestore {
           // Labels limit
           request.resource.data.labels.size() <= 20 &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount']);
         
         // Update: must be board member
         allow update: if isBoardMember(boardId) &&
@@ -357,7 +357,7 @@ service cloud.firestore {
           (!('priority' in request.resource.data) || request.resource.data.priority == null ||
             isOneOf(request.resource.data.priority, ['low', 'medium', 'high', 'urgent'])) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount']);
         
         // Delete: must be board member
         // RATE LIMITING NOTE: Cascade delete of comments should be handled
