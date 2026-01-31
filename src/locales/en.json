@@ -439,5 +439,9 @@
     "today": "Today",
     "tomorrow": "Tomorrow",
     "yesterday": "Yesterday"
+  },
+  "member": {
+    "editProfile": "Edit profile info",
+    "viewActivity": "View member's board activity"
   }
 }

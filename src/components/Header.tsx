@@ -14,6 +14,7 @@ import { BoardMember, Card } from '@/types';
 import { subscribeToBoardMembers, subscribeToArchivedCards, subscribeToArchivedColumns, subscribeToCards } from '@/lib/firestore';
 // Avatar is used inline for member display, keep static import
 import { Avatar } from './ShareBoardModal';
+import { MemberProfilePopover } from './MemberProfilePopover';
 import { Tip } from './Tooltip';
 import { BoardBackground } from '@/types';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -121,6 +122,8 @@ export function Header({
   const [isEditingBoardName, setIsEditingBoardName] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedMember, setSelectedMember] = useState<BoardMember | null>(null);
+  const [memberAnchorEl, setMemberAnchorEl] = useState<HTMLElement | null>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
@@ -730,17 +733,21 @@ export function Header({
               
               {/* Stacked Member Avatars */}
               {members.length > 0 && (
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="flex items-center flex-shrink-0 -space-x-2 hover:opacity-90 transition-opacity"
-                  aria-label={`View ${members.length} board member${members.length !== 1 ? 's' : ''}`}
-                  title={`${members.length} member${members.length !== 1 ? 's' : ''}`}
+                <div
+                  className="flex items-center flex-shrink-0 -space-x-2"
+                  role="group"
+                  aria-label={`${members.length} board member${members.length !== 1 ? 's' : ''}`}
                 >
                   {members.slice(0, 4).map((member, index) => (
-                    <div
+                    <button
                       key={member.uid}
-                      className="relative flex-shrink-0"
+                      onClick={(e) => {
+                        setSelectedMember(member);
+                        setMemberAnchorEl(e.currentTarget);
+                      }}
+                      className="relative flex-shrink-0 hover:z-20 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-white/60 rounded-full"
                       style={{ zIndex: 10 - index }}
+                      aria-label={`View ${member.displayName || member.email}'s profile`}
                     >
                       <Avatar
                         photoURL={member.photoURL}
@@ -748,17 +755,19 @@ export function Header({
                         email={member.email}
                         size="sm"
                       />
-                    </div>
+                    </button>
                   ))}
                   {members.length > 4 && (
-                    <div
-                      className="relative w-8 h-8 rounded-full bg-white/30 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold backdrop-blur-sm"
+                    <button
+                      onClick={() => setShowShareModal(true)}
+                      className="relative w-8 h-8 rounded-full bg-white/30 ring-2 ring-white flex items-center justify-center text-white text-xs font-semibold backdrop-blur-sm hover:bg-white/40 transition-colors"
                       style={{ zIndex: 6 }}
+                      aria-label={`View all ${members.length} members`}
                     >
                       +{members.length - 4}
-                    </div>
+                    </button>
                   )}
-                </button>
+                </div>
               )}
 
               {/* Activity Button */}
@@ -1028,6 +1037,24 @@ export function Header({
           boardId={boardId}
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
+        />
+      )}
+
+      {/* Member Profile Popover */}
+      {selectedMember && (
+        <MemberProfilePopover
+          member={selectedMember}
+          isOpen={!!selectedMember}
+          onClose={() => {
+            setSelectedMember(null);
+            setMemberAnchorEl(null);
+          }}
+          anchorEl={memberAnchorEl}
+          onViewActivity={onActivityClick ? (memberId) => {
+            // TODO: Filter activity by member
+            onActivityClick();
+          } : undefined}
+          isCurrentUser={user?.uid === selectedMember.uid}
         />
       )}
 
