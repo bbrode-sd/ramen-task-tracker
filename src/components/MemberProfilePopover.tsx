@@ -100,9 +100,6 @@ export function MemberProfilePopover({
   // Don't render until we have a valid position
   if (!isOpen || !position) return null;
 
-  // Generate a username from email (e.g., "user@example.com" -> "@user")
-  const username = member.email ? `@${member.email.split('@')[0]}` : '';
-
   return (
     <div className="fixed inset-0 z-[60]" style={{ pointerEvents: 'none' }}>
       <div
@@ -152,7 +149,7 @@ export function MemberProfilePopover({
             {member.displayName || member.email.split('@')[0]}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {username}
+            {member.email}
           </p>
         </div>
 
