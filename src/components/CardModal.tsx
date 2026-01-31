@@ -1174,12 +1174,38 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
       >
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/5 dark:ring-1 dark:ring-emerald-400/20 flex items-center justify-center flex-shrink-0 shadow-sm" aria-hidden="true">
+        {/* Header with Editable Bilingual Titles */}
+        <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/5 dark:ring-1 dark:ring-emerald-400/20 flex items-center justify-center flex-shrink-0 shadow-sm" aria-hidden="true">
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 dark:text-emerald-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </div>
+              <h2 id="card-modal-title" className="sr-only">
+                {titleEn || titleJa || t('card.untitled')}
+              </h2>
+            </div>
+            <button
+              ref={closeButtonRef}
+              onClick={onClose}
+              className="p-2.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:shadow-sm rounded-xl transition-all group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+              aria-label="Close card details dialog"
+            >
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 dark:text-emerald-300"
+                className="w-5 h-5 text-slate-400 dark:text-slate-300 group-hover:text-slate-600 dark:group-hover:text-white transition-colors"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1189,45 +1215,95 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 id="card-modal-title" className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate">
-                {locale === 'ja' 
-                  ? (titleJa || titleEn || t('card.untitled')) 
-                  : (titleEn || titleJa || t('card.untitled'))}
-              </h2>
-              {/* Show secondary language subtitle if both titles exist */}
-              {titleEn && titleJa && (
-                <p id="card-modal-description" className="text-sm text-slate-500 dark:text-slate-400 truncate">
-                  {locale === 'ja' ? titleEn : titleJa}
-                </p>
+            </button>
+          </div>
+          
+          {/* Bilingual Title Inputs - Equal Billing */}
+          <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <legend className="sr-only">Card Title in English and Japanese</legend>
+            {/* English Title */}
+            <div className="space-y-1.5">
+              <label htmlFor="card-title-en" className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                  EN
+                </span>
+                <TranslationIndicator
+                  isTranslating={translationState.isTranslating[fieldKeys.titleEn] || false}
+                  hasError={translationState.errors[fieldKeys.titleEn]}
+                  onRetry={handleRetryTitleEn}
+                  language="en"
+                />
+              </label>
+              <input
+                id="card-title-en"
+                type="text"
+                value={titleEn}
+                onChange={(e) => setTitleEn(e.target.value)}
+                onBlur={() => handleTitleEnChange(titleEn)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleTitleEnChange(titleEn);
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
+                aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
+                className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                  translationState.errors[fieldKeys.titleEn]
+                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
+                }`}
+                placeholder="Enter title in English..."
+              />
+              {translationState.errors[fieldKeys.titleEn] && (
+                <span id="title-en-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleEn]}</span>
               )}
             </div>
-          </div>
-          <button
-            ref={closeButtonRef}
-            onClick={onClose}
-            className="p-2.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:shadow-sm rounded-xl transition-all group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
-            aria-label="Close card details dialog"
-          >
-            <svg
-              className="w-5 h-5 text-slate-400 dark:text-slate-300 group-hover:text-slate-600 dark:group-hover:text-white transition-colors"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
+
+            {/* Japanese Title */}
+            <div className="space-y-1.5">
+              <label htmlFor="card-title-ja" className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                  JP
+                </span>
+                <TranslationIndicator
+                  isTranslating={translationState.isTranslating[fieldKeys.titleJa] || false}
+                  hasError={translationState.errors[fieldKeys.titleJa]}
+                  onRetry={handleRetryTitleJa}
+                  language="ja"
+                />
+              </label>
+              <input
+                id="card-title-ja"
+                type="text"
+                value={titleJa}
+                onChange={(e) => setTitleJa(e.target.value)}
+                onBlur={() => handleTitleJaChange(titleJa)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleTitleJaChange(titleJa);
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
+                aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
+                className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                  translationState.errors[fieldKeys.titleJa]
+                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
+                }`}
+                placeholder="日本語でタイトルを入力..."
               />
-            </svg>
-          </button>
+              {translationState.errors[fieldKeys.titleJa] && (
+                <span id="title-ja-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleJa]}</span>
+              )}
+            </div>
+          </fieldset>
         </header>
 
         {/* Cover preview */}
@@ -1265,92 +1341,6 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         <div className="flex flex-col lg:flex-row">
           {/* Main Content */}
           <div className="flex-1 p-4 sm:p-5 md:p-6 space-y-5 sm:space-y-6">
-            {/* Bilingual Title Section */}
-            <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <legend className="sr-only">Card Title in English and Japanese</legend>
-              {/* English Title */}
-              <div className="space-y-2.5">
-                <label htmlFor="card-title-en" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
-                    EN
-                  </span>
-                  Title (English)
-                  <TranslationIndicator
-                    isTranslating={translationState.isTranslating[fieldKeys.titleEn] || false}
-                    hasError={translationState.errors[fieldKeys.titleEn]}
-                    onRetry={handleRetryTitleEn}
-                    language="en"
-                  />
-                </label>
-                <input
-                  id="card-title-en"
-                  type="text"
-                  value={titleEn}
-                  onChange={(e) => setTitleEn(e.target.value)}
-                  onBlur={() => handleTitleEnChange(titleEn)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleTitleEnChange(titleEn);
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
-                  aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                    translationState.errors[fieldKeys.titleEn]
-                      ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
-                  }`}
-                  placeholder="Enter title in English..."
-                />
-                {translationState.errors[fieldKeys.titleEn] && (
-                  <span id="title-en-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleEn]}</span>
-                )}
-              </div>
-
-              {/* Japanese Title */}
-              <div className="space-y-2.5">
-                <label htmlFor="card-title-ja" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
-                    JP
-                  </span>
-                  Title (日本語)
-                  <TranslationIndicator
-                    isTranslating={translationState.isTranslating[fieldKeys.titleJa] || false}
-                    hasError={translationState.errors[fieldKeys.titleJa]}
-                    onRetry={handleRetryTitleJa}
-                    language="ja"
-                  />
-                </label>
-                <input
-                  id="card-title-ja"
-                  type="text"
-                  value={titleJa}
-                  onChange={(e) => setTitleJa(e.target.value)}
-                  onBlur={() => handleTitleJaChange(titleJa)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleTitleJaChange(titleJa);
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                  aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
-                  aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                    translationState.errors[fieldKeys.titleJa]
-                      ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
-                  }`}
-                  placeholder="日本語でタイトルを入力..."
-                />
-                {translationState.errors[fieldKeys.titleJa] && (
-                  <span id="title-ja-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleJa]}</span>
-                )}
-              </div>
-            </fieldset>
-
             {/* Bilingual Description Section */}
             <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <legend className="sr-only">Card Description in English and Japanese</legend>
