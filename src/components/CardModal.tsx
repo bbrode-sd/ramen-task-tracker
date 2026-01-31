@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
-import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority } from '@/types';
+import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column } from '@/types';
 import {
   getCard,
   updateCard,
@@ -30,6 +30,9 @@ import {
   updateCardCover,
   removeCardCover,
   toggleCardWatch,
+  subscribeToColumns,
+  subscribeToCards,
+  moveCard,
 } from '@/lib/firestore';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -161,6 +164,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [watchers, setWatchers] = useState<BoardMember[]>([]);
   const [isTogglingWatch, setIsTogglingWatch] = useState(false);
 
+  // Column/list selection
+  const [columns, setColumns] = useState<Column[]>([]);
+  const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+  const [isMovingCard, setIsMovingCard] = useState(false);
+  const [allCards, setAllCards] = useState<Card[]>([]);
+  const columnDropdownRef = useRef<HTMLDivElement>(null);
+
   // Track last saved values to avoid re-translating unchanged content
   const [lastSavedTitleEn, setLastSavedTitleEn] = useState('');
   const [lastSavedTitleJa, setLastSavedTitleJa] = useState('');
@@ -196,6 +206,45 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     };
     fetchCard();
   }, [boardId, cardId]);
+
+  // Subscribe to columns for the list selector
+  useEffect(() => {
+    const unsubscribe = subscribeToColumns(
+      boardId,
+      setColumns,
+      (error) => {
+        console.error('Error subscribing to columns:', error);
+      }
+    );
+    return () => unsubscribe();
+  }, [boardId]);
+
+  // Subscribe to all cards to determine order when moving
+  useEffect(() => {
+    const unsubscribe = subscribeToCards(
+      boardId,
+      setAllCards,
+      {
+        onError: (error) => {
+          console.error('Error subscribing to cards:', error);
+        }
+      }
+    );
+    return () => unsubscribe();
+  }, [boardId]);
+
+  // Close column dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (columnDropdownRef.current && !columnDropdownRef.current.contains(event.target as Node)) {
+        setShowColumnDropdown(false);
+      }
+    };
+    if (showColumnDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showColumnDropdown]);
 
   // Subscribe to comments
   useEffect(() => {
@@ -1114,6 +1163,57 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     if (updatedCard) setCard(updatedCard);
   };
 
+  // Move card to a different column
+  const handleMoveToColumn = async (targetColumnId: string) => {
+    if (!card || card.columnId === targetColumnId) {
+      setShowColumnDropdown(false);
+      return;
+    }
+
+    setIsMovingCard(true);
+    try {
+      // Get max order in the target column to place card at the bottom
+      const cardsInTargetColumn = allCards.filter(c => c.columnId === targetColumnId && !c.isArchived);
+      const maxOrder = cardsInTargetColumn.length > 0 
+        ? Math.max(...cardsInTargetColumn.map(c => c.order)) + 1 
+        : 0;
+
+      // Get column names for activity log
+      const fromColumn = columns.find(col => col.id === card.columnId);
+      const toColumn = columns.find(col => col.id === targetColumnId);
+
+      await moveCard(boardId, cardId, targetColumnId, maxOrder);
+
+      // Log activity
+      if (user) {
+        await logActivity(boardId, {
+          cardId,
+          cardTitle: card.titleEn || card.titleJa || '',
+          type: 'card_moved',
+          userId: user.uid,
+          userName: user.displayName || 'Anonymous',
+          userPhoto: user.photoURL,
+          metadata: {
+            from: fromColumn?.name || 'Unknown',
+            to: toColumn?.name || 'Unknown',
+          },
+        });
+      }
+
+      // Refresh card data
+      const updatedCard = await getCard(boardId, cardId);
+      if (updatedCard) setCard(updatedCard);
+
+      showToast('success', t('cardModal.movedTo', { list: toColumn?.name || 'list' }));
+    } catch (error) {
+      console.error('Failed to move card:', error);
+      showToast('error', 'Failed to move card');
+    } finally {
+      setIsMovingCard(false);
+      setShowColumnDropdown(false);
+    }
+  };
+
   const handleArchive = async () => {
     try {
       await archiveCard(boardId, cardId);
@@ -1238,12 +1338,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         onPaste={handlePaste}
       >
         {/* Header with Editable Bilingual Titles */}
-        <header className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/5 dark:ring-1 dark:ring-emerald-400/20 flex items-center justify-center flex-shrink-0 shadow-sm" aria-hidden="true">
+        <header className="px-4 sm:px-5 py-3 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/5 dark:ring-1 dark:ring-emerald-400/20 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 dark:text-emerald-300"
+                  className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1260,11 +1360,67 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               <h2 id="card-modal-title" className="sr-only">
                 {titleEn || titleJa || t('card.untitled')}
               </h2>
+              
+              {/* Column/List Selector */}
+              <div className="relative" ref={columnDropdownRef}>
+                <span className="text-xs text-slate-500 dark:text-slate-400 mr-1">{t('cardModal.inList')}</span>
+                <button
+                  onClick={() => setShowColumnDropdown(!showColumnDropdown)}
+                  disabled={isMovingCard}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70 rounded-md transition-colors disabled:opacity-50"
+                  aria-label={t('cardModal.changeList')}
+                  aria-expanded={showColumnDropdown}
+                  aria-haspopup="listbox"
+                >
+                  {isMovingCard ? (
+                    <span className="animate-pulse">{t('common.loading')}</span>
+                  ) : (
+                    <>
+                      {columns.find(col => col.id === card?.columnId)?.name || 'Unknown'}
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+                
+                {showColumnDropdown && (
+                  <div 
+                    className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-50"
+                    role="listbox"
+                    aria-label={t('cardModal.selectList')}
+                  >
+                    {columns.map((col) => (
+                      <button
+                        key={col.id}
+                        onClick={() => handleMoveToColumn(col.id)}
+                        disabled={col.id === card?.columnId}
+                        className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                          col.id === card?.columnId
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-default'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        }`}
+                        role="option"
+                        aria-selected={col.id === card?.columnId}
+                      >
+                        <span className="flex items-center gap-2">
+                          {col.id === card?.columnId && (
+                            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          <span className={col.id === card?.columnId ? '' : 'ml-6'}>{col.name}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <button
               ref={closeButtonRef}
               onClick={onClose}
-              className="p-2.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:shadow-sm rounded-xl transition-all group touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800/70 rounded-lg transition-all group touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0"
               aria-label="Close card details dialog"
             >
               <svg
@@ -1285,10 +1441,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           </div>
           
           {/* Bilingual Title Display/Edit - Equal Billing */}
-          <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <legend className="sr-only">Card Title in English and Japanese</legend>
             {/* English Title */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
@@ -1302,7 +1458,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 />
               </div>
               {editingField === 'titleEn' ? (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <input
                     id="card-title-en"
                     type="text"
@@ -1318,7 +1474,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     autoFocus
                     aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
                     aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                    className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                    className={`w-full px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                       translationState.errors[fieldKeys.titleEn]
                         ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
                         : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
@@ -1328,28 +1484,28 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={saveTitleEn}
-                      className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                      className="px-2.5 py-1 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors"
                     >
                       {t('common.save')}
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      className="px-2.5 py-1 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
                     >
                       {t('common.cancel')}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="group flex items-start gap-2">
-                  <p className={`flex-1 px-3 py-2.5 text-lg font-semibold rounded-xl border border-transparent ${
+                <div className="group flex items-center gap-2">
+                  <p className={`flex-1 px-2 py-1.5 text-lg font-semibold rounded-lg border border-transparent ${
                     titleEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
                     {titleEn || t('cardModal.noTitle')}
                   </p>
                   <button
                     onClick={startEditingTitleEn}
-                    className="shrink-0 mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    className="shrink-0 px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                   >
                     {t('common.edit')}
                   </button>
@@ -1361,7 +1517,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             </div>
 
             {/* Japanese Title */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
@@ -1375,7 +1531,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 />
               </div>
               {editingField === 'titleJa' ? (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <input
                     id="card-title-ja"
                     type="text"
@@ -1391,7 +1547,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     autoFocus
                     aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
                     aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                    className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                    className={`w-full px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                       translationState.errors[fieldKeys.titleJa]
                         ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
                         : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
@@ -1401,28 +1557,28 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={saveTitleJa}
-                      className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                      className="px-2.5 py-1 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
                     >
                       {t('common.save')}
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      className="px-2.5 py-1 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
                     >
                       {t('common.cancel')}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="group flex items-start gap-2">
-                  <p className={`flex-1 px-3 py-2.5 text-lg font-semibold rounded-xl border border-transparent ${
+                <div className="group flex items-center gap-2">
+                  <p className={`flex-1 px-2 py-1.5 text-lg font-semibold rounded-lg border border-transparent ${
                     titleJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
                     {titleJa || t('cardModal.noTitle')}
                   </p>
                   <button
                     onClick={startEditingTitleJa}
-                    className="shrink-0 mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    className="shrink-0 px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                   >
                     {t('common.edit')}
                   </button>
