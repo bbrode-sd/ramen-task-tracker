@@ -11,7 +11,6 @@ interface MemberProfilePopoverProps {
   onClose: () => void;
   anchorEl: HTMLElement | null;
   onViewActivity?: (memberId: string) => void;
-  isCurrentUser?: boolean;
 }
 
 function getInitials(name: string | null, email: string): string {
@@ -60,7 +59,6 @@ export function MemberProfilePopover({
   onClose,
   anchorEl,
   onViewActivity,
-  isCurrentUser = false,
 }: MemberProfilePopoverProps) {
   const { t } = useLocale();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -155,17 +153,6 @@ export function MemberProfilePopover({
 
         {/* Actions */}
         <div className="border-t border-gray-100 dark:border-gray-700">
-          {isCurrentUser && (
-            <button
-              onClick={() => {
-                // TODO: Implement edit profile
-                onClose();
-              }}
-              className="w-full px-6 py-3.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3"
-            >
-              <span>{t('member.editProfile')}</span>
-            </button>
-          )}
           {onViewActivity && (
             <button
               onClick={() => {

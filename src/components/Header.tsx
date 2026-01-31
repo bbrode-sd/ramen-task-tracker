@@ -1053,7 +1053,6 @@ export function Header({
             // TODO: Filter activity by member
             onActivityClick();
           } : undefined}
-          isCurrentUser={user?.uid === selectedMember.uid}
         />
       )}
 
