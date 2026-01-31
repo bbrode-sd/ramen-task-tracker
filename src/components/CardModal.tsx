@@ -1805,17 +1805,14 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   </div>
                 ) : (
                   <div className="group">
-                    <div className={`min-h-[80px] px-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30 ${
-                      descriptionEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
-                    }`}>
+                    <div 
+                      className={`min-h-[40px] py-1 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors ${
+                        descriptionEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
+                      }`}
+                      onClick={startEditingDescriptionEn}
+                    >
                       <p className="whitespace-pre-wrap">{descriptionEn || t('cardModal.noDescription')}</p>
                     </div>
-                    <button
-                      onClick={startEditingDescriptionEn}
-                      className="mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                    >
-                      {t('common.edit')}
-                    </button>
                   </div>
                 )}
               </div>
@@ -1881,17 +1878,14 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   </div>
                 ) : (
                   <div className="group">
-                    <div className={`min-h-[80px] px-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30 ${
-                      descriptionJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
-                    }`}>
+                    <div 
+                      className={`min-h-[40px] py-1 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors ${
+                        descriptionJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
+                      }`}
+                      onClick={startEditingDescriptionJa}
+                    >
                       <p className="whitespace-pre-wrap">{descriptionJa || t('cardModal.noDescription')}</p>
                     </div>
-                    <button
-                      onClick={startEditingDescriptionJa}
-                      className="mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                    >
-                      {t('common.edit')}
-                    </button>
                   </div>
                 )}
               </div>
