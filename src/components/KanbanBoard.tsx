@@ -67,7 +67,7 @@ interface KanbanBoardProps {
  */
 export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const { user } = useAuth();
-  const { filterCards, getMatchCount, hasActiveFilters, matchesFilter, sortCards } = useFilter();
+  const { filterCards, getMatchCount, hasActiveFilters, matchesFilter } = useFilter();
   const {
     focusedColumnIndex,
     focusedCardIndex,
@@ -367,12 +367,11 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   };
 
   const getCardsForColumn = useCallback((columnId: string) => {
-    const columnCards = cards
+    // Cards are sorted only by their manual order - users drag to reorder
+    return cards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order);
-    // Apply sorting from filter context
-    return sortCards(columnCards);
-  }, [cards, sortCards]);
+  }, [cards]);
 
   // Edge scrolling during drag
   const startEdgeScroll = useCallback(() => {

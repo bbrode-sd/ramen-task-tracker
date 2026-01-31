@@ -60,9 +60,6 @@ export interface CardCover {
 
 export type CardPriority = 'low' | 'medium' | 'high' | 'urgent' | null;
 
-export type SortBy = 'created' | 'dueDate' | 'priority' | 'title';
-export type SortOrder = 'asc' | 'desc';
-
 export interface Card {
   id: string;
   boardId: string;

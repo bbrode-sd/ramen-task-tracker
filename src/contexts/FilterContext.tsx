@@ -1,7 +1,21 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { Card, CardPriority, SortBy, SortOrder } from '@/types';
+import { Card, CardPriority } from '@/types';
+
+// Due date filter options matching Trello
+export type DueDateFilter = 
+  | 'none'           // No dates
+  | 'overdue'        // Overdue
+  | 'due_day'        // Due in the next day
+  | 'due_week'       // Due in the next week
+  | 'due_month';     // Due in the next month
+
+// Member filter options
+export type MemberFilter = 
+  | 'none'           // No members assigned
+  | 'me'             // Cards assigned to me
+  | string;          // Specific member ID
 
 interface FilterContextType {
   // State
@@ -9,45 +23,39 @@ interface FilterContextType {
   selectedLabels: string[];
   selectedPriorities: CardPriority[];
   showOnlyMyCards: boolean;
-  sortBy: SortBy;
-  sortOrder: SortOrder;
+  selectedMembers: MemberFilter[];
+  selectedDueDates: DueDateFilter[];
+  showComplete: boolean | null;  // null = any, true = complete, false = incomplete
   
   // Methods
   setSearchQuery: (query: string) => void;
   toggleLabel: (label: string) => void;
   togglePriority: (priority: CardPriority) => void;
+  toggleMember: (member: MemberFilter) => void;
+  toggleDueDate: (dueDate: DueDateFilter) => void;
+  setShowComplete: (value: boolean | null) => void;
   clearFilters: () => void;
   setShowOnlyMyCards: (show: boolean) => void;
-  setSortBy: (sortBy: SortBy) => void;
-  setSortOrder: (sortOrder: SortOrder) => void;
   
   // Computed
   hasActiveFilters: boolean;
+  activeFilterCount: number;
   filterCards: (cards: Card[], userId?: string) => Card[];
-  sortCards: (cards: Card[]) => Card[];
-  filterAndSortCards: (cards: Card[], userId?: string) => Card[];
   matchesFilter: (card: Card, userId?: string) => boolean;
   getMatchCount: (cards: Card[], userId?: string) => number;
+  searchCards: (cards: Card[], query: string) => Card[];
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
-
-// Priority values for sorting (higher number = higher priority)
-const PRIORITY_VALUES: Record<string, number> = {
-  'urgent': 4,
-  'high': 3,
-  'medium': 2,
-  'low': 1,
-};
 
 export function FilterProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQueryState] = useState('');
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<CardPriority[]>([]);
   const [showOnlyMyCards, setShowOnlyMyCards] = useState(false);
-  // Default: sort by priority (high to low)
-  const [sortBy, setSortByState] = useState<SortBy>('priority');
-  const [sortOrder, setSortOrderState] = useState<SortOrder>('desc');
+  const [selectedMembers, setSelectedMembers] = useState<MemberFilter[]>([]);
+  const [selectedDueDates, setSelectedDueDates] = useState<DueDateFilter[]>([]);
+  const [showComplete, setShowCompleteState] = useState<boolean | null>(null);
 
   const setSearchQuery = useCallback((query: string) => {
     setSearchQueryState(query);
@@ -65,37 +73,138 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const toggleMember = useCallback((member: MemberFilter) => {
+    setSelectedMembers((prev) =>
+      prev.includes(member) ? prev.filter((m) => m !== member) : [...prev, member]
+    );
+  }, []);
+
+  const toggleDueDate = useCallback((dueDate: DueDateFilter) => {
+    setSelectedDueDates((prev) =>
+      prev.includes(dueDate) ? prev.filter((d) => d !== dueDate) : [...prev, dueDate]
+    );
+  }, []);
+
+  const setShowComplete = useCallback((value: boolean | null) => {
+    setShowCompleteState(value);
+  }, []);
+
   const clearFilters = useCallback(() => {
     setSearchQueryState('');
     setSelectedLabels([]);
     setSelectedPriorities([]);
     setShowOnlyMyCards(false);
-    // Reset to default sort
-    setSortByState('priority');
-    setSortOrderState('desc');
-  }, []);
-
-  const setSortBy = useCallback((newSortBy: SortBy) => {
-    setSortByState(newSortBy);
-    // Set sensible default order for each sort type
-    if (newSortBy === 'priority') {
-      setSortOrderState('desc'); // High to low
-    } else if (newSortBy === 'dueDate') {
-      setSortOrderState('asc'); // Soonest first
-    } else if (newSortBy === 'created') {
-      setSortOrderState('desc'); // Newest first
-    } else if (newSortBy === 'title') {
-      setSortOrderState('asc'); // A to Z
-    }
-  }, []);
-
-  const setSortOrder = useCallback((newSortOrder: SortOrder) => {
-    setSortOrderState(newSortOrder);
+    setSelectedMembers([]);
+    setSelectedDueDates([]);
+    setShowCompleteState(null);
   }, []);
 
   const hasActiveFilters = useMemo(() => {
-    return searchQuery.length > 0 || selectedLabels.length > 0 || selectedPriorities.length > 0 || showOnlyMyCards;
-  }, [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards]);
+    return (
+      searchQuery.length > 0 || 
+      selectedLabels.length > 0 || 
+      selectedPriorities.length > 0 || 
+      showOnlyMyCards ||
+      selectedMembers.length > 0 ||
+      selectedDueDates.length > 0 ||
+      showComplete !== null
+    );
+  }, [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchQuery.length > 0) count++;
+    count += selectedLabels.length;
+    count += selectedPriorities.length;
+    if (showOnlyMyCards) count++;
+    count += selectedMembers.length;
+    count += selectedDueDates.length;
+    if (showComplete !== null) count++;
+    return count;
+  }, [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete]);
+
+  // Helper to check if card is complete (all checklists done)
+  const isCardComplete = useCallback((card: Card): boolean => {
+    if (!card.checklists || card.checklists.length === 0) {
+      return false;
+    }
+    return card.checklists.every(checklist => 
+      checklist.items.length > 0 && checklist.items.every(item => item.isCompleted)
+    );
+  }, []);
+
+  // Helper to check due date filter
+  const matchesDueDateFilter = useCallback((card: Card, filters: DueDateFilter[]): boolean => {
+    if (filters.length === 0) return true;
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const nextMonth = new Date(today);
+    nextMonth.setDate(nextMonth.getDate() + 30);
+
+    return filters.some(filter => {
+      switch (filter) {
+        case 'none':
+          return !card.dueDate;
+        case 'overdue':
+          if (!card.dueDate) return false;
+          return card.dueDate.toDate() < today;
+        case 'due_day':
+          if (!card.dueDate) return false;
+          const dueDay = card.dueDate.toDate();
+          return dueDay >= today && dueDay < tomorrow;
+        case 'due_week':
+          if (!card.dueDate) return false;
+          const dueWeek = card.dueDate.toDate();
+          return dueWeek >= today && dueWeek < nextWeek;
+        case 'due_month':
+          if (!card.dueDate) return false;
+          const dueMonth = card.dueDate.toDate();
+          return dueMonth >= today && dueMonth < nextMonth;
+        default:
+          return true;
+      }
+    });
+  }, []);
+
+  // Helper to check member filter
+  const matchesMemberFilter = useCallback((card: Card, filters: MemberFilter[], userId?: string): boolean => {
+    if (filters.length === 0) return true;
+
+    return filters.some(filter => {
+      switch (filter) {
+        case 'none':
+          return !card.assigneeIds || card.assigneeIds.length === 0;
+        case 'me':
+          return userId ? (card.assigneeIds?.includes(userId) || card.createdBy === userId) : false;
+        default:
+          // Specific member ID
+          return card.assigneeIds?.includes(filter) ?? false;
+      }
+    });
+  }, []);
+
+  // Search cards without filtering - returns matching cards for dropdown
+  const searchCards = useCallback((cards: Card[], query: string): Card[] => {
+    if (!query.trim()) return [];
+    
+    const searchTerm = query.toLowerCase().trim();
+    return cards.filter(card => {
+      const searchableText = [
+        card.titleEn || '',
+        card.titleJa || '',
+        card.descriptionEn || '',
+        card.descriptionJa || '',
+        ...(card.labels || []),
+      ].join(' ').toLowerCase();
+      
+      return searchableText.includes(searchTerm);
+    }).slice(0, 10); // Limit to 10 results for dropdown
+  }, []);
 
   const matchesFilter = useCallback(
     (card: Card, userId?: string): boolean => {
@@ -106,6 +215,23 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         if (!isCreator && !isAssignee) {
           return false;
         }
+      }
+
+      // Check member filter
+      if (!matchesMemberFilter(card, selectedMembers, userId)) {
+        return false;
+      }
+
+      // Check due date filter
+      if (!matchesDueDateFilter(card, selectedDueDates)) {
+        return false;
+      }
+
+      // Check completion status
+      if (showComplete !== null) {
+        const complete = isCardComplete(card);
+        if (showComplete && !complete) return false;
+        if (!showComplete && complete) return false;
       }
 
       // Check label filter
@@ -146,7 +272,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
 
       return true;
     },
-    [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards]
+    [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete, matchesMemberFilter, matchesDueDateFilter, isCardComplete]
   );
 
   const filterCards = useCallback(
@@ -157,62 +283,6 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
       return cards.filter((card) => matchesFilter(card, userId));
     },
     [hasActiveFilters, matchesFilter]
-  );
-
-  const sortCards = useCallback(
-    (cards: Card[]): Card[] => {
-      return [...cards].sort((a, b) => {
-        let comparison = 0;
-
-        switch (sortBy) {
-          case 'priority': {
-            const priorityA = PRIORITY_VALUES[a.priority ?? ''] ?? 0;
-            const priorityB = PRIORITY_VALUES[b.priority ?? ''] ?? 0;
-            comparison = priorityA - priorityB;
-            break;
-          }
-          case 'dueDate': {
-            // Cards without due date go to the end
-            if (!a.dueDate && !b.dueDate) {
-              comparison = 0;
-            } else if (!a.dueDate) {
-              comparison = 1;
-            } else if (!b.dueDate) {
-              comparison = -1;
-            } else {
-              const dateA = a.dueDate.toMillis();
-              const dateB = b.dueDate.toMillis();
-              comparison = dateA - dateB;
-            }
-            break;
-          }
-          case 'created': {
-            const createdA = a.createdAt?.toMillis() ?? 0;
-            const createdB = b.createdAt?.toMillis() ?? 0;
-            comparison = createdA - createdB;
-            break;
-          }
-          case 'title': {
-            const titleA = (a.titleEn || a.titleJa || '').toLowerCase();
-            const titleB = (b.titleEn || b.titleJa || '').toLowerCase();
-            comparison = titleA.localeCompare(titleB);
-            break;
-          }
-        }
-
-        // Apply sort order
-        return sortOrder === 'asc' ? comparison : -comparison;
-      });
-    },
-    [sortBy, sortOrder]
-  );
-
-  const filterAndSortCards = useCallback(
-    (cards: Card[], userId?: string): Card[] => {
-      const filtered = filterCards(cards, userId);
-      return sortCards(filtered);
-    },
-    [filterCards, sortCards]
   );
 
   const getMatchCount = useCallback(
@@ -229,21 +299,23 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         selectedLabels,
         selectedPriorities,
         showOnlyMyCards,
-        sortBy,
-        sortOrder,
+        selectedMembers,
+        selectedDueDates,
+        showComplete,
         setSearchQuery,
         toggleLabel,
         togglePriority,
+        toggleMember,
+        toggleDueDate,
+        setShowComplete,
         clearFilters,
         setShowOnlyMyCards,
-        setSortBy,
-        setSortOrder,
         hasActiveFilters,
+        activeFilterCount,
         filterCards,
-        sortCards,
-        filterAndSortCards,
         matchesFilter,
         getMatchCount,
+        searchCards,
       }}
     >
       {children}

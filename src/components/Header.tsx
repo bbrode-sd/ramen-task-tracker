@@ -9,7 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { SyncIndicator } from './SyncIndicator';
 import Image from 'next/image';
-import { BoardMember, Card, SortBy, SortOrder } from '@/types';
+import { BoardMember, Card } from '@/types';
 import { subscribeToBoardMembers, subscribeToArchivedCards, subscribeToArchivedColumns, subscribeToCards } from '@/lib/firestore';
 // Avatar is used inline for member display, keep static import
 import { Avatar } from './ShareBoardModal';
@@ -105,17 +105,12 @@ export function Header({
   const togglePriority = filterContext?.togglePriority ?? (() => {});
   const hasActiveFilters = filterContext?.hasActiveFilters ?? false;
   const clearFilters = filterContext?.clearFilters ?? (() => {});
-  const sortBy = filterContext?.sortBy ?? 'priority';
-  const sortOrder = filterContext?.sortOrder ?? 'desc';
-  const setSortBy = filterContext?.setSortBy ?? (() => {});
-  const setSortOrder = filterContext?.setSortOrder ?? (() => {});
   const { searchInputRef: keyboardSearchInputRef, expandSearchCallback } = useKeyboardShortcuts();
   
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showArchivedDrawer, setShowArchivedDrawer] = useState(false);
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false);
@@ -137,7 +132,6 @@ export function Header({
   const localSearchInputRef = useRef<HTMLInputElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
   const priorityDropdownRef = useRef<HTMLDivElement>(null);
-  const sortDropdownRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Priority options for filter
@@ -285,9 +279,6 @@ export function Header({
       }
       if (priorityDropdownRef.current && !priorityDropdownRef.current.contains(event.target as Node)) {
         setShowPriorityDropdown(false);
-      }
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
-        setShowSortDropdown(false);
       }
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
         setShowMoreMenu(false);
@@ -787,115 +778,6 @@ export function Header({
                         <span>{priority.label}</span>
                       </button>
                     ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="relative" ref={sortDropdownRef}>
-              <button
-                onClick={() => setShowSortDropdown(!showSortDropdown)}
-                aria-expanded={showSortDropdown}
-                aria-haspopup="listbox"
-                aria-label="Sort cards"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 bg-white/20 text-white hover:bg-white/30 border border-white/20"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                </svg>
-                <span className="hidden sm:inline">{t('header.sort')}</span>
-                {sortOrder === 'asc' ? (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                )}
-              </button>
-
-              {showSortDropdown && (
-                <div 
-                  role="listbox"
-                  aria-label="Sort options"
-                  className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
-                >
-                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('header.sortBy')}</h4>
-                  </div>
-                  <div className="py-1">
-                    {([
-                      { value: 'priority', label: t('header.sortPriority') },
-                      { value: 'dueDate', label: t('header.sortDueDate') },
-                      { value: 'created', label: t('header.sortCreated') },
-                      { value: 'title', label: t('header.sortTitle') },
-                    ] as const).map((option) => (
-                      <button
-                        key={option.value}
-                        role="option"
-                        aria-selected={sortBy === option.value}
-                        onClick={() => {
-                          setSortBy(option.value);
-                          setShowSortDropdown(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                          sortBy === option.value 
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' 
-                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <span 
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            sortBy === option.value 
-                              ? 'bg-emerald-500 border-emerald-500' 
-                              : 'border-gray-300 dark:border-gray-600'
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {sortBy === option.value && (
-                            <span className="w-1.5 h-1.5 bg-white rounded-full" />
-                          )}
-                        </span>
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-100 dark:border-gray-700 px-3 py-2 mt-1">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('header.sortOrder')}</h4>
-                    <div className="flex gap-2" role="group" aria-label={t('header.sortOrder')}>
-                      <button
-                        onClick={() => setSortOrder('asc')}
-                        aria-label={t('header.ascending')}
-                        aria-pressed={sortOrder === 'asc'}
-                        className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
-                          sortOrder === 'asc'
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                        </svg>
-                        {t('header.ascending')}
-                      </button>
-                      <button
-                        onClick={() => setSortOrder('desc')}
-                        aria-label={t('header.descending')}
-                        aria-pressed={sortOrder === 'desc'}
-                        className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
-                          sortOrder === 'desc'
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        {t('header.descending')}
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
