@@ -65,10 +65,31 @@
       "using": "Using: {{name}}"
     }
   },
+  "filter": {
+    "title": "Filter",
+    "keyword": "Keyword",
+    "enterKeyword": "Enter a keyword...",
+    "searchHint": "Search cards, members, labels, and more.",
+    "members": "Members",
+    "noMembers": "No members",
+    "cardsAssignedToMe": "Cards assigned to me",
+    "selectMembers": "Select members",
+    "cardStatus": "Card status",
+    "markedComplete": "Marked as complete",
+    "notMarkedComplete": "Not marked as complete",
+    "dueDate": "Due date",
+    "noDates": "No dates",
+    "overdue": "Overdue",
+    "dueNextDay": "Due in the next day",
+    "dueNextWeek": "Due in the next week",
+    "dueNextMonth": "Due in the next month",
+    "noLabels": "No labels"
+  },
   "header": {
     "backToBoards": "Back to boards",
     "searchCards": "Search cards...",
     "searchShortcut": "Press / to search",
+    "filter": "Filter",
     "labels": "Labels",
     "filterByLabel": "Filter by Label",
     "priority": "Priority",

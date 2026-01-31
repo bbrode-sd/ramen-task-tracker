@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,9 +13,10 @@ import { BoardMember, Card } from '@/types';
 import { subscribeToBoardMembers, subscribeToArchivedCards, subscribeToArchivedColumns, subscribeToCards } from '@/lib/firestore';
 // Avatar is used inline for member display, keep static import
 import { Avatar } from './ShareBoardModal';
-import { Tip, ShortcutHint } from './Tooltip';
+import { Tip } from './Tooltip';
 import { BoardBackground } from '@/types';
 import { useLocale } from '@/contexts/LocaleContext';
+import { FilterPanel } from './FilterPanel';
 
 // Lazy load all modal components for better initial load performance
 // These are only rendered when user opens them, reducing initial bundle size
@@ -97,20 +98,14 @@ export function Header({
   const { t } = useLocale();
   // Use optional filter hook - returns null when not in a FilterProvider (e.g., on home page)
   const filterContext = useFilterOptional();
-  const searchQuery = filterContext?.searchQuery ?? '';
-  const setSearchQuery = filterContext?.setSearchQuery ?? (() => {});
-  const selectedLabels = filterContext?.selectedLabels ?? [];
-  const toggleLabel = filterContext?.toggleLabel ?? (() => {});
-  const selectedPriorities = filterContext?.selectedPriorities ?? [];
-  const togglePriority = filterContext?.togglePriority ?? (() => {});
   const hasActiveFilters = filterContext?.hasActiveFilters ?? false;
   const clearFilters = filterContext?.clearFilters ?? (() => {});
   const { searchInputRef: keyboardSearchInputRef, expandSearchCallback } = useKeyboardShortcuts();
   
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
-  const [showLabelDropdown, setShowLabelDropdown] = useState(false);
-  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
+  const [searchQuery, setSearchQueryLocal] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showArchivedDrawer, setShowArchivedDrawer] = useState(false);
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false);
@@ -128,35 +123,66 @@ export function Header({
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const boardNameInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const [cards, setCards] = useState<Card[]>([]);
-  const localSearchInputRef = useRef<HTMLInputElement>(null);
-  const labelDropdownRef = useRef<HTMLDivElement>(null);
-  const priorityDropdownRef = useRef<HTMLDivElement>(null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Priority options for filter
-  const priorityOptions = [
-    { value: 'urgent' as const, label: t('header.priorityUrgent'), color: 'bg-red-500' },
-    { value: 'high' as const, label: t('header.priorityHigh'), color: 'bg-amber-500' },
-    { value: 'medium' as const, label: t('header.priorityMedium'), color: 'bg-yellow-500' },
-    { value: 'low' as const, label: t('header.priorityLow'), color: 'bg-blue-500' },
-  ];
+  // Get active filter count
+  const activeFilterCount = filterContext?.activeFilterCount ?? 0;
 
-  // Connect the search input ref to the keyboard shortcuts context
-  const searchInputRef = useCallback((element: HTMLInputElement | null) => {
-    (localSearchInputRef as React.MutableRefObject<HTMLInputElement | null>).current = element;
-    (keyboardSearchInputRef as React.MutableRefObject<HTMLInputElement | null>).current = element;
-  }, [keyboardSearchInputRef]);
+  // Search cards for dropdown (not filtering)
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase().trim();
+    return cards.filter(card => {
+      const searchableText = [
+        card.titleEn || '',
+        card.titleJa || '',
+        card.descriptionEn || '',
+        card.descriptionJa || '',
+      ].join(' ').toLowerCase();
+      return searchableText.includes(query);
+    }).slice(0, 10); // Limit to 10 results
+  }, [cards, searchQuery]);
 
   // Register the expand search callback
   useEffect(() => {
     expandSearchCallback.current = () => {
       setIsSearchExpanded(true);
+      setTimeout(() => searchInputRef.current?.focus(), 100);
     };
     return () => {
       expandSearchCallback.current = null;
     };
   }, [expandSearchCallback]);
+
+  // Connect keyboard shortcut ref to search input
+  useEffect(() => {
+    if (searchInputRef.current) {
+      (keyboardSearchInputRef as React.MutableRefObject<HTMLInputElement | null>).current = searchInputRef.current;
+    }
+  }, [keyboardSearchInputRef, isSearchExpanded]);
+
+  // Focus search input when expanded
+  useEffect(() => {
+    if (isSearchExpanded && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchExpanded]);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+        if (!searchQuery) {
+          setIsSearchExpanded(false);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [searchQuery]);
 
   // Subscribe to board members
   useEffect(() => {
@@ -236,33 +262,6 @@ export function Header({
     return () => unsubscribe();
   }, [boardId]);
 
-  // Sync local state with context
-  useEffect(() => {
-    setLocalSearchQuery(searchQuery);
-  }, [searchQuery]);
-
-  // Debounced search
-  useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      setSearchQuery(localSearchQuery);
-    }, 300);
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, [localSearchQuery, setSearchQuery]);
-
-  // Focus search input when expanded
-  useEffect(() => {
-    if (isSearchExpanded && localSearchInputRef.current) {
-      localSearchInputRef.current.focus();
-    }
-  }, [isSearchExpanded]);
-
   // Focus board name input when editing
   useEffect(() => {
     if (isEditingBoardName && boardNameInputRef.current) {
@@ -274,12 +273,6 @@ export function Header({
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (labelDropdownRef.current && !labelDropdownRef.current.contains(event.target as Node)) {
-        setShowLabelDropdown(false);
-      }
-      if (priorityDropdownRef.current && !priorityDropdownRef.current.contains(event.target as Node)) {
-        setShowPriorityDropdown(false);
-      }
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
         setShowMoreMenu(false);
       }
@@ -293,35 +286,6 @@ export function Header({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleSearchExpand = useCallback(() => {
-    setIsSearchExpanded(true);
-  }, []);
-
-  // Expand search when / key is pressed (from keyboard shortcut context)
-  useEffect(() => {
-    const handleFocus = () => {
-      if (localSearchInputRef.current === document.activeElement) {
-        setIsSearchExpanded(true);
-      }
-    };
-    localSearchInputRef.current?.addEventListener('focus', handleFocus);
-    return () => {
-      localSearchInputRef.current?.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  const handleSearchBlur = useCallback(() => {
-    if (!localSearchQuery) {
-      setIsSearchExpanded(false);
-    }
-  }, [localSearchQuery]);
-
-  const handleClearSearch = useCallback(() => {
-    setLocalSearchQuery('');
-    setSearchQuery('');
-    localSearchInputRef.current?.focus();
-  }, [setSearchQuery]);
 
   const cycleTheme = useCallback(() => {
     const themeOrder = ['light', 'dark', 'system'] as const;
@@ -446,73 +410,35 @@ export function Header({
             {/* Mobile Dropdown Menu */}
             {showMobileMenu && (
               <div className="absolute top-full left-0 right-0 mt-1 mx-3 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
-                {/* Search */}
-                <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-                  <div className="relative" role="search">
-                    <svg 
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="search"
-                      value={localSearchQuery}
-                      onChange={(e) => setLocalSearchQuery(e.target.value)}
-                      placeholder={t('header.searchCards')}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px]"
-                    />
-                  </div>
-                </div>
-                
-                {/* Labels Filter */}
-                {availableLabels.length > 0 && (
-                  <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('header.filterByLabel')}</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {availableLabels.map((label) => (
-                        <button
-                          key={label}
-                          onClick={() => toggleLabel(label)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                            selectedLabels.includes(label) 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Priority Filter */}
-                <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('header.filterByPriority')}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {priorityOptions.map((priority) => (
-                      <button
-                        key={priority.value}
-                        onClick={() => togglePriority(priority.value)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center gap-2 ${
-                          selectedPriorities.includes(priority.value) 
-                            ? 'bg-emerald-500 text-white' 
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
-                        }`}
-                      >
-                        <span className={`w-2.5 h-2.5 rounded-full ${priority.color}`} aria-hidden="true" />
-                        {priority.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
                 {/* Quick Actions */}
                 <div className="p-2">
+                  {/* Search Button */}
+                  <button
+                    onClick={() => { setIsSearchExpanded(true); setShowMobileMenu(false); }}
+                    aria-label={t('common.search')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    {t('common.search')}
+                  </button>
+                  {/* Filter Button */}
+                  <button
+                    onClick={() => { setShowFilterPanel(true); setShowMobileMenu(false); }}
+                    aria-label={t('header.filter')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    {t('header.filter')}
+                    {activeFilterCount > 0 && (
+                      <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-emerald-100 text-emerald-600 rounded-full">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
                   {onActivityClick && (
                     <button
                       onClick={() => { onActivityClick(); setShowMobileMenu(false); }}
@@ -578,11 +504,12 @@ export function Header({
           </div>
         )}
 
-        {/* Search and Filters - Desktop only, hidden on mobile */}
+        {/* Search, Filter and Actions - Desktop only, hidden on mobile */}
         {showSearchAndFilters && (
           <div className="hidden lg:flex items-center gap-2 flex-1 justify-center max-w-xl">
-            {/* Search Bar */}
+            {/* Search Bar with Dropdown */}
             <div 
+              ref={searchContainerRef}
               className={`relative flex items-center transition-all duration-300 ease-out ${
                 isSearchExpanded ? 'flex-1 min-w-[240px] max-w-sm' : ''
               }`}
@@ -603,19 +530,22 @@ export function Header({
                     id="card-search"
                     ref={searchInputRef}
                     type="search"
-                    value={localSearchQuery}
-                    onChange={(e) => setLocalSearchQuery(e.target.value)}
-                    onBlur={handleSearchBlur}
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQueryLocal(e.target.value);
+                      setShowSearchResults(e.target.value.length > 0);
+                    }}
+                    onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                     placeholder={t('header.searchCards')}
-                    aria-describedby="search-results-count"
                     className="w-full pl-9 pr-8 py-2 bg-white/20 hover:bg-white/25 focus:bg-white/30 border border-white/20 focus:border-white/40 rounded-xl text-white placeholder:text-white/50 text-sm focus:outline-none transition-all backdrop-blur-sm"
                   />
-                  <span id="search-results-count" className="sr-only">
-                    {hasActiveFilters ? `${matchingCards} of ${totalCards} cards match your search` : `${totalCards} cards total`}
-                  </span>
-                  {localSearchQuery && (
+                  {searchQuery && (
                     <button
-                      onClick={handleClearSearch}
+                      onClick={() => {
+                        setSearchQueryLocal('');
+                        setShowSearchResults(false);
+                        searchInputRef.current?.focus();
+                      }}
                       aria-label="Clear search"
                       className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-white/60 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
                     >
@@ -623,6 +553,81 @@ export function Header({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
+                  )}
+
+                  {/* Search Results Dropdown */}
+                  {showSearchResults && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
+                      {searchResults.length > 0 ? (
+                        <div className="py-1 max-h-80 overflow-y-auto">
+                          <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                              Cards
+                            </span>
+                          </div>
+                          {searchResults.map((card) => (
+                            <button
+                              key={card.id}
+                              onClick={() => {
+                                window.location.href = `/boards/${boardId}?card=${card.id}`;
+                                setShowSearchResults(false);
+                                setSearchQueryLocal('');
+                              }}
+                              className="w-full px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-start gap-3"
+                            >
+                              <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                              </svg>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {card.titleEn || card.titleJa || t('card.untitled')}
+                                </div>
+                                {card.titleJa && card.titleEn && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {card.titleJa}
+                                  </div>
+                                )}
+                                {card.isArchived && (
+                                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                                    • Archived
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                          {/* Advanced search link */}
+                          <button
+                            onClick={() => {
+                              setShowFilterPanel(true);
+                              setShowSearchResults(false);
+                            }}
+                            className="w-full px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 border-t border-gray-100 dark:border-gray-700"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                              Advanced search
+                            </span>
+                          </button>
+                        </div>
+                      ) : searchQuery.length > 0 ? (
+                        <div className="px-4 py-6 text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            No cards found for "{searchQuery}"
+                          </p>
+                          <button
+                            onClick={() => {
+                              setShowFilterPanel(true);
+                              setShowSearchResults(false);
+                            }}
+                            className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+                          >
+                            Try advanced search
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
                   )}
                 </div>
               ) : (
@@ -633,7 +638,7 @@ export function Header({
                   position="bottom"
                 >
                   <button
-                    onClick={handleSearchExpand}
+                    onClick={() => setIsSearchExpanded(true)}
                     className="flex items-center gap-2 px-3 py-2 text-white/80 hover:text-white bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-200 border border-white/20"
                     aria-label={t('header.searchCards')}
                   >
@@ -648,140 +653,26 @@ export function Header({
               )}
             </div>
 
-            {/* Label Filter Dropdown */}
-            {availableLabels.length > 0 && (
-              <div className="relative" ref={labelDropdownRef}>
-                <button
-                  onClick={() => setShowLabelDropdown(!showLabelDropdown)}
-                  aria-expanded={showLabelDropdown}
-                  aria-haspopup="listbox"
-                  aria-label={`${t('header.labels')}${selectedLabels.length > 0 ? `, ${selectedLabels.length} selected` : ''}`}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    selectedLabels.length > 0 
-                      ? 'bg-white text-emerald-600' 
-                      : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  <span className="hidden sm:inline">{t('header.labels')}</span>
-                  {selectedLabels.length > 0 && (
-                    <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-full" aria-hidden="true">
-                      {selectedLabels.length}
-                    </span>
-                  )}
-                </button>
-
-                {showLabelDropdown && (
-                  <div 
-                    role="listbox"
-                    aria-label="Available labels"
-                    aria-multiselectable="true"
-                    className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
-                  >
-                    <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide" id="label-filter-heading">{t('header.filterByLabel')}</h4>
-                    </div>
-                    <div className="max-h-64 overflow-y-auto py-1" role="group" aria-labelledby="label-filter-heading">
-                      {availableLabels.map((label) => (
-                        <button
-                          key={label}
-                          role="option"
-                          aria-selected={selectedLabels.includes(label)}
-                          onClick={() => toggleLabel(label)}
-                          className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                        >
-                          <span 
-                            className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                              selectedLabels.includes(label) 
-                                ? 'bg-emerald-500 border-emerald-500' 
-                                : 'border-gray-300 dark:border-gray-600'
-                            }`}
-                            aria-hidden="true"
-                          >
-                            {selectedLabels.includes(label) && (
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </span>
-                          <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-700/50">
-                            {label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Priority Filter Dropdown */}
-            <div className="relative" ref={priorityDropdownRef}>
-              <button
-                onClick={() => setShowPriorityDropdown(!showPriorityDropdown)}
-                aria-expanded={showPriorityDropdown}
-                aria-haspopup="listbox"
-                aria-label={`${t('header.priority')}${selectedPriorities.length > 0 ? `, ${selectedPriorities.length} selected` : ''}`}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  selectedPriorities.length > 0 
-                    ? 'bg-white text-emerald-600' 
-                    : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
-                </svg>
-                <span className="hidden sm:inline">{t('header.priority')}</span>
-                {selectedPriorities.length > 0 && (
-                  <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-full" aria-hidden="true">
-                    {selectedPriorities.length}
-                  </span>
-                )}
-              </button>
-
-              {showPriorityDropdown && (
-                <div 
-                  role="listbox"
-                  aria-label="Available priorities"
-                  aria-multiselectable="true"
-                  className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden"
-                >
-                  <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide" id="priority-filter-heading">{t('header.filterByPriority')}</h4>
-                  </div>
-                  <div className="py-1" role="group" aria-labelledby="priority-filter-heading">
-                    {priorityOptions.map((priority) => (
-                      <button
-                        key={priority.value}
-                        role="option"
-                        aria-selected={selectedPriorities.includes(priority.value)}
-                        onClick={() => togglePriority(priority.value)}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                      >
-                        <span 
-                          className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                            selectedPriorities.includes(priority.value) 
-                              ? 'bg-emerald-500 border-emerald-500' 
-                              : 'border-gray-300 dark:border-gray-600'
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {selectedPriorities.includes(priority.value) && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </span>
-                        <span className={`w-2.5 h-2.5 rounded-full ${priority.color}`} aria-hidden="true" />
-                        <span>{priority.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            {/* Filter Button */}
+            <button
+              onClick={() => setShowFilterPanel(true)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                hasActiveFilters 
+                  ? 'bg-white text-emerald-600' 
+                  : 'text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border border-white/20'
+              }`}
+              aria-label={t('header.filter')}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span className="hidden sm:inline">{t('header.filter')}</span>
+              {activeFilterCount > 0 && (
+                <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-full">
+                  {activeFilterCount}
+                </span>
               )}
-            </div>
+            </button>
 
             {/* Active Filters Indicator & Clear Button */}
             {hasActiveFilters && (
@@ -1191,6 +1082,21 @@ export function Header({
         isOpen={showLanguageSettings}
         onClose={() => setShowLanguageSettings(false)}
       />
+
+      {/* Filter Panel */}
+      {boardId && (
+        <FilterPanel
+          isOpen={showFilterPanel}
+          onClose={() => setShowFilterPanel(false)}
+          availableLabels={availableLabels}
+          cards={cards}
+          members={members}
+          onCardClick={(cardId) => {
+            // Navigate to card
+            window.location.href = `/boards/${boardId}?card=${cardId}`;
+          }}
+        />
+      )}
     </header>
   );
 }

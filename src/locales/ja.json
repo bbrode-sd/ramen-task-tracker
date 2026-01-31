@@ -65,10 +65,31 @@
       "using": "使用中: {{name}}"
     }
   },
+  "filter": {
+    "title": "フィルター",
+    "keyword": "キーワード",
+    "enterKeyword": "キーワードを入力...",
+    "searchHint": "カード、メンバー、ラベルなどを検索。",
+    "members": "メンバー",
+    "noMembers": "メンバーなし",
+    "cardsAssignedToMe": "自分に割り当てられたカード",
+    "selectMembers": "メンバーを選択",
+    "cardStatus": "カードの状態",
+    "markedComplete": "完了としてマーク",
+    "notMarkedComplete": "未完了",
+    "dueDate": "期限",
+    "noDates": "期限なし",
+    "overdue": "期限切れ",
+    "dueNextDay": "明日まで",
+    "dueNextWeek": "1週間以内",
+    "dueNextMonth": "1ヶ月以内",
+    "noLabels": "ラベルなし"
+  },
   "header": {
     "backToBoards": "ボード一覧に戻る",
     "searchCards": "カードを検索...",
     "searchShortcut": "/ で検索",
+    "filter": "フィルター",
     "labels": "ラベル",
     "filterByLabel": "ラベルで絞り込み",
     "priority": "優先度",
