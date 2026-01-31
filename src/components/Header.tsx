@@ -593,7 +593,7 @@ export function Header({
             {/* Search Bar */}
             <div 
               className={`relative flex items-center transition-all duration-300 ease-out ${
-                isSearchExpanded ? 'flex-1 max-w-sm' : ''
+                isSearchExpanded ? 'flex-1 min-w-[240px] max-w-sm' : ''
               }`}
             >
               {isSearchExpanded ? (
@@ -957,14 +957,14 @@ export function Header({
               {members.length > 0 && (
                 <button
                   onClick={() => setShowShareModal(true)}
-                  className="flex items-center -space-x-2 hover:opacity-90 transition-opacity"
+                  className="flex items-center flex-shrink-0 -space-x-2 hover:opacity-90 transition-opacity"
                   aria-label={`View ${members.length} board member${members.length !== 1 ? 's' : ''}`}
                   title={`${members.length} member${members.length !== 1 ? 's' : ''}`}
                 >
                   {members.slice(0, 4).map((member, index) => (
                     <div
                       key={member.uid}
-                      className="relative"
+                      className="relative flex-shrink-0"
                       style={{ zIndex: 10 - index }}
                     >
                       <Avatar
