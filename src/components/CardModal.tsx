@@ -1707,12 +1707,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         {coverPreview && (
           <div className="relative group/cover">
             {coverPreview.type === 'image' ? (
-              <div className="relative h-32 sm:h-40 w-full overflow-hidden">
+              <div className="relative h-32 sm:h-40 w-full overflow-hidden bg-black">
                 <Image
                   src={coverPreview.url}
                   alt={t('cardModal.accessibility.cardCover')}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
               </div>

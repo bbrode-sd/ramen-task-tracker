@@ -718,14 +718,14 @@ function CardComponent({
           {/* Cover image/color if exists */}
           {coverData && (
             coverData.type === 'image' ? (
-              <div className="relative h-[120px] rounded-t-xl overflow-hidden transition-all duration-300">
+              <div className="relative h-[120px] rounded-t-xl overflow-hidden transition-all duration-300 bg-black">
                 <Image
                   src={coverData.url}
                   alt="Card cover"
                   fill
                   loading="lazy"
                   sizes="300px"
-                  className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                  className="object-contain group-hover:scale-[1.02] transition-transform duration-300"
                 />
               </div>
             ) : (
