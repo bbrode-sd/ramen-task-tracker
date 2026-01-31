@@ -659,6 +659,27 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     return t('cardModal.comment.autoTranslated');
   }, [card?.descriptionDetectedLanguage, card?.descriptionTranslatorEn, card?.descriptionTranslatorJa, t]);
 
+  // Helper to get the title translation status label
+  const getTitleTranslationLabel = useCallback((lang: 'en' | 'ja') => {
+    if (!card?.titleDetectedLanguage) {
+      // No title tracking yet or legacy data without tracking
+      return null;
+    }
+    
+    const isOriginal = lang === card.titleDetectedLanguage;
+    if (isOriginal) {
+      return t('cardModal.comment.original');
+    }
+    
+    // Check if there's a manual translator
+    const translator = lang === 'en' ? card.titleTranslatorEn : card.titleTranslatorJa;
+    if (translator) {
+      return t('cardModal.comment.translatedBy', { name: translator.displayName });
+    }
+    
+    return t('cardModal.comment.autoTranslated');
+  }, [card?.titleDetectedLanguage, card?.titleTranslatorEn, card?.titleTranslatorJa, t]);
+
   // Edit mode handlers for explicit save/cancel workflow
   const startEditingTitleEn = useCallback(() => {
     setEditTitleEn(titleEn);
@@ -2691,7 +2712,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                   />
                 </svg>
                 {t('cardModal.sidebar.assignees')}
