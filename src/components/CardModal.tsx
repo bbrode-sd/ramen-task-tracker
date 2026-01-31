@@ -32,6 +32,7 @@ import {
   toggleCardWatch,
 } from '@/lib/firestore';
 import { useToast } from '@/contexts/ToastContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { uploadFile, uploadFromPaste, getFileType } from '@/lib/storage';
 import { Timestamp } from 'firebase/firestore';
 import { CommentsEmptyState } from './EmptyState';
@@ -62,6 +63,7 @@ interface CardModalProps {
 export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { locale, t } = useLocale();
   const { 
     debouncedTranslate, 
     translateWithAutoDetect, 
@@ -1191,9 +1193,18 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 />
               </svg>
             </div>
-            <div className="min-w-0">
-              <h2 id="card-modal-title" className="text-base sm:text-lg font-semibold text-slate-800 dark:text-white truncate">Card Details</h2>
-              <p id="card-modal-description" className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">Edit titles, descriptions, and more</p>
+            <div className="min-w-0 flex-1">
+              <h2 id="card-modal-title" className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate">
+                {locale === 'ja' 
+                  ? (titleJa || titleEn || t('card.untitled')) 
+                  : (titleEn || titleJa || t('card.untitled'))}
+              </h2>
+              {/* Show secondary language subtitle if both titles exist */}
+              {titleEn && titleJa && (
+                <p id="card-modal-description" className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                  {locale === 'ja' ? titleEn : titleJa}
+                </p>
+              )}
             </div>
           </div>
           <button
