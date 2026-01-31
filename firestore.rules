@@ -245,8 +245,11 @@ service cloud.firestore {
           isBool(request.resource.data.isArchived) &&
           // Field length limits
           isValidLength(request.resource.data.name, 200) &&
+          // nameJa is optional - validate length if present
+          (!('nameJa' in request.resource.data) || 
+            (isString(request.resource.data.nameJa) && isValidLength(request.resource.data.nameJa, 200))) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'name', 'order', 'createdAt', 'updatedAt', 'isArchived']);
+          request.resource.data.keys().hasOnly(['boardId', 'name', 'nameJa', 'order', 'createdAt', 'updatedAt', 'isArchived']);
         
         // Update: must be board member
         allow update: if isBoardMember(boardId) &&
@@ -258,8 +261,11 @@ service cloud.firestore {
           isTimestamp(request.resource.data.updatedAt) &&
           // Field length limits
           isValidLength(request.resource.data.name, 200) &&
+          // nameJa is optional - validate length if present
+          (!('nameJa' in request.resource.data) || 
+            (isString(request.resource.data.nameJa) && isValidLength(request.resource.data.nameJa, 200))) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'name', 'order', 'createdAt', 'updatedAt', 'isArchived']);
+          request.resource.data.keys().hasOnly(['boardId', 'name', 'nameJa', 'order', 'createdAt', 'updatedAt', 'isArchived']);
         
         // Delete: must be board member
         // RATE LIMITING NOTE: Consider Cloud Function for cascade delete of cards
