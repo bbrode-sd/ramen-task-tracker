@@ -1338,7 +1338,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         onPaste={handlePaste}
       >
         {/* Header with Editable Bilingual Titles */}
-        <header className="px-4 sm:px-5 py-3 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl sticky top-0 z-10 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+        <header className="px-4 sm:px-5 py-3 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/5 dark:ring-1 dark:ring-emerald-400/20 flex items-center justify-center flex-shrink-0" aria-hidden="true">
