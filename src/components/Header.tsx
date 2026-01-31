@@ -870,23 +870,6 @@ export function Header({
                       {t('header.batchTranslation')}
                     </button>
 
-                    {/* Language Settings */}
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        setShowLanguageSettings(true);
-                        setShowMoreMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
-                    >
-                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                      </svg>
-                      Language / 言語
-                    </button>
-
-                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
-
                     {/* Archive */}
                     <button
                       role="menuitem"
@@ -996,6 +979,20 @@ export function Header({
                       >
                         {themeIcon}
                         <span>{themeLabel}</span>
+                      </button>
+
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          setShowLanguageSettings(true);
+                          setShowAccountMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <span>Language / 言語</span>
                       </button>
 
                       <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
