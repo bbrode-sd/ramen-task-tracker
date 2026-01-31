@@ -117,9 +117,11 @@ export function LanguageSettingsModal({ isOpen, onClose }: LanguageSettingsModal
                   }`}>
                     {lang.nativeLabel}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {lang.label}
-                  </p>
+                  {lang.nativeLabel !== lang.label && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {lang.label}
+                    </p>
+                  )}
                 </div>
                 {locale === lang.value && (
                   <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center">
