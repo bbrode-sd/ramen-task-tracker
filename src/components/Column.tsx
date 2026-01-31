@@ -615,65 +615,61 @@ function ColumnComponent({
                 </div>
               </div>
               
-              <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-[var(--text-tertiary)] bg-[var(--surface-active)] rounded-full mt-0.5">
-                {cards.length}
-              </span>
-            </div>
-
-            {/* Column Menu */}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                aria-expanded={showMenu}
-                aria-haspopup="menu"
-                aria-label={`${column.name} list actions menu`}
-                className="p-2.5 sm:p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-              >
-                <svg
-                  className="w-5 h-5 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
+              {/* Column Menu */}
+              <div className="relative flex-shrink-0" ref={menuRef}>
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  aria-expanded={showMenu}
+                  aria-haspopup="menu"
+                  aria-label={`${column.name} list actions menu`}
+                  className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="w-4 h-4 text-slate-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </button>
 
-              {showMenu && (
-                <div 
-                  role="menu"
-                  aria-label={`Actions for ${column.name} list`}
-                  className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-10 overflow-hidden"
-                >
-                  <button
-                    role="menuitem"
-                    onClick={handleArchiveAllCards}
-                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
+                {showMenu && (
+                  <div 
+                    role="menu"
+                    aria-label={`Actions for ${column.name} list`}
+                    className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-10 overflow-hidden"
                   >
-                    <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Archive all cards
-                  </button>
-                  <hr className="my-1.5 border-gray-100 dark:border-slate-700" aria-hidden="true" />
-                  <button
-                    role="menuitem"
-                    onClick={handleArchive}
-                    className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                    Archive list
-                  </button>
-                </div>
-              )}
+                    <button
+                      role="menuitem"
+                      onClick={handleArchiveAllCards}
+                      className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
+                    >
+                      <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Archive all cards
+                    </button>
+                    <hr className="my-1.5 border-gray-100 dark:border-slate-700" aria-hidden="true" />
+                    <button
+                      role="menuitem"
+                      onClick={handleArchive}
+                      className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                      </svg>
+                      Archive list
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
