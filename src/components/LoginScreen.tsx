@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -12,7 +13,9 @@ export function LoginScreen() {
       <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="relative">
           <div className="w-20 h-20 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
-          <span className="absolute inset-0 flex items-center justify-center text-4xl">🍜</span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Image src="/icon-192.png" alt="Loading" width={40} height={40} className="rounded-lg" />
+          </span>
         </div>
       </div>
     );
@@ -70,10 +73,17 @@ export function LoginScreen() {
                   <div className="w-1.5 h-8 bg-gradient-to-t from-slate-400/50 via-slate-300/30 to-transparent dark:from-slate-500/40 dark:via-slate-400/20 rounded-full animate-steam-3"></div>
                 </div>
                 
-                {/* Tomobodo emoji */}
-                <span className="relative text-7xl sm:text-8xl block select-none animate-tomobodo-wobble hover:animate-tomobodo-spin cursor-default" style={{textShadow: '0 8px 24px rgba(0,0,0,0.15)'}}>
-                  🍜
-                </span>
+                {/* Tomobodo icon */}
+                <div className="relative block select-none animate-tomobodo-wobble hover:animate-tomobodo-spin cursor-default">
+                  <Image 
+                    src="/icon-192.png" 
+                    alt="Tomobodo" 
+                    width={96} 
+                    height={96} 
+                    className="rounded-2xl shadow-2xl"
+                    style={{filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.15))'}}
+                  />
+                </div>
                 
                 {/* Reflection */}
                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent rounded-full blur-sm"></div>

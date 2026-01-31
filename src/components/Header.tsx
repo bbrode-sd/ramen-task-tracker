@@ -391,7 +391,13 @@ export function Header({
             </Link>
           )}
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl drop-shadow-sm flex-shrink-0">🍜</span>
+            <Image 
+              src="/icon-192.png" 
+              alt="Tomobodo" 
+              width={28} 
+              height={28} 
+              className="drop-shadow-sm flex-shrink-0 rounded-md"
+            />
             {boardName ? (
               isEditingBoardName ? (
                 <input
