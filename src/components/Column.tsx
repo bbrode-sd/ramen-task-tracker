@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import { Column as ColumnType, Card as CardType, CardTemplate } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useFilter } from '@/contexts/FilterContext';
+import { useTranslation } from '@/contexts/TranslationContext';
 import {
   updateColumn,
   archiveColumn,
@@ -25,6 +26,7 @@ import {
 import { useToast } from '@/contexts/ToastContext';
 import { Card } from './Card';
 import { ColumnEmptyState } from './EmptyState';
+import { TranslationIndicator } from './CardModal/TranslationIndicator';
 
 
 interface ColumnProps {
@@ -69,6 +71,13 @@ function ColumnComponent({
   const { showToast } = useToast();
   const { locale } = useLocale();
   const { triggerAddCard, setTriggerAddCard, addCardInputRefs } = useKeyboardShortcuts();
+  const { 
+    debouncedTranslate, 
+    translationState, 
+    cancelTranslation,
+    clearError,
+    retryTranslation,
+  } = useTranslation();
   
   // Use filter context directly to ensure re-render when filters change
   const { hasActiveFilters: hasActiveFiltersContext, matchesFilter: matchesFilterContext } = useFilter();
@@ -76,10 +85,15 @@ function ColumnComponent({
   // Prefer context values over props for reactivity
   const hasActiveFilters = hasActiveFiltersContext || hasActiveFiltersProp;
   const matchesFilter = (card: CardType) => matchesFilterContext(card, user?.uid);
-  const [isEditing, setIsEditing] = useState(false);
+  const [editingField, setEditingField] = useState<'en' | 'ja' | null>(null);
   const [columnName, setColumnName] = useState(column.name);
   const [columnNameJa, setColumnNameJa] = useState(column.nameJa || '');
-  const [isTranslatingName, setIsTranslatingName] = useState(false);
+  
+  // Translation field keys for this column
+  const fieldKeys = useMemo(() => ({
+    nameEn: `column-${column.id}-name-en`,
+    nameJa: `column-${column.id}-name-ja`,
+  }), [column.id]);
   const [showMenu, setShowMenu] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitleEn, setNewCardTitleEn] = useState('');
@@ -144,21 +158,13 @@ function ColumnComponent({
     fetchTemplates();
   }, [showTemplateDropdown, user]);
 
-  // Translate text to target language
-  const translate = useCallback(async (text: string, targetLanguage: 'en' | 'ja'): Promise<string> => {
-    try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, targetLanguage }),
-      });
-      const data = await response.json();
-      return data.translation || text;
-    } catch (error) {
-      console.error('Translation error:', error);
-      return text;
-    }
-  }, []);
+  // Cancel translations when unmounting
+  useEffect(() => {
+    return () => {
+      cancelTranslation(fieldKeys.nameEn);
+      cancelTranslation(fieldKeys.nameJa);
+    };
+  }, [cancelTranslation, fieldKeys]);
 
   // Sync column name states when column prop changes
   useEffect(() => {
@@ -166,25 +172,75 @@ function ColumnComponent({
     setColumnNameJa(column.nameJa || '');
   }, [column.name, column.nameJa]);
 
-  const handleRename = async () => {
-    if (columnName.trim() && columnName !== column.name) {
-      // Update with English name first
-      await updateColumn(boardId, column.id, { name: columnName.trim() });
-      
-      // Translate to Japanese in the background
-      setIsTranslatingName(true);
-      try {
-        const translatedNameJa = await translate(columnName.trim(), 'ja');
-        await updateColumn(boardId, column.id, { nameJa: translatedNameJa });
-        setColumnNameJa(translatedNameJa);
-      } catch (error) {
-        console.error('Failed to translate column name:', error);
-      } finally {
-        setIsTranslatingName(false);
-      }
+  // Handle saving English name and auto-translating to Japanese
+  const handleSaveNameEn = async (value: string) => {
+    const trimmedValue = value.trim();
+    setColumnName(trimmedValue);
+    setEditingField(null);
+    
+    if (!trimmedValue) return;
+    
+    // Update English name
+    await updateColumn(boardId, column.id, { name: trimmedValue });
+    
+    // Auto-translate to Japanese with debouncing
+    if (trimmedValue) {
+      debouncedTranslate(trimmedValue, 'ja', fieldKeys.nameJa, async (result) => {
+        if (!result.error) {
+          setColumnNameJa(result.translation);
+          await updateColumn(boardId, column.id, { nameJa: result.translation });
+        }
+      });
     }
-    setIsEditing(false);
   };
+
+  // Handle saving Japanese name and auto-translating to English
+  const handleSaveNameJa = async (value: string) => {
+    const trimmedValue = value.trim();
+    setColumnNameJa(trimmedValue);
+    setEditingField(null);
+    
+    if (!trimmedValue) return;
+    
+    // Update Japanese name
+    await updateColumn(boardId, column.id, { nameJa: trimmedValue });
+    
+    // Auto-translate to English with debouncing
+    if (trimmedValue) {
+      debouncedTranslate(trimmedValue, 'en', fieldKeys.nameEn, async (result) => {
+        if (!result.error) {
+          setColumnName(result.translation);
+          await updateColumn(boardId, column.id, { name: result.translation });
+        }
+      });
+    }
+  };
+
+  // Retry handlers for failed translations
+  const handleRetryNameJa = useCallback(async () => {
+    clearError(fieldKeys.nameJa);
+    const result = await retryTranslation(columnName, 'ja', fieldKeys.nameJa);
+    if (!result.error) {
+      setColumnNameJa(result.translation);
+      await updateColumn(boardId, column.id, { nameJa: result.translation });
+    }
+  }, [columnName, fieldKeys.nameJa, clearError, retryTranslation, boardId, column.id]);
+
+  const handleRetryNameEn = useCallback(async () => {
+    clearError(fieldKeys.nameEn);
+    const result = await retryTranslation(columnNameJa, 'en', fieldKeys.nameEn);
+    if (!result.error) {
+      setColumnName(result.translation);
+      await updateColumn(boardId, column.id, { name: result.translation });
+    }
+  }, [columnNameJa, fieldKeys.nameEn, clearError, retryTranslation, boardId, column.id]);
+
+  // Cancel editing helper
+  const cancelEditing = useCallback(() => {
+    setColumnName(column.name);
+    setColumnNameJa(column.nameJa || '');
+    setEditingField(null);
+  }, [column.name, column.nameJa]);
 
   const handleArchive = async () => {
     setShowMenu(false);
@@ -252,12 +308,11 @@ function ColumnComponent({
       });
 
       // Translate to Japanese in the background and update the card
-      try {
-        const titleJa = await translate(titleEn, 'ja');
-        await updateCard(boardId, cardId, { titleJa });
-      } catch (error) {
-        console.error('Failed to translate card title:', error);
-      }
+      debouncedTranslate(titleEn, 'ja', `card-${cardId}-title-ja`, async (result) => {
+        if (!result.error) {
+          await updateCard(boardId, cardId, { titleJa: result.translation });
+        }
+      });
     }
   };
 
@@ -437,46 +492,101 @@ function ColumnComponent({
           {/* Column Header */}
           <div
             {...provided.dragHandleProps}
-            className="px-3 py-3.5 flex items-center justify-between border-b border-[var(--border-subtle)]"
+            className="px-3 py-3.5 border-b border-[var(--border-subtle)]"
           >
-            {isEditing ? (
-              <input
-                type="text"
-                value={columnName}
-                onChange={(e) => setColumnName(e.target.value)}
-                onBlur={handleRename}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleRename();
-                  if (e.key === 'Escape') {
-                    setColumnName(column.name);
-                    setColumnNameJa(column.nameJa || '');
-                    setIsEditing(false);
-                  }
-                }}
-                className="flex-1 px-3 py-1.5 text-sm font-semibold bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
-                autoFocus
-                placeholder="List name (English)"
-              />
-            ) : (
-              <div
-                onClick={() => setIsEditing(true)}
-                className="flex-1 px-2.5 py-1.5 cursor-pointer hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="flex-1 min-w-0">
-                    {/* English name */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
-                        EN
-                      </span>
-                      <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{column.name}</span>
+            <div className="flex items-start gap-2.5">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                {/* English name */}
+                <div className="flex items-center gap-1.5">
+                  <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
+                    EN
+                  </span>
+                  {editingField === 'en' ? (
+                    <div className="flex-1 flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={columnName}
+                        onChange={(e) => setColumnName(e.target.value)}
+                        onBlur={() => handleSaveNameEn(columnName)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSaveNameEn(columnName);
+                          }
+                          if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
+                        className="flex-1 px-2 py-1 text-sm font-semibold bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                        autoFocus
+                        placeholder="List name (English)"
+                      />
+                      <TranslationIndicator
+                        isTranslating={translationState.isTranslating[fieldKeys.nameEn] || false}
+                        hasError={translationState.errors[fieldKeys.nameEn]}
+                        onRetry={handleRetryNameEn}
+                        language="en"
+                      />
                     </div>
-                    {/* Japanese name */}
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
-                        JP
+                  ) : (
+                    <div 
+                      onClick={() => setEditingField('en')}
+                      className="flex-1 flex items-center gap-1.5 cursor-pointer group"
+                    >
+                      <span className="text-sm font-semibold text-[var(--text-primary)] truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                        {column.name || '—'}
                       </span>
-                      {isTranslatingName || (!columnNameJa && column.name) ? (
+                      <TranslationIndicator
+                        isTranslating={translationState.isTranslating[fieldKeys.nameEn] || false}
+                        hasError={translationState.errors[fieldKeys.nameEn]}
+                        onRetry={handleRetryNameEn}
+                        language="en"
+                      />
+                      <svg className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Japanese name */}
+                <div className="flex items-center gap-1.5">
+                  <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
+                    JP
+                  </span>
+                  {editingField === 'ja' ? (
+                    <div className="flex-1 flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={columnNameJa}
+                        onChange={(e) => setColumnNameJa(e.target.value)}
+                        onBlur={() => handleSaveNameJa(columnNameJa)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSaveNameJa(columnNameJa);
+                          }
+                          if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
+                        className="flex-1 px-2 py-1 text-xs bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                        autoFocus
+                        placeholder="リスト名（日本語）"
+                      />
+                      <TranslationIndicator
+                        isTranslating={translationState.isTranslating[fieldKeys.nameJa] || false}
+                        hasError={translationState.errors[fieldKeys.nameJa]}
+                        onRetry={handleRetryNameJa}
+                        language="ja"
+                      />
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => setEditingField('ja')}
+                      className="flex-1 flex items-center gap-1.5 cursor-pointer group"
+                    >
+                      {translationState.isTranslating[fieldKeys.nameJa] && !columnNameJa ? (
                         <span className="text-xs text-[var(--text-muted)] italic flex items-center gap-1">
                           <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -485,16 +595,30 @@ function ColumnComponent({
                           翻訳中...
                         </span>
                       ) : (
-                        <span className="text-xs text-[var(--text-secondary)] truncate">{columnNameJa || '—'}</span>
+                        <>
+                          <span className="text-xs text-[var(--text-secondary)] truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                            {columnNameJa || '—'}
+                          </span>
+                          <TranslationIndicator
+                            isTranslating={translationState.isTranslating[fieldKeys.nameJa] || false}
+                            hasError={translationState.errors[fieldKeys.nameJa]}
+                            onRetry={handleRetryNameJa}
+                            language="ja"
+                          />
+                          <svg className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </>
                       )}
                     </div>
-                  </div>
-                  <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-[var(--text-tertiary)] bg-[var(--surface-active)] rounded-full">
-                    {cards.length}
-                  </span>
+                  )}
                 </div>
               </div>
-            )}
+              
+              <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-[var(--text-tertiary)] bg-[var(--surface-active)] rounded-full mt-0.5">
+                {cards.length}
+              </span>
+            </div>
 
             {/* Column Menu */}
             <div className="relative" ref={menuRef}>
@@ -530,7 +654,7 @@ function ColumnComponent({
                   <button
                     role="menuitem"
                     onClick={() => {
-                      setIsEditing(true);
+                      setEditingField('en');
                       setShowMenu(false);
                     }}
                     className="w-full px-4 py-3 sm:py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors min-h-[48px] sm:min-h-0"
