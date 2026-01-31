@@ -126,11 +126,13 @@ export function Header({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [isEditingBoardName, setIsEditingBoardName] = useState(false);
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [archivedCount, setArchivedCount] = useState(0);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const boardNameInputRef = useRef<HTMLInputElement>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const localSearchInputRef = useRef<HTMLInputElement>(null);
   const labelDropdownRef = useRef<HTMLDivElement>(null);
@@ -267,6 +269,14 @@ export function Header({
     }
   }, [isSearchExpanded]);
 
+  // Focus board name input when editing
+  useEffect(() => {
+    if (isEditingBoardName && boardNameInputRef.current) {
+      boardNameInputRef.current.focus();
+      boardNameInputRef.current.select();
+    }
+  }, [isEditingBoardName]);
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -383,12 +393,30 @@ export function Header({
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-xl sm:text-2xl drop-shadow-sm flex-shrink-0">🍜</span>
             {boardName ? (
-              <input
-                type="text"
-                value={boardName}
-                onChange={(e) => onBoardNameChange?.(e.target.value)}
-                className="text-base sm:text-lg md:text-xl font-bold text-white bg-white/10 border border-white/20 focus:bg-white/20 focus:border-white/40 focus:outline-none rounded-lg px-2 sm:px-3 py-1.5 min-w-0 w-full max-w-[140px] sm:max-w-[200px] md:max-w-none transition-all placeholder:text-white/50"
-              />
+              isEditingBoardName ? (
+                <input
+                  ref={boardNameInputRef}
+                  type="text"
+                  value={boardName}
+                  onChange={(e) => onBoardNameChange?.(e.target.value)}
+                  onBlur={() => setIsEditingBoardName(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === 'Escape') {
+                      (e.currentTarget as HTMLInputElement).blur();
+                    }
+                  }}
+                  className="text-base sm:text-lg md:text-xl font-bold text-white bg-white/20 border border-white/30 focus:bg-white/25 focus:border-white/50 focus:outline-none rounded-lg px-2 sm:px-3 py-1.5 min-w-0 w-full max-w-[140px] sm:max-w-[200px] md:max-w-none transition-all placeholder:text-white/50"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingBoardName(true)}
+                  className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate px-2 sm:px-3 py-1.5 -mx-2 -my-1.5 rounded-lg hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors max-w-[140px] sm:max-w-[200px] md:max-w-none"
+                  aria-label="Edit board name"
+                >
+                  {boardName}
+                </button>
+              )
             ) : (
               <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
                 <span className="hidden sm:inline">Ramen Task Tracker</span>

@@ -97,6 +97,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   // File upload
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadNotice, setUploadNotice] = useState<{
+    status: 'uploading' | 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const uploadNoticeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Accessibility: Modal focus management
   const modalRef = useRef<HTMLDivElement>(null);
@@ -219,6 +224,31 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     };
     fetchMembers();
   }, [boardId]);
+
+  useEffect(() => {
+    return () => {
+      if (uploadNoticeTimeoutRef.current) {
+        clearTimeout(uploadNoticeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showUploadNotice = useCallback(
+    (status: 'uploading' | 'success' | 'error', message: string, autoHideMs = 2500) => {
+      if (uploadNoticeTimeoutRef.current) {
+        clearTimeout(uploadNoticeTimeoutRef.current);
+      }
+
+      setUploadNotice({ status, message });
+
+      if (status !== 'uploading') {
+        uploadNoticeTimeoutRef.current = setTimeout(() => {
+          setUploadNotice(null);
+        }, autoHideMs);
+      }
+    },
+    []
+  );
 
   // Load assignees when card or board members change
   useEffect(() => {
@@ -859,6 +889,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     if (!files || !user) return;
 
     setIsUploading(true);
+    const fileCount = files.length;
+    showUploadNotice(
+      'uploading',
+      fileCount === 1 ? 'Uploading attachment...' : `Uploading ${fileCount} attachments...`
+    );
     try {
       // Check if card currently has no cover and no image attachments
       const hasNoCover = !card?.coverImage;
@@ -905,10 +940,16 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       // Refresh card
       const updatedCard = await getCard(boardId, cardId);
       if (updatedCard) setCard(updatedCard);
+      showUploadNotice(
+        'success',
+        fileCount === 1 ? 'Attachment added' : `${fileCount} attachments added`
+      );
     } catch (error) {
       console.error('Upload error:', error);
+      showUploadNotice('error', 'Attachment upload failed');
+    } finally {
+      setIsUploading(false);
     }
-    setIsUploading(false);
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
@@ -919,6 +960,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       if (item.type.startsWith('image/')) {
         e.preventDefault();
         setIsUploading(true);
+        showUploadNotice('uploading', 'Uploading image...');
 
         // Check if card currently has no cover and no image attachments
         const hasNoCover = !card?.coverImage;
@@ -960,12 +1002,23 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               
               const updatedCard = await getCard(boardId, cardId);
               if (updatedCard) setCard(updatedCard);
+              showUploadNotice('success', 'Image added');
             } catch (error) {
               console.error('Paste upload error:', error);
+              showUploadNotice('error', 'Image upload failed');
+            } finally {
+              setIsUploading(false);
             }
+          };
+          reader.onerror = () => {
+            console.error('Paste upload error: failed to read image data');
+            showUploadNotice('error', 'Image upload failed');
             setIsUploading(false);
           };
           reader.readAsDataURL(blob);
+        } else {
+          showUploadNotice('error', 'Image upload failed');
+          setIsUploading(false);
         }
         break;
       }
@@ -2577,6 +2630,76 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           </div>
         </div>
       </div>
+
+      {uploadNotice && (
+        <div className="fixed bottom-4 left-4 z-[70] pointer-events-none">
+          <div
+            className={`w-72 max-w-[calc(100vw-2rem)] rounded-xl border px-4 py-3 shadow-lg backdrop-blur-xl ${
+              uploadNotice.status === 'uploading'
+                ? 'bg-blue-500/10 border-blue-500/20'
+                : uploadNotice.status === 'success'
+                  ? 'bg-emerald-500/10 border-emerald-500/20'
+                  : 'bg-red-500/10 border-red-500/20'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                  uploadNotice.status === 'uploading'
+                    ? 'bg-blue-500 text-white'
+                    : uploadNotice.status === 'success'
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-red-500 text-white'
+                }`}
+              >
+                {uploadNotice.status === 'uploading' ? (
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
+                  </svg>
+                ) : uploadNotice.status === 'success' ? (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p
+                  className={`text-sm font-medium ${
+                    uploadNotice.status === 'uploading'
+                      ? 'text-blue-700'
+                      : uploadNotice.status === 'success'
+                        ? 'text-emerald-700'
+                        : 'text-red-700'
+                  }`}
+                >
+                  {uploadNotice.message}
+                </p>
+                {uploadNotice.status === 'uploading' && (
+                  <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-black/5">
+                    <div className="h-full w-2/3 animate-pulse bg-blue-500" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Save as Template Modal */}
       {showSaveTemplateModal && (

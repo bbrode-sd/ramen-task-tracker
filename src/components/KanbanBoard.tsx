@@ -77,7 +77,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     focusPrevColumn,
     focusNextCard,
     focusPrevCard,
-    toggleHelpModal,
     isHelpModalOpen,
     registerColumns,
     registerCardsInColumn,
@@ -638,11 +637,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       if (isHelpModalOpen && e.key !== 'Escape') return;
 
       switch (e.key) {
-        case '?':
-          e.preventDefault();
-          toggleHelpModal();
-          break;
-          
         case 'ArrowLeft':
           e.preventDefault();
           focusPrevColumn();
@@ -769,7 +763,6 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     focusedCardIndex,
     columns,
     cards,
-    toggleHelpModal,
     focusPrevColumn,
     focusNextColumn,
     focusPrevCard,

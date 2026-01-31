@@ -144,6 +144,18 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
     setIsHelpModalOpen((prev) => !prev);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '?') return;
+      if (isInputFocused()) return;
+      e.preventDefault();
+      toggleHelpModal();
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isInputFocused, toggleHelpModal]);
+
   // Clear focus when clicking outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {

@@ -744,7 +744,8 @@ export const Column = memo(ColumnComponent, (prevProps, nextProps) => {
     if (
       prevCard.id !== nextCard.id ||
       prevCard.order !== nextCard.order ||
-      prevCard.columnId !== nextCard.columnId
+      prevCard.columnId !== nextCard.columnId ||
+      prevCard.updatedAt !== nextCard.updatedAt
     ) {
       return false;
     }

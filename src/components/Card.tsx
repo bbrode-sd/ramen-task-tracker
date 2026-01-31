@@ -937,6 +937,15 @@ function coverImageEqual(a: CardType['coverImage'], b: CardType['coverImage']): 
   return a.attachmentId === b.attachmentId && a.color === b.color;
 }
 
+function getCoverAttachmentSignature(card: CardType): string {
+  if (!card.coverImage?.attachmentId || !card.attachments?.length) return '';
+  const coverAttachment = card.attachments.find(
+    attachment => attachment.id === card.coverImage?.attachmentId
+  );
+  if (!coverAttachment) return '';
+  return `${coverAttachment.id}:${coverAttachment.url}:${coverAttachment.type}`;
+}
+
 // Compare checklists by their IDs and item completion status only
 function checklistsEqual(a: CardType['checklists'], b: CardType['checklists']): boolean {
   if (a === b) return true;
@@ -957,6 +966,9 @@ function checklistsEqual(a: CardType['checklists'], b: CardType['checklists']): 
 export const Card = memo(CardComponent, (prevProps, nextProps) => {
   // Custom comparison for better performance - avoid JSON.stringify
   // Only re-render if these specific props change
+  const prevCoverAttachmentSignature = getCoverAttachmentSignature(prevProps.card);
+  const nextCoverAttachmentSignature = getCoverAttachmentSignature(nextProps.card);
+
   return (
     prevProps.card.id === nextProps.card.id &&
     prevProps.card.titleEn === nextProps.card.titleEn &&
@@ -976,6 +988,7 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     shallowArrayEqual(prevProps.card.labels, nextProps.card.labels) &&
     checklistsEqual(prevProps.card.checklists, nextProps.card.checklists) &&
     prevProps.card.attachments?.length === nextProps.card.attachments?.length &&
+    prevCoverAttachmentSignature === nextCoverAttachmentSignature &&
     shallowArrayEqual(prevProps.card.assigneeIds, nextProps.card.assigneeIds) &&
     shallowArrayEqual(prevProps.card.watcherIds, nextProps.card.watcherIds)
   );
