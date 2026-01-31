@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { Activity } from '@/types';
 import { getAvatarColor, getInitials } from './utils';
-import { useLocale } from '@/contexts/LocaleContext';
 
 // English translations for activities
 const enTranslations: Record<string, string> = {
@@ -48,8 +47,6 @@ interface ActivityItemProps {
  * Displays a bilingual activity log item (English and Japanese side by side)
  */
 export function ActivityItem({ activity }: ActivityItemProps) {
-  const { locale } = useLocale();
-  
   const getActivityKey = () => {
     switch (activity.type) {
       case 'card_created':
@@ -91,68 +88,45 @@ export function ActivityItem({ activity }: ActivityItemProps) {
   const enText = interpolate(enTranslations[key] || '', params);
   const jaText = interpolate(jaTranslations[key] || '', params);
 
-  const renderHeader = (lang: 'en' | 'ja') => (
-    <div className="flex items-center gap-2 mb-2">
+  return (
+    <div className="flex items-start gap-3">
+      {/* Single avatar on the left */}
       {activity.userPhoto ? (
         <Image
           src={activity.userPhoto}
           alt={activity.userName}
-          width={36}
-          height={36}
-          className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800/80 object-cover"
+          width={28}
+          height={28}
+          className="w-7 h-7 rounded-full flex-shrink-0 object-cover mt-0.5"
         />
       ) : (
         <div 
-          className={`w-9 h-9 rounded-full bg-gradient-to-br ${getAvatarColor(activity.userId)} flex items-center justify-center flex-shrink-0 shadow-sm`}
+          className={`w-7 h-7 rounded-full bg-gradient-to-br ${getAvatarColor(activity.userId)} flex items-center justify-center flex-shrink-0 mt-0.5`}
         >
-          <span className="text-sm font-medium text-white">{getInitials(activity.userName)}</span>
+          <span className="text-[10px] font-medium text-white">{getInitials(activity.userName)}</span>
         </div>
       )}
-      <span className="text-sm font-semibold text-slate-800 dark:text-white">
-        {activity.userName}
-      </span>
-      <span className="text-xs text-slate-400 dark:text-slate-400">
-        {format(
-          activity.createdAt.toDate(), 
-          lang === 'ja' ? 'yyyy年M月d日 H:mm' : 'MMM d, yyyy h:mm a', 
-          { locale: lang === 'ja' ? ja : enUS }
-        )}
-      </span>
-    </div>
-  );
-
-  return (
-    <div className="flex gap-3 group">
+      
+      {/* Bilingual activity text - side by side */}
       <div className="flex-1 min-w-0">
-        {/* Bilingual activity display - side by side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
           {/* English version */}
-          <div>
-            {renderHeader('en')}
-            <div className="bg-slate-50 dark:bg-slate-900/70 border border-blue-200 dark:border-blue-700/70 rounded-xl px-4 py-3 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
-                  EN
-                </span>
-              </div>
-              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{enText}</p>
-            </div>
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+            {enText}
+            <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+              {format(activity.createdAt.toDate(), 'MMM d, h:mm a', { locale: enUS })}
+            </span>
+          </p>
           
           {/* Japanese version */}
-          <div>
-            {renderHeader('ja')}
-            <div className="bg-slate-50 dark:bg-slate-900/70 border border-red-200 dark:border-red-700/70 rounded-xl px-4 py-3 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
-                  JP
-                </span>
-              </div>
-              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{jaText}</p>
-            </div>
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+            {jaText}
+            <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+              {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
+            </span>
+          </p>
         </div>
       </div>
     </div>
