@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { DragDropContext, Droppable, DropResult, DragStart, DragUpdate } from '@hello-pangea/dnd';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFilter } from '@/contexts/FilterContext';
@@ -35,7 +36,9 @@ const CardModal = dynamic(() => import('./CardModal').then(mod => ({ default: mo
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="relative">
         <div className="animate-spin rounded-full h-14 w-14 border-4 border-white/30 border-t-white"></div>
-        <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
+        <span className="absolute inset-0 flex items-center justify-center">
+          <img src="/logo-white.png" alt="Loading" width={28} height={28} className="opacity-50" />
+        </span>
       </div>
     </div>
   ),
@@ -863,7 +866,9 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
-            <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
+            <span className="absolute inset-0 flex items-center justify-center">
+              <Image src="/logo-white.png" alt="Loading" width={32} height={32} className="opacity-30 dark:opacity-50" />
+            </span>
           </div>
         </div>
       </div>

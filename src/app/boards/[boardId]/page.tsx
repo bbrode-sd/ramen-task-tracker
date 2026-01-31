@@ -2,6 +2,7 @@
 
 import { use } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { FilterProvider } from '@/contexts/FilterContext';
 import { LoginScreen } from '@/components/LoginScreen';
@@ -27,7 +28,9 @@ export default function BoardPage({ params }: BoardPageProps) {
       <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="relative">
           <div className="w-20 h-20 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
-          <span className="absolute inset-0 flex items-center justify-center text-4xl">🍜</span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Image src="/logo-white.png" alt="Loading" width={40} height={40} className="opacity-30 dark:opacity-50" />
+          </span>
         </div>
       </div>
     );

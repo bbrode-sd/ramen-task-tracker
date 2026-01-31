@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -140,7 +141,9 @@ export function BoardList() {
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
-            <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
+            <span className="absolute inset-0 flex items-center justify-center">
+              <Image src="/logo-white.png" alt="Loading" width={32} height={32} className="opacity-30 dark:opacity-50" />
+            </span>
           </div>
         </div>
       </div>
