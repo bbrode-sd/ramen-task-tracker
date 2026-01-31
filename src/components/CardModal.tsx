@@ -1707,7 +1707,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
         {/* Cover preview */}
         {coverPreview && (
-          <div className="relative">
+          <div className="relative group/cover">
             {coverPreview.type === 'image' ? (
               <div className="relative h-32 sm:h-40 w-full overflow-hidden">
                 <Image
@@ -1724,15 +1724,16 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 style={{ backgroundColor: coverPreview.color }}
               />
             )}
-            {/* Quick remove cover button */}
+            {/* Quick remove cover button - only shows on hover */}
             <button
               onClick={handleRemoveCover}
-              className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg shadow-sm transition-all border border-slate-200 hover:border-red-500 text-slate-500 dark:bg-slate-900/80 dark:border-slate-700/70 dark:text-slate-300 dark:hover:bg-red-500/90 dark:hover:border-red-500"
+              className="absolute top-2 right-2 px-2.5 py-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg shadow-sm transition-all border border-slate-200 hover:border-red-500 text-slate-500 dark:bg-slate-900/80 dark:border-slate-700/70 dark:text-slate-300 dark:hover:bg-red-500/90 dark:hover:border-red-500 opacity-0 group-hover/cover:opacity-100 flex items-center gap-1.5 text-xs font-medium"
               title={t('cardModal.accessibility.removeCoverTitle')}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
+              {t('cardModal.sidebar.removeCover')}
             </button>
           </div>
         )}
