@@ -56,11 +56,11 @@ export function ActivityItem({ activity }: ActivityItemProps) {
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-slate-600">
-          <span className="font-medium text-slate-800">{activity.userName}</span>{' '}
+        <p className="text-slate-600 dark:text-slate-300">
+          <span className="font-medium text-slate-800 dark:text-white">{activity.userName}</span>{' '}
           {getActivityText()}
         </p>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
           {formatDistanceToNow(activity.createdAt.toDate(), { addSuffix: true })}
         </p>
       </div>
