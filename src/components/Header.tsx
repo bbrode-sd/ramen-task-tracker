@@ -506,7 +506,7 @@ export function Header({
 
         {/* Search, Filter and Actions - Desktop only, hidden on mobile */}
         {showSearchAndFilters && (
-          <div className="hidden lg:flex items-center gap-2 flex-1 justify-center max-w-xl">
+          <div className="hidden lg:flex items-center gap-2 flex-1 justify-center">
             {/* Search Bar with Dropdown */}
             <div 
               ref={searchContainerRef}
@@ -694,7 +694,7 @@ export function Header({
             )}
 
             {/* Due Date Stats, Member Avatars, Archive & Share Buttons */}
-            <div className="flex items-center gap-2 ml-2">
+            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
               {/* Due Date Stats Indicator */}
               {dueDateStats && (dueDateStats.overdue > 0 || dueDateStats.today > 0 || dueDateStats.tomorrow > 0) && (
                 <div className="flex items-center gap-1.5 px-3 py-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-xl transition-all duration-200 border border-white/20">
