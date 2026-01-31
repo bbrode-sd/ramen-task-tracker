@@ -2239,41 +2239,38 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </h4>
 
               {/* Add comment */}
-              <div className="flex gap-3">
-                {user?.photoURL && (
-                  <Image
-                    src={user.photoURL}
-                    alt={user.displayName || 'User'}
-                    width={36}
-                    height={36}
-                    className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800/80 object-cover"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  {/* Use same grid as comments, with content centered in middle */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 justify-items-center">
-                    <div className="w-full md:col-span-2 md:w-1/2">
-                      <textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder={t('cardModal.comment.placeholder')}
-                        className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 min-h-[90px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                            handleAddComment();
-                          }
-                        }}
-                      />
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{t('cardModal.comment.submitHint')}</span>
-                        <button
-                          onClick={handleAddComment}
-                          disabled={!newComment.trim() || isAddingComment}
-                          className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-sm active:scale-[0.98]"
-                        >
-                          {isAddingComment ? t('cardModal.comment.posting') : t('cardModal.comment.postComment')}
-                        </button>
-                      </div>
+              <div className="flex justify-center">
+                <div className="w-full md:w-1/2 flex gap-3">
+                  {user?.photoURL && (
+                    <Image
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'}
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-full flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800/80 object-cover"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder={t('cardModal.comment.placeholder')}
+                      className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 min-h-[90px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          handleAddComment();
+                        }
+                      }}
+                    />
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{t('cardModal.comment.submitHint')}</span>
+                      <button
+                        onClick={handleAddComment}
+                        disabled={!newComment.trim() || isAddingComment}
+                        className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-sm active:scale-[0.98]"
+                      >
+                        {isAddingComment ? t('cardModal.comment.posting') : t('cardModal.comment.postComment')}
+                      </button>
                     </div>
                   </div>
                 </div>
