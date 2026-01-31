@@ -870,7 +870,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       };
     } else if (diffDays === 0) {
       return {
-        label: 'Today',
+        label: t('cardModal.sidebar.today'),
         className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
         isOverdue: false,
         isDueToday: true,
@@ -878,7 +878,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       };
     } else if (diffDays === 1) {
       return {
-        label: 'Tomorrow',
+        label: t('cardModal.sidebar.tomorrow'),
         className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
         isOverdue: false,
         isDueToday: false,
@@ -1006,7 +1006,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     const fileCount = files.length;
     showUploadNotice(
       'uploading',
-      fileCount === 1 ? 'Uploading attachment...' : `Uploading ${fileCount} attachments...`
+      fileCount === 1 ? t('cardModal.upload.uploadingOne') : t('cardModal.upload.uploadingMany', { count: fileCount })
     );
     try {
       // Check if card currently has no cover and no image attachments
@@ -1056,11 +1056,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       if (updatedCard) setCard(updatedCard);
       showUploadNotice(
         'success',
-        fileCount === 1 ? 'Attachment added' : `${fileCount} attachments added`
+        fileCount === 1 ? t('cardModal.upload.addedOne') : t('cardModal.upload.addedMany', { count: fileCount })
       );
     } catch (error) {
       console.error('Upload error:', error);
-      showUploadNotice('error', 'Attachment upload failed');
+      showUploadNotice('error', t('cardModal.upload.failed'));
     } finally {
       setIsUploading(false);
     }
@@ -1074,7 +1074,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       if (item.type.startsWith('image/')) {
         e.preventDefault();
         setIsUploading(true);
-        showUploadNotice('uploading', 'Uploading image...');
+        showUploadNotice('uploading', t('cardModal.upload.uploadingImage'));
 
         // Check if card currently has no cover and no image attachments
         const hasNoCover = !card?.coverImage;
@@ -1116,22 +1116,22 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               
               const updatedCard = await getCard(boardId, cardId);
               if (updatedCard) setCard(updatedCard);
-              showUploadNotice('success', 'Image added');
+              showUploadNotice('success', t('cardModal.upload.imageAdded'));
             } catch (error) {
               console.error('Paste upload error:', error);
-              showUploadNotice('error', 'Image upload failed');
+              showUploadNotice('error', t('cardModal.upload.imageFailed'));
             } finally {
               setIsUploading(false);
             }
           };
           reader.onerror = () => {
             console.error('Paste upload error: failed to read image data');
-            showUploadNotice('error', 'Image upload failed');
+            showUploadNotice('error', t('cardModal.upload.imageFailed'));
             setIsUploading(false);
           };
           reader.readAsDataURL(blob);
         } else {
-          showUploadNotice('error', 'Image upload failed');
+          showUploadNotice('error', t('cardModal.upload.imageFailed'));
           setIsUploading(false);
         }
         break;
@@ -1207,7 +1207,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       showToast('success', t('cardModal.movedTo', { list: toColumn?.name || 'list' }));
     } catch (error) {
       console.error('Failed to move card:', error);
-      showToast('error', 'Failed to move card');
+      showToast('error', t('cardModal.toast.failedToMove'));
     } finally {
       setIsMovingCard(false);
       setShowColumnDropdown(false);
@@ -1231,14 +1231,14 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       }
       
       onClose();
-      showToast('success', 'Card archived', {
+      showToast('success', t('cardModal.toast.cardArchived'), {
         undoAction: async () => {
           await restoreCard(boardId, cardId);
         },
       });
     } catch (error) {
       console.error('Failed to archive card:', error);
-      showToast('error', 'Failed to archive card');
+      showToast('error', t('cardModal.toast.failedToArchive'));
     }
   };
 
@@ -1264,10 +1264,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       const updatedCard = await getCard(boardId, cardId);
       if (updatedCard) setCard(updatedCard);
       
-      showToast('success', nowWatching ? 'Now watching this card' : 'Stopped watching this card');
+      showToast('success', nowWatching ? t('cardModal.toast.nowWatching') : t('cardModal.toast.stoppedWatching'));
     } catch (error) {
       console.error('Failed to toggle watch:', error);
-      showToast('error', 'Failed to update watch status');
+      showToast('error', t('cardModal.toast.failedToWatch'));
     } finally {
       setIsTogglingWatch(false);
     }
@@ -1288,12 +1288,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         checklists: card.checklists || [],
         createdBy: user.uid,
       });
-      showToast('success', 'Card saved as template');
+      showToast('success', t('cardModal.toast.templateSaved'));
       setShowSaveTemplateModal(false);
       setTemplateName('');
     } catch (error) {
       console.error('Failed to save template:', error);
-      showToast('error', 'Failed to save template');
+      showToast('error', t('cardModal.toast.templateFailed'));
     } finally {
       setIsSavingTemplate(false);
     }
@@ -1620,7 +1620,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               <div className="relative h-32 sm:h-40 w-full overflow-hidden">
                 <Image
                   src={coverPreview.url}
-                  alt="Card cover"
+                  alt={t('cardModal.accessibility.cardCover')}
                   fill
                   className="object-cover"
                 />
@@ -1636,7 +1636,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <button
               onClick={handleRemoveCover}
               className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg shadow-sm transition-all border border-slate-200 hover:border-red-500 text-slate-500 dark:bg-slate-900/80 dark:border-slate-700/70 dark:text-slate-300 dark:hover:bg-red-500/90 dark:hover:border-red-500"
-              title="Remove cover"
+              title={t('cardModal.accessibility.removeCoverTitle')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1837,7 +1837,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                         <button
                           onClick={() => handleDeleteChecklist(checklist.id)}
                           className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete checklist"
+                          title={t('cardModal.checklistItem.deleteChecklist')}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1982,7 +1982,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                         activeItemAssigneePickerId === item.id ? null : item.id
                                       )}
                                       className="w-6 h-6 rounded-full border border-dashed border-slate-300 dark:border-slate-500 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                                      title="Assign member"
+                                      title={t('cardModal.checklistItem.assignMember')}
                                     >
                                       <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -2001,7 +2001,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                           </svg>
-                                          Unassign
+                                          {t('cardModal.checklistItem.unassign')}
                                         </button>
                                       )}
                                       {boardMembers.map((member) => (
@@ -2070,7 +2070,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                         activeItemDueDatePickerId === item.id ? null : item.id
                                       )}
                                       className="w-6 h-6 rounded border border-dashed border-slate-300 dark:border-slate-500 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all"
-                                      title="Set due date"
+                                      title={t('cardModal.checklistItem.setDueDate')}
                                     >
                                       <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2082,7 +2082,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                   {activeItemDueDatePickerId === item.id && (
                                     <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-slate-900/80 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700/70 z-20 p-3">
                                       <div className="space-y-2">
-                                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Due date</label>
+                                        <label className="text-xs font-medium text-slate-500 dark:text-slate-400">{t('cardModal.sidebar.dueDate')}</label>
                                         <input
                                           type="date"
                                           value={item.dueDate ? format(item.dueDate.toDate(), 'yyyy-MM-dd') : ''}
@@ -2098,9 +2098,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                         {/* Quick date options */}
                                         <div className="flex flex-wrap gap-1 pt-1">
                                           {[
-                                            { label: 'Today', days: 0 },
-                                            { label: 'Tomorrow', days: 1 },
-                                            { label: 'Next week', days: 7 },
+                                            { label: t('cardModal.sidebar.today'), days: 0 },
+                                            { label: t('cardModal.sidebar.tomorrow'), days: 1 },
+                                            { label: t('cardModal.sidebar.nextWeek'), days: 7 },
                                           ].map((opt) => {
                                             const targetDate = new Date();
                                             targetDate.setDate(targetDate.getDate() + opt.days);
@@ -2124,7 +2124,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
-                                            Remove due date
+                                            {t('cardModal.checklistItem.removeDueDate')}
                                           </button>
                                         )}
                                       </div>
@@ -2136,7 +2136,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                 <button
                                   onClick={() => handleDeleteChecklistItem(checklist.id, item.id)}
                                   className="p-1 text-slate-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
-                                  title="Delete item"
+                                  title={t('cardModal.checklistItem.deleteItem')}
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2166,7 +2166,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                             disabled={!newItemTexts[checklist.id]?.trim()}
                             className="px-3 py-2 bg-green-500 hover:bg-green-600 disabled:bg-slate-200 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
                           >
-                            Add
+                            {t('cardModal.checklistItem.add')}
                           </button>
                         </div>
                       </div>
@@ -2714,7 +2714,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     text: 'text-red-700 dark:text-red-400',
                     border: 'border-red-200 dark:border-red-800/50',
                     icon: 'alert',
-                    label: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`,
+                    label: Math.abs(diffDays) === 1 ? t('cardModal.sidebar.overdueBy', { count: Math.abs(diffDays) }) : t('cardModal.sidebar.overdueByPlural', { count: Math.abs(diffDays) }),
                     pulse: true,
                   };
                 } else if (diffDays === 0) {
@@ -2723,7 +2723,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     text: 'text-red-600 dark:text-red-400',
                     border: 'border-red-200 dark:border-red-800/50',
                     icon: 'clock',
-                    label: 'Due today',
+                    label: t('cardModal.sidebar.dueToday'),
                   };
                 } else if (diffDays === 1) {
                   statusConfig = {
@@ -2731,7 +2731,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     text: 'text-orange-700 dark:text-orange-400',
                     border: 'border-orange-200 dark:border-orange-800/50',
                     icon: 'clock',
-                    label: 'Due tomorrow',
+                    label: t('cardModal.sidebar.dueTomorrow'),
                   };
                 } else if (diffDays <= 7) {
                   statusConfig = {
@@ -2739,7 +2739,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     text: 'text-yellow-700 dark:text-yellow-400',
                     border: 'border-yellow-200 dark:border-yellow-800/50',
                     icon: 'calendar',
-                    label: `Due in ${diffDays} days`,
+                    label: t('cardModal.sidebar.dueInDays', { count: diffDays }),
                   };
                 } else {
                   statusConfig = {
@@ -2747,7 +2747,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     text: 'text-slate-600 dark:text-slate-400',
                     border: 'border-slate-200 dark:border-slate-700/50',
                     icon: 'calendar',
-                    label: `Due in ${diffDays} days`,
+                    label: t('cardModal.sidebar.dueInDays', { count: diffDays }),
                   };
                 }
                 
@@ -2847,12 +2847,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {([
-                  { value: null, label: 'None', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50' },
-                  { value: 'low', label: 'Low', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50', dot: 'bg-slate-400' },
-                  { value: 'medium', label: 'Medium', color: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-800/40', dot: 'bg-yellow-500' },
-                  { value: 'high', label: 'High', color: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-800/40', dot: 'bg-orange-500' },
-                  { value: 'urgent', label: 'Urgent', color: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-800/40', dot: 'bg-red-500' },
-                ] as { value: CardPriority; label: string; color: string; dot?: string }[]).map((option) => (
+                  { value: null, labelKey: 'cardModal.sidebar.priorityNone', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50' },
+                  { value: 'low', labelKey: 'cardModal.sidebar.priorityLow', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50', dot: 'bg-slate-400' },
+                  { value: 'medium', labelKey: 'cardModal.sidebar.priorityMedium', color: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-800/40', dot: 'bg-yellow-500' },
+                  { value: 'high', labelKey: 'cardModal.sidebar.priorityHigh', color: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-800/40', dot: 'bg-orange-500' },
+                  { value: 'urgent', labelKey: 'cardModal.sidebar.priorityUrgent', color: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-800/40', dot: 'bg-red-500' },
+                ] as { value: CardPriority; labelKey: string; color: string; dot?: string }[]).map((option) => (
                   <button
                     key={option.value ?? 'none'}
                     onClick={() => handlePriorityChange(option.value)}
@@ -2869,7 +2869,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                         aria-hidden="true" 
                       />
                     )}
-                    {option.label}
+                    {t(option.labelKey)}
                   </button>
                 ))}
               </div>
@@ -2885,7 +2885,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <button
               onClick={handleToggleWatch}
               disabled={isTogglingWatch}
-              title={isWatching ? 'Stop watching this card' : 'Watch this card for updates'}
+              title={isWatching ? t('cardModal.toast.stoppedWatching') : t('cardModal.sidebar.watch')}
               className={`w-full px-4 py-2.5 border rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm ${
                 isWatching
                   ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/30'
@@ -3110,21 +3110,21 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Save as Template</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500">Create a reusable card template</p>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">{t('cardModal.template.title')}</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{t('cardModal.template.subtitle')}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Template Name
+                  {t('cardModal.template.nameLabel')}
                 </label>
                 <input
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="e.g., Bug Report, Feature Request..."
+                  placeholder={t('cardModal.template.namePlaceholder')}
                   className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                   autoFocus
                   onKeyDown={(e) => {
@@ -3140,20 +3140,20 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </div>
 
               <div className="bg-slate-50 dark:bg-slate-900/70 rounded-xl p-4 space-y-2 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Will include:</p>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('cardModal.template.willInclude')}</p>
                 <div className="flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-600 rounded-lg text-xs text-slate-600 dark:text-slate-200 border border-slate-200 dark:border-slate-500">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Titles & Descriptions
+                    {t('cardModal.template.titlesDescriptions')}
                   </span>
                   {card?.labels && card.labels.length > 0 && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-lg text-xs text-slate-600 border border-slate-200">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
-                      {card.labels.length} Label{card.labels.length > 1 ? 's' : ''}
+                      {card.labels.length > 1 ? t('cardModal.template.labelCountPlural', { count: card.labels.length }) : t('cardModal.template.labelCount', { count: card.labels.length })}
                     </span>
                   )}
                   {card?.checklists && card.checklists.length > 0 && (
@@ -3161,7 +3161,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                       </svg>
-                      {card.checklists.length} Checklist{card.checklists.length > 1 ? 's' : ''}
+                      {card.checklists.length > 1 ? t('cardModal.template.checklistCountPlural', { count: card.checklists.length }) : t('cardModal.template.checklistCount', { count: card.checklists.length })}
                     </span>
                   )}
                 </div>
@@ -3182,7 +3182,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   disabled={!templateName.trim() || isSavingTemplate}
                   className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium rounded-xl hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
-                  {isSavingTemplate ? 'Saving...' : 'Save Template'}
+                  {isSavingTemplate ? t('cardModal.template.savingTemplate') : t('cardModal.template.saveTemplate')}
                 </button>
               </div>
             </div>
