@@ -314,9 +314,11 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
   // Helper to get background classes
   const getBackgroundClasses = () => {
-    if (!board?.background) {
-      // Default premium background with subtle warmth
-      return 'bg-gradient-to-br from-slate-50 via-emerald-50/30 to-blue-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950';
+    // Default premium background with subtle warmth (theme-aware)
+    const defaultBackground = 'bg-gradient-to-br from-slate-50 via-emerald-50/30 to-blue-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950';
+    
+    if (!board?.background || !board.background.value) {
+      return defaultBackground;
     }
     
     if (board.background.type === 'gradient') {
@@ -327,7 +329,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
       return board.background.value;
     }
     
-    return 'bg-gradient-to-br from-stone-50 via-amber-50/30 to-orange-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950';
+    return defaultBackground;
   };
 
   // Translate text to target language

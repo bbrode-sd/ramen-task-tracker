@@ -6,7 +6,7 @@ import { BoardBackground } from '@/types';
 // Gradient presets
 export const GRADIENT_PRESETS = [
   {
-    name: 'Default',
+    name: 'Ember',
     value: 'from-orange-500 via-orange-500 to-red-500',
     preview: 'linear-gradient(to right, #f97316, #f97316, #ef4444)',
   },
@@ -131,11 +131,14 @@ export function BackgroundPicker({
   };
 
   const isSelected = (type: 'gradient' | 'color', value: string) => {
-    if (!currentBackground) {
-      // Default is the orange/red gradient
-      return type === 'gradient' && value === GRADIENT_PRESETS[0].value;
-    }
+    if (!currentBackground) return false;
     return currentBackground.type === type && currentBackground.value === value;
+  };
+
+  const handleResetToDefault = () => {
+    // Pass a special value that the parent will interpret as "use theme default"
+    onSelect({ type: 'gradient', value: '' });
+    onClose();
   };
 
   return (
@@ -198,9 +201,37 @@ export function BackgroundPicker({
         </div>
 
         {/* Content */}
-        <div className="p-5 max-h-80 overflow-y-auto">
+        <div className="p-5 pt-4 max-h-80 overflow-y-auto">
           {selectedType === 'gradient' ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
+              {/* Default Option */}
+              <button
+                onClick={handleResetToDefault}
+                className={`w-full relative rounded-xl overflow-hidden transition-all hover:scale-[1.01] active:scale-[0.99] ${
+                  !currentBackground || currentBackground.value === ''
+                    ? 'ring-2 ring-orange-500 ring-offset-2 ring-offset-[var(--surface)]'
+                    : 'ring-1 ring-[var(--border)] hover:ring-[var(--border-strong)]'
+                }`}
+              >
+                <div className="h-16 bg-gradient-to-br from-slate-100 via-emerald-50/50 to-blue-50/30 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800" />
+                <div className="absolute inset-0 flex items-end">
+                  <div className="w-full px-3 py-2 bg-gradient-to-t from-black/40 to-transparent">
+                    <span className="text-sm font-medium text-white drop-shadow-sm">
+                      Default
+                    </span>
+                  </div>
+                </div>
+                {(!currentBackground || currentBackground.value === '') && (
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+              
+              {/* Gradient Options */}
+              <div className="grid grid-cols-2 gap-3">
               {GRADIENT_PRESETS.map((gradient) => (
                 <button
                   key={gradient.name}
@@ -230,6 +261,7 @@ export function BackgroundPicker({
                   )}
                 </button>
               ))}
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-4 gap-3">
