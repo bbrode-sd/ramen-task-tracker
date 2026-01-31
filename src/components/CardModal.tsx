@@ -1304,7 +1304,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="relative">
           <div className="animate-spin rounded-full h-14 w-14 border-4 border-white/30 border-t-white"></div>
-          <span className="absolute inset-0 flex items-center justify-center text-2xl">🍜</span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <Image src="/logo-white.png" alt="Loading" width={28} height={28} className="opacity-50" />
+          </span>
         </div>
       </div>
     );
@@ -2156,7 +2158,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') handleAddChecklistItem(checklist.id);
                             }}
-                            placeholder="Add an item..."
+                            placeholder={t('cardModal.checklistItem.addItemPlaceholder')}
                             className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-900/70 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                           />
                           <button
@@ -2193,7 +2195,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       />
                     </svg>
                   </div>
-                  Attachments
+                  {t('cardModal.attachments')}
                   <span className="text-xs font-medium text-slate-400 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 dark:ring-1 dark:ring-slate-700/70 px-2 py-0.5 rounded-full">
                     {card.attachments.length}
                   </span>
@@ -2228,7 +2230,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     />
                   </svg>
                 </div>
-                Activity
+                {t('cardModal.activity.title')}
                 {(comments.length + activities.filter(a => a.type !== 'comment_added').length) > 0 && (
                   <span className="text-xs font-medium text-slate-400 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 dark:ring-1 dark:ring-slate-700/70 px-2 py-0.5 rounded-full">
                     {comments.length + activities.filter(a => a.type !== 'comment_added').length}
@@ -2254,7 +2256,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       <textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Write a comment..."
+                        placeholder={t('cardModal.comment.placeholder')}
                         className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 min-h-[90px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -2263,13 +2265,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                         }}
                       />
                       <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">Press ⌘+Enter to submit</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{t('cardModal.comment.submitHint')}</span>
                         <button
                           onClick={handleAddComment}
                           disabled={!newComment.trim() || isAddingComment}
                           className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-sm active:scale-[0.98]"
                         >
-                          {isAddingComment ? 'Posting...' : 'Post Comment'}
+                          {isAddingComment ? t('cardModal.comment.posting') : t('cardModal.comment.postComment')}
                         </button>
                       </div>
                     </div>
@@ -2309,7 +2311,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
           {/* Sidebar */}
           <div className="lg:w-56 p-4 sm:p-5 bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-900 dark:to-slate-950/80 sm:rounded-br-2xl space-y-4 border-t lg:border-t-0 lg:border-l border-slate-200/70 dark:border-slate-800/80">
             <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              Add to card
+              {t('cardModal.sidebar.addToCard')}
             </h4>
 
             {/* Upload file */}
@@ -2343,7 +2345,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   />
                 </svg>
               </span>
-              <span className="text-slate-600 dark:text-slate-200 font-medium">{isUploading ? 'Uploading...' : 'Attachment'}</span>
+              <span className="text-slate-600 dark:text-slate-200 font-medium">{isUploading ? t('cardModal.sidebar.uploading') : t('cardModal.sidebar.attachment')}</span>
             </button>
 
             {/* Add link */}
@@ -2353,7 +2355,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   type="url"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="Paste link URL..."
+                  placeholder={t('cardModal.sidebar.linkUrlPlaceholder')}
                   className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   autoFocus
                 />
@@ -2361,7 +2363,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   type="text"
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
-                  placeholder="Link name (optional)"
+                  placeholder={t('cardModal.sidebar.linkNamePlaceholder')}
                   className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
                 <div className="flex gap-2">
@@ -2404,7 +2406,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     />
                   </svg>
                 </span>
-                <span className="text-slate-600 dark:text-slate-200 font-medium">Link</span>
+                <span className="text-slate-600 dark:text-slate-200 font-medium">{t('cardModal.sidebar.link')}</span>
               </button>
             )}
 
@@ -2415,7 +2417,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   type="text"
                   value={newChecklistTitle}
                   onChange={(e) => setNewChecklistTitle(e.target.value)}
-                  placeholder="Checklist title..."
+                  placeholder={t('cardModal.sidebar.checklistTitlePlaceholder')}
                   className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   autoFocus
                   onKeyDown={(e) => {
@@ -2465,7 +2467,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     />
                   </svg>
                 </span>
-                <span className="text-slate-600 dark:text-slate-200 font-medium">Checklist</span>
+                <span className="text-slate-600 dark:text-slate-200 font-medium">{t('cardModal.sidebar.checklist')}</span>
               </button>
             )}
 
@@ -2473,7 +2475,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             {showCoverPicker ? (
               <div className="space-y-3 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cover</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('cardModal.sidebar.cover')}</span>
                   <button
                     onClick={() => setShowCoverPicker(false)}
                     className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded"
@@ -2487,7 +2489,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 {/* Image attachments */}
                 {imageAttachments.length > 0 && (
                   <div className="space-y-2">
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Images</span>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{t('cardModal.sidebar.images')}</span>
                     <div className="grid grid-cols-3 gap-1.5">
                       {imageAttachments.map((attachment) => (
                         <button
@@ -2520,7 +2522,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 
                 {/* Color palette */}
                 <div className="space-y-2">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Colors</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{t('cardModal.sidebar.colors')}</span>
                   <div className="grid grid-cols-5 gap-1.5">
                     {coverColors.map((color) => (
                       <button
@@ -2550,7 +2552,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     onClick={handleRemoveCover}
                     className="w-full px-3 py-2 text-xs text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
                   >
-                    Remove cover
+                    {t('cardModal.sidebar.removeCover')}
                   </button>
                 )}
               </div>
@@ -2574,7 +2576,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     />
                   </svg>
                 </span>
-                <span className="text-slate-600 dark:text-slate-200 font-medium">Cover</span>
+                <span className="text-slate-600 dark:text-slate-200 font-medium">{t('cardModal.sidebar.cover')}</span>
               </button>
             )}
 
@@ -2594,13 +2596,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                   />
                 </svg>
-                Assignees
+                {t('cardModal.sidebar.assignees')}
               </label>
               
               {/* Current assignees */}
               <div className="flex flex-wrap gap-1.5 min-h-[32px]">
                 {assignees.length === 0 ? (
-                  <span className="text-xs text-slate-400 dark:text-slate-500 italic">No assignees</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 italic">{t('cardModal.sidebar.noAssignees')}</span>
                 ) : (
                   assignees.map((assignee) => (
                     <UserAvatar
@@ -2635,7 +2637,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  <span className="text-slate-600 dark:text-slate-200 font-medium">Add assignee</span>
+                  <span className="text-slate-600 dark:text-slate-200 font-medium">{t('cardModal.sidebar.addAssignee')}</span>
                 </button>
                 
                 {showAssigneeDropdown && (
@@ -2646,7 +2648,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   >
                     {boardMembers.filter(m => !card?.assigneeIds?.includes(m.uid)).length === 0 ? (
                       <div className="px-3 py-2 text-sm text-slate-400 dark:text-slate-500 text-center">
-                        All members assigned
+                        {t('cardModal.sidebar.allMembersAssigned')}
                       </div>
                     ) : (
                       boardMembers
@@ -2693,7 +2695,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                Due Date
+                {t('cardModal.sidebar.dueDate')}
               </label>
               
               {/* Due Date Status Banner */}
@@ -2772,9 +2774,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* Quick date buttons */}
               <div className="flex flex-wrap gap-2">
                 {[
-                  { label: 'Today', days: 0 },
-                  { label: 'Tomorrow', days: 1 },
-                  { label: 'Next Week', days: 7 },
+                  { label: t('cardModal.sidebar.today'), days: 0 },
+                  { label: t('cardModal.sidebar.tomorrow'), days: 1 },
+                  { label: t('cardModal.sidebar.nextWeek'), days: 7 },
                 ].map((option) => {
                   const targetDate = new Date();
                   targetDate.setDate(targetDate.getDate() + option.days);
@@ -2819,7 +2821,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  Clear due date
+                  {t('cardModal.sidebar.clearDueDate')}
                 </button>
               )}
             </div>
@@ -2841,7 +2843,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
                   />
                 </svg>
-                Priority
+                {t('cardModal.sidebar.priority')}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {([
@@ -2876,7 +2878,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <hr className="border-slate-200 dark:border-slate-700" />
 
             <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              Actions
+              {t('cardModal.sidebar.actions')}
             </h4>
 
             {/* Watch/Subscribe button */}
@@ -2924,7 +2926,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   ? 'text-cyan-700 dark:text-cyan-300'
                   : 'text-slate-600 dark:text-slate-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400'
               }`}>
-                {isTogglingWatch ? 'Updating...' : isWatching ? 'Watching' : 'Watch'}
+                {isTogglingWatch ? t('cardModal.sidebar.updating') : isWatching ? t('cardModal.sidebar.watching') : t('cardModal.sidebar.watch')}
               </span>
               {isWatching && (
                 <svg className="w-4 h-4 text-cyan-600 dark:text-cyan-400 ml-auto" fill="currentColor" viewBox="0 0 20 20">
@@ -2941,7 +2943,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  {watchers.length} Watching
+                  {t('cardModal.sidebar.watchersCount', { count: watchers.length })}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {watchers.slice(0, 5).map((watcher) => (
@@ -2983,7 +2985,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   />
                 </svg>
               </span>
-              <span className="text-slate-600 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 font-medium transition-colors">Save as Template</span>
+              <span className="text-slate-600 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 font-medium transition-colors">{t('cardModal.sidebar.saveAsTemplate')}</span>
             </button>
 
             <button
@@ -3005,7 +3007,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   />
                 </svg>
               </span>
-              <span className="text-slate-600 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400 font-medium transition-colors">Archive</span>
+              <span className="text-slate-600 dark:text-slate-200 group-hover:text-red-600 dark:group-hover:text-red-400 font-medium transition-colors">{t('cardModal.sidebar.archive')}</span>
             </button>
           </div>
         </div>

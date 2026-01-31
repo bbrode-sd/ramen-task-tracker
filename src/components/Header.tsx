@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFilterOptional } from '@/contexts/FilterContext';
@@ -93,6 +94,7 @@ export function Header({
   onBackgroundChange,
   dueDateStats,
 }: HeaderProps) {
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { t } = useLocale();
@@ -569,7 +571,7 @@ export function Header({
                             <button
                               key={card.id}
                               onClick={() => {
-                                window.location.href = `/boards/${boardId}?card=${card.id}`;
+                                router.push(`/boards/${boardId}?card=${card.id}`);
                                 setShowSearchResults(false);
                                 setSearchQueryLocal('');
                               }}
