@@ -682,12 +682,12 @@ function ColumnComponent({
                 </div>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setIsAddingCard(true)}
                   data-onboarding="add-card"
                   aria-label={`Add a card to ${column.name}`}
-                  className="w-full px-3 py-3 sm:py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
+                  className="flex-1 px-3 py-3 sm:py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
                 >
                   <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 dark:bg-slate-700/80 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40 rounded-lg transition-colors" aria-hidden="true">
                     <svg
@@ -708,35 +708,37 @@ function ColumnComponent({
                   Add a card
                 </button>
                 
-                {/* Create from template */}
-                <div className="relative" ref={templateDropdownRef}>
+                {/* Create from template - small icon button with tooltip */}
+                <div className="relative group/template" ref={templateDropdownRef}>
                   <button
                     onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
                     aria-expanded={showTemplateDropdown}
                     aria-haspopup="menu"
                     aria-label="Create card from template"
-                    className="w-full px-3 py-2.5 sm:py-2 text-sm text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/40 dark:hover:bg-slate-700/40 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[44px] sm:min-h-0"
+                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-lg transition-all touch-manipulation"
                   >
-                    <span className="w-6 h-6 flex items-center justify-center bg-slate-200/60 dark:bg-slate-700/60 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 rounded-lg transition-colors">
-                      <svg
-                        className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
-                        />
-                      </svg>
-                    </span>
-                    <span className="text-xs">From template</span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                      />
+                    </svg>
                   </button>
                   
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/template:opacity-100 pointer-events-none transition-opacity duration-150 z-30">
+                    Create from template...
+                  </div>
+                  
                   {showTemplateDropdown && (
-                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20">
+                    <div className="absolute bottom-full right-0 mb-1 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20">
                       <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
                         <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Card Templates</h4>
                       </div>
