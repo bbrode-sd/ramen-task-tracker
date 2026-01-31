@@ -79,13 +79,11 @@ export function BackgroundPicker({
   const [selectedType, setSelectedType] = useState<'gradient' | 'color'>(
     currentBackground?.type === 'color' ? 'color' : 'gradient'
   );
-  const [previewBackground, setPreviewBackground] = useState<BoardBackground | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  // Reset preview when opened
+  // Reset selected type when opened
   useEffect(() => {
     if (isOpen) {
-      setPreviewBackground(null);
       setSelectedType(currentBackground?.type === 'color' ? 'color' : 'gradient');
     }
   }, [isOpen, currentBackground]);
@@ -199,20 +197,6 @@ export function BackgroundPicker({
           </div>
         </div>
 
-        {/* Preview */}
-        {previewBackground && (
-          <div className="px-5 pt-4">
-            <div className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">Preview</div>
-            <div
-              className={`h-16 rounded-xl ${
-                previewBackground.type === 'gradient'
-                  ? `bg-gradient-to-r ${previewBackground.value}`
-                  : previewBackground.value
-              } transition-all duration-300`}
-            />
-          </div>
-        )}
-
         {/* Content */}
         <div className="p-5 max-h-80 overflow-y-auto">
           {selectedType === 'gradient' ? (
@@ -221,8 +205,6 @@ export function BackgroundPicker({
                 <button
                   key={gradient.name}
                   onClick={() => handleGradientSelect(gradient)}
-                  onMouseEnter={() => setPreviewBackground({ type: 'gradient', value: gradient.value })}
-                  onMouseLeave={() => setPreviewBackground(null)}
                   className={`group relative rounded-xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] ${
                     isSelected('gradient', gradient.value)
                       ? 'ring-2 ring-orange-500 ring-offset-2 ring-offset-[var(--surface)]'
@@ -255,8 +237,6 @@ export function BackgroundPicker({
                 <button
                   key={color.name}
                   onClick={() => handleColorSelect(color)}
-                  onMouseEnter={() => setPreviewBackground({ type: 'color', value: color.value })}
-                  onMouseLeave={() => setPreviewBackground(null)}
                   className={`group relative aspect-square rounded-xl transition-all hover:scale-[1.05] active:scale-[0.95] ${
                     isSelected('color', color.value)
                       ? 'ring-2 ring-orange-500 ring-offset-2 ring-offset-[var(--surface)]'
