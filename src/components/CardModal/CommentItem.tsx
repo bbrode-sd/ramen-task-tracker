@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { ja, enUS } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import { Comment } from '@/types';
 import { updateCommentTranslation } from '@/lib/firestore';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface CommentItemProps {
   comment: Comment;
@@ -27,6 +29,7 @@ export function CommentItem({
   cardId,
   onDelete,
 }: CommentItemProps) {
+  const { t, locale } = useLocale();
   const isOwner = currentUserId === comment.createdBy;
   
   // Editing state
@@ -43,16 +46,16 @@ export function CommentItem({
   const getTranslationLabel = (lang: 'en' | 'ja') => {
     const isOriginal = lang === detectedLang;
     if (isOriginal) {
-      return lang === 'en' ? 'Original' : 'オリジナル';
+      return t('cardModal.comment.original');
     }
     
     // Check if there's a manual translator
     const translator = lang === 'en' ? comment.translatorEn : comment.translatorJa;
     if (translator) {
-      return `Translated by ${translator.displayName}`;
+      return t('cardModal.comment.translatedBy', { name: translator.displayName });
     }
     
-    return 'Auto-Translated';
+    return t('cardModal.comment.autoTranslated');
   };
   
   const handleStartEdit = (lang: 'en' | 'ja') => {
@@ -110,7 +113,7 @@ export function CommentItem({
       </span>
       <span className="text-xs text-slate-400 dark:text-slate-400">
         {comment.createdAt instanceof Timestamp
-          ? format(comment.createdAt.toDate(), 'MMM d, yyyy h:mm a')
+          ? format(comment.createdAt.toDate(), locale === 'ja' ? 'yyyy年M月d日 H:mm' : 'MMM d, yyyy h:mm a', { locale: locale === 'ja' ? ja : enUS })
           : ''}
       </span>
       {isOwner && (
@@ -118,7 +121,7 @@ export function CommentItem({
           onClick={onDelete}
           className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
         >
-          Delete
+          {t('common.delete')}
         </button>
       )}
     </div>
@@ -146,7 +149,7 @@ export function CommentItem({
                 <button
                   onClick={() => handleStartEdit('en')}
                   className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition-colors opacity-0 group-hover:opacity-100"
-                  title="Edit translation"
+                  title={t('cardModal.comment.editTranslation')}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -169,14 +172,14 @@ export function CommentItem({
                     disabled={isSaving}
                     className="text-xs px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={handleConfirmEdit}
                     disabled={isSaving || !editingContent.trim()}
                     className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
                   >
-                    {isSaving ? 'Saving...' : 'Confirm'}
+                    {isSaving ? t('cardModal.comment.saving') : t('common.confirm')}
                   </button>
                 </div>
               </div>
@@ -203,7 +206,7 @@ export function CommentItem({
                   <button
                     onClick={() => handleStartEdit('ja')}
                   className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Edit translation"
+                    title={t('cardModal.comment.editTranslation')}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -226,14 +229,14 @@ export function CommentItem({
                       disabled={isSaving}
                     className="text-xs px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white transition-colors"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                     <button
                       onClick={handleConfirmEdit}
                       disabled={isSaving || !editingContent.trim()}
                       className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
                     >
-                      {isSaving ? 'Saving...' : 'Confirm'}
+                      {isSaving ? t('cardModal.comment.saving') : t('common.confirm')}
                     </button>
                   </div>
                 </div>

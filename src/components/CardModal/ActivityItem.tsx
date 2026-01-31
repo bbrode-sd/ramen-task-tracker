@@ -2,8 +2,10 @@
 
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
+import { ja, enUS } from 'date-fns/locale';
 import { Activity } from '@/types';
 import { getAvatarColor, getInitials } from './utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface ActivityItemProps {
   activity: Activity;
@@ -13,28 +15,41 @@ interface ActivityItemProps {
  * Displays a single activity log item
  */
 export function ActivityItem({ activity }: ActivityItemProps) {
+  const { t, locale } = useLocale();
+  
   const getActivityText = () => {
     switch (activity.type) {
       case 'card_created':
-        return 'created this card';
+        return t('cardModal.activity.createdCard');
       case 'card_moved':
-        return `moved this card from ${activity.metadata?.from} to ${activity.metadata?.to}`;
+        return t('cardModal.activity.movedCard', {
+          from: String(activity.metadata?.from ?? ''),
+          to: String(activity.metadata?.to ?? '')
+        });
       case 'card_updated':
-        return 'updated this card';
+        return t('cardModal.activity.updatedCard');
       case 'card_archived':
-        return 'archived this card';
+        return t('cardModal.activity.archivedCard');
       case 'comment_added':
-        return 'added a comment';
+        return t('cardModal.activity.addedComment');
       case 'checklist_completed':
-        return `completed checklist "${activity.metadata?.checklistName}"`;
+        return t('cardModal.activity.completedChecklist', {
+          checklistName: String(activity.metadata?.checklistName ?? '')
+        });
       case 'assignee_added':
-        return `assigned ${activity.metadata?.assigneeName}`;
+        return t('cardModal.activity.assignedUser', {
+          assigneeName: String(activity.metadata?.assigneeName ?? '')
+        });
       case 'due_date_set':
-        return `set due date to ${activity.metadata?.dueDate}`;
+        return t('cardModal.activity.setDueDate', {
+          dueDate: String(activity.metadata?.dueDate ?? '')
+        });
       case 'attachment_added':
-        return `attached ${activity.metadata?.attachmentName}`;
+        return t('cardModal.activity.attachedFile', {
+          attachmentName: String(activity.metadata?.attachmentName ?? '')
+        });
       default:
-        return 'performed an action';
+        return t('cardModal.activity.performedAction');
     }
   };
 
@@ -61,7 +76,10 @@ export function ActivityItem({ activity }: ActivityItemProps) {
           {getActivityText()}
         </p>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-          {formatDistanceToNow(activity.createdAt.toDate(), { addSuffix: true })}
+          {formatDistanceToNow(activity.createdAt.toDate(), { 
+            addSuffix: true,
+            locale: locale === 'ja' ? ja : enUS
+          })}
         </p>
       </div>
     </div>

@@ -196,7 +196,26 @@
     "moveCard": "Move card",
     "archiveCard": "Archive card",
     "deleteCard": "Delete card",
-    "saveAsTemplate": "Save as template"
+    "saveAsTemplate": "Save as template",
+    "activity": {
+      "createdCard": "created this card",
+      "movedCard": "moved this card from {{from}} to {{to}}",
+      "updatedCard": "updated this card",
+      "archivedCard": "archived this card",
+      "addedComment": "added a comment",
+      "completedChecklist": "completed checklist \"{{checklistName}}\"",
+      "assignedUser": "assigned {{assigneeName}}",
+      "setDueDate": "set due date to {{dueDate}}",
+      "attachedFile": "attached {{attachmentName}}",
+      "performedAction": "performed an action"
+    },
+    "comment": {
+      "original": "Original",
+      "autoTranslated": "Auto-Translated",
+      "translatedBy": "Translated by {{name}}",
+      "editTranslation": "Edit translation",
+      "saving": "Saving..."
+    }
   },
   "archiveDrawer": {
     "title": "Archived Items",

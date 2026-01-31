@@ -196,7 +196,26 @@
     "moveCard": "カードを移動",
     "archiveCard": "カードをアーカイブ",
     "deleteCard": "カードを削除",
-    "saveAsTemplate": "テンプレートとして保存"
+    "saveAsTemplate": "テンプレートとして保存",
+    "activity": {
+      "createdCard": "このカードを作成しました",
+      "movedCard": "このカードを{{from}}から{{to}}に移動しました",
+      "updatedCard": "このカードを更新しました",
+      "archivedCard": "このカードをアーカイブしました",
+      "addedComment": "コメントを追加しました",
+      "completedChecklist": "チェックリスト「{{checklistName}}」を完了しました",
+      "assignedUser": "{{assigneeName}}を担当に設定しました",
+      "setDueDate": "期限を{{dueDate}}に設定しました",
+      "attachedFile": "{{attachmentName}}を添付しました",
+      "performedAction": "アクションを実行しました"
+    },
+    "comment": {
+      "original": "オリジナル",
+      "autoTranslated": "自動翻訳",
+      "translatedBy": "{{name}}が翻訳",
+      "editTranslation": "翻訳を編集",
+      "saving": "保存中..."
+    }
   },
   "archiveDrawer": {
     "title": "アーカイブ済みアイテム",
