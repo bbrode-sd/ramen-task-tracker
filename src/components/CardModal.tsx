@@ -1445,43 +1445,43 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <legend className="sr-only">Card Title in English and Japanese</legend>
             {/* English Title */}
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
-                  EN
-                </span>
-                <TranslationIndicator
-                  isTranslating={translationState.isTranslating[fieldKeys.titleEn] || false}
-                  hasError={translationState.errors[fieldKeys.titleEn]}
-                  onRetry={handleRetryTitleEn}
-                  language="en"
-                />
-              </div>
               {editingField === 'titleEn' ? (
                 <div className="space-y-1.5">
-                  <input
-                    id="card-title-en"
-                    type="text"
-                    value={editTitleEn}
-                    onChange={(e) => setEditTitleEn(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        saveTitleEn();
-                      } else if (e.key === 'Escape') {
-                        cancelEditing();
-                      }
-                    }}
-                    autoFocus
-                    aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
-                    aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                    className={`w-full px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                      translationState.errors[fieldKeys.titleEn]
-                        ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                        : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
-                    }`}
-                    placeholder={t('cardModal.enterTitleEn')}
-                  />
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                      EN
+                    </span>
+                    <input
+                      id="card-title-en"
+                      type="text"
+                      value={editTitleEn}
+                      onChange={(e) => setEditTitleEn(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveTitleEn();
+                        } else if (e.key === 'Escape') {
+                          cancelEditing();
+                        }
+                      }}
+                      autoFocus
+                      aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
+                      aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
+                      className={`flex-1 px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                        translationState.errors[fieldKeys.titleEn]
+                          ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                          : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
+                      }`}
+                      placeholder={t('cardModal.enterTitleEn')}
+                    />
+                    <TranslationIndicator
+                      isTranslating={translationState.isTranslating[fieldKeys.titleEn] || false}
+                      hasError={translationState.errors[fieldKeys.titleEn]}
+                      onRetry={handleRetryTitleEn}
+                      language="en"
+                    />
+                  </div>
+                  <div className="flex gap-2 ml-10">
                     <button
                       onClick={saveTitleEn}
                       className="px-2.5 py-1 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors"
@@ -1498,11 +1498,21 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </div>
               ) : (
                 <div className="group flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                    EN
+                  </span>
                   <p className={`flex-1 px-2 py-1.5 text-lg font-semibold rounded-lg border border-transparent ${
                     titleEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
                     {titleEn || t('cardModal.noTitle')}
                   </p>
+                  <TranslationIndicator
+                    isTranslating={translationState.isTranslating[fieldKeys.titleEn] || false}
+                    hasError={translationState.errors[fieldKeys.titleEn]}
+                    onRetry={handleRetryTitleEn}
+                    language="en"
+                  />
                   <button
                     onClick={startEditingTitleEn}
                     className="shrink-0 px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
@@ -1518,43 +1528,43 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Japanese Title */}
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
-                  JP
-                </span>
-                <TranslationIndicator
-                  isTranslating={translationState.isTranslating[fieldKeys.titleJa] || false}
-                  hasError={translationState.errors[fieldKeys.titleJa]}
-                  onRetry={handleRetryTitleJa}
-                  language="ja"
-                />
-              </div>
               {editingField === 'titleJa' ? (
                 <div className="space-y-1.5">
-                  <input
-                    id="card-title-ja"
-                    type="text"
-                    value={editTitleJa}
-                    onChange={(e) => setEditTitleJa(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        saveTitleJa();
-                      } else if (e.key === 'Escape') {
-                        cancelEditing();
-                      }
-                    }}
-                    autoFocus
-                    aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
-                    aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                    className={`w-full px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                      translationState.errors[fieldKeys.titleJa]
-                        ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                        : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
-                    }`}
-                    placeholder={t('cardModal.enterTitleJa')}
-                  />
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                      JP
+                    </span>
+                    <input
+                      id="card-title-ja"
+                      type="text"
+                      value={editTitleJa}
+                      onChange={(e) => setEditTitleJa(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveTitleJa();
+                        } else if (e.key === 'Escape') {
+                          cancelEditing();
+                        }
+                      }}
+                      autoFocus
+                      aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
+                      aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
+                      className={`flex-1 px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                        translationState.errors[fieldKeys.titleJa]
+                          ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                          : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
+                      }`}
+                      placeholder={t('cardModal.enterTitleJa')}
+                    />
+                    <TranslationIndicator
+                      isTranslating={translationState.isTranslating[fieldKeys.titleJa] || false}
+                      hasError={translationState.errors[fieldKeys.titleJa]}
+                      onRetry={handleRetryTitleJa}
+                      language="ja"
+                    />
+                  </div>
+                  <div className="flex gap-2 ml-10">
                     <button
                       onClick={saveTitleJa}
                       className="px-2.5 py-1 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
@@ -1571,11 +1581,21 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </div>
               ) : (
                 <div className="group flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                    JP
+                  </span>
                   <p className={`flex-1 px-2 py-1.5 text-lg font-semibold rounded-lg border border-transparent ${
                     titleJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
                     {titleJa || t('cardModal.noTitle')}
                   </p>
+                  <TranslationIndicator
+                    isTranslating={translationState.isTranslating[fieldKeys.titleJa] || false}
+                    hasError={translationState.errors[fieldKeys.titleJa]}
+                    onRetry={handleRetryTitleJa}
+                    language="ja"
+                  />
                   <button
                     onClick={startEditingTitleJa}
                     className="shrink-0 px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
