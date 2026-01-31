@@ -58,7 +58,7 @@ export function LoginScreen() {
           <div className="p-8 sm:p-10 lg:p-12">
             {/* Hero section */}
             <div className="text-center mb-10">
-              {/* Ramen bowl illustration */}
+              {/* Tomobodo bowl illustration */}
               <div className="relative inline-block mb-8">
                 {/* Animated glow behind emoji */}
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full blur-2xl opacity-30 dark:opacity-40 scale-150 animate-pulse-soft"></div>
@@ -70,8 +70,8 @@ export function LoginScreen() {
                   <div className="w-1.5 h-8 bg-gradient-to-t from-stone-400/50 via-stone-300/30 to-transparent dark:from-stone-500/40 dark:via-stone-400/20 rounded-full animate-steam-3"></div>
                 </div>
                 
-                {/* Ramen emoji */}
-                <span className="relative text-7xl sm:text-8xl block select-none animate-ramen-wobble hover:animate-ramen-spin cursor-default" style={{textShadow: '0 8px 24px rgba(0,0,0,0.15)'}}>
+                {/* Tomobodo emoji */}
+                <span className="relative text-7xl sm:text-8xl block select-none animate-tomobodo-wobble hover:animate-tomobodo-spin cursor-default" style={{textShadow: '0 8px 24px rgba(0,0,0,0.15)'}}>
                   🍜
                 </span>
                 
@@ -165,11 +165,11 @@ export function LoginScreen() {
           0%, 100% { opacity: 0; transform: translateY(0) scaleX(1); }
           50% { opacity: 1; transform: translateY(-12px) scaleX(1.2); }
         }
-        @keyframes ramen-wobble {
+        @keyframes tomobodo-wobble {
           0%, 100% { transform: rotate(-2deg) scale(1); }
           50% { transform: rotate(2deg) scale(1.02); }
         }
-        @keyframes ramen-spin {
+        @keyframes tomobodo-spin {
           0% { transform: rotate(0deg) scale(1); }
           50% { transform: rotate(180deg) scale(1.1); }
           100% { transform: rotate(360deg) scale(1); }
@@ -185,8 +185,8 @@ export function LoginScreen() {
         .animate-steam-1 { animation: steam-1 3s ease-in-out infinite; }
         .animate-steam-2 { animation: steam-2 3.5s ease-in-out infinite 0.4s; }
         .animate-steam-3 { animation: steam-3 2.8s ease-in-out infinite 0.8s; }
-        .animate-ramen-wobble { animation: ramen-wobble 4s ease-in-out infinite; }
-        .animate-ramen-spin { animation: ramen-spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .animate-tomobodo-wobble { animation: tomobodo-wobble 4s ease-in-out infinite; }
+        .animate-tomobodo-spin { animation: tomobodo-spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .animate-float-slow { animation: float-slow 12s ease-in-out infinite; }
         .animate-float-delayed { animation: float-delayed 15s ease-in-out infinite 3s; }
       `}</style>

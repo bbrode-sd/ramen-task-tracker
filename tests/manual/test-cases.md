@@ -1,6 +1,6 @@
-# Ramen Task Tracker - Manual Test Cases
+# Tomobodo - Manual Test Cases
 
-This document contains all manual test cases for QA testing of the Ramen Task Tracker application.
+This document contains all manual test cases for QA testing of the Tomobodo application.
 
 ## Test Environment Setup
 

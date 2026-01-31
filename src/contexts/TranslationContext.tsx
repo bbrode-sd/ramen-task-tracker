@@ -86,7 +86,7 @@ interface TranslationContextType {
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'ramen-translation-settings';
+const STORAGE_KEY = 'tomobodo-translation-settings';
 
 const DEFAULT_SETTINGS: TranslationSettings = {
   primaryLanguage: 'auto',

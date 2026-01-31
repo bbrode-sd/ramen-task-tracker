@@ -107,7 +107,7 @@ export interface TrelloCheckItem {
 
 export interface ValidationResult {
   isValid: boolean;
-  format: 'ramen' | 'trello' | 'unknown';
+  format: 'tomobodo' | 'trello' | 'unknown';
   errors: string[];
   warnings: string[];
   preview?: ImportPreview;
@@ -286,9 +286,9 @@ export function validateImportData(data: unknown): ValidationResult {
 
   const obj = data as Record<string, unknown>;
 
-  // Check for Ramen format
+  // Check for Tomobodo format
   if ('version' in obj && 'board' in obj && 'columns' in obj && 'cards' in obj) {
-    return validateRamenFormat(obj);
+    return validateTomobodoFormat(obj);
   }
 
   // Check for Trello format
@@ -299,12 +299,12 @@ export function validateImportData(data: unknown): ValidationResult {
   return {
     isValid: false,
     format: 'unknown',
-    errors: ['Unrecognized file format. Please use a Ramen Task Tracker export or Trello JSON export.'],
+    errors: ['Unrecognized file format. Please use a Tomobodo export or Trello JSON export.'],
     warnings: [],
   };
 }
 
-function validateRamenFormat(data: Record<string, unknown>): ValidationResult {
+function validateTomobodoFormat(data: Record<string, unknown>): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -351,7 +351,7 @@ function validateRamenFormat(data: Record<string, unknown>): ValidationResult {
 
   return {
     isValid,
-    format: 'ramen',
+    format: 'tomobodo',
     errors,
     warnings,
     preview: isValid
@@ -408,16 +408,16 @@ function validateTrelloFormat(data: Record<string, unknown>): ValidationResult {
 export async function importBoardFromJSON(
   data: ExportedBoard | TrelloBoard,
   userId: string,
-  format: 'ramen' | 'trello',
+  format: 'tomobodo' | 'trello',
   onProgress?: (progress: number, message: string) => void
 ): Promise<string> {
   if (format === 'trello') {
     return importFromTrello(data as TrelloBoard, userId, onProgress);
   }
-  return importFromRamen(data as ExportedBoard, userId, onProgress);
+  return importFromTomobodo(data as ExportedBoard, userId, onProgress);
 }
 
-async function importFromRamen(
+async function importFromTomobodo(
   data: ExportedBoard,
   userId: string,
   onProgress?: (progress: number, message: string) => void

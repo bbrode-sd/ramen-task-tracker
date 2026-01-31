@@ -1,4 +1,4 @@
-# Ramen Task Tracker 🍜
+# Tomobodo 🍜
 
 A bilingual Kanban board with English/Japanese support, powered by LLM translation.
 
@@ -26,14 +26,14 @@ A bilingual Kanban board with English/Japanese support, powered by LLM translati
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ramen-task-tracker.git
-cd ramen-task-tracker
+git clone https://github.com/YOUR_USERNAME/tomobodo.git
+cd tomobodo
 npm install
 ```
 
 ### 2. Firebase Setup
 
-1. Go to [Firebase Console](https://console.firebase.google.com/project/ramen-task-tracker)
+1. Go to [Firebase Console](https://console.firebase.google.com/project/tomobodo)
 2. Enable **Authentication** > **Google** sign-in provider
 3. Enable **Cloud Storage** > Click "Get Started"
 4. Your Firestore database is already configured
@@ -44,9 +44,9 @@ Create a `.env.local` file (or configure in Vercel):
 
 ```env
 NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=ramen-task-tracker.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=ramen-task-tracker
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=ramen-task-tracker.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tomobodo.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tomobodo
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tomobodo.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 OPENAI_API_KEY=your-openai-api-key
@@ -71,9 +71,9 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Firebase Console Links
 
-- [Authentication](https://console.firebase.google.com/project/ramen-task-tracker/authentication)
-- [Firestore](https://console.firebase.google.com/project/ramen-task-tracker/firestore)
-- [Storage](https://console.firebase.google.com/project/ramen-task-tracker/storage)
+- [Authentication](https://console.firebase.google.com/project/tomobodo/authentication)
+- [Firestore](https://console.firebase.google.com/project/tomobodo/firestore)
+- [Storage](https://console.firebase.google.com/project/tomobodo/storage)
 
 ## License
 

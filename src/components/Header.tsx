@@ -419,8 +419,8 @@ export function Header({
               )
             ) : (
               <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
-                <span className="hidden sm:inline">Ramen Task Tracker</span>
-                <span className="sm:hidden">Ramen</span>
+                <span className="hidden sm:inline">Tomobodo</span>
+                <span className="sm:hidden">Tomobodo</span>
               </h1>
             )}
           </div>

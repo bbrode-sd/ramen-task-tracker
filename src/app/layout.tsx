@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ramen Task Tracker",
+  title: "Tomobodo",
   description: "Bilingual Kanban board with English/Japanese support",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Ramen Tasks",
+    title: "Tomobodo",
   },
   formatDetection: {
     telephone: false,
@@ -39,7 +39,7 @@ export const viewport: Viewport = {
 const themeScript = `
   (function() {
     try {
-      const stored = localStorage.getItem('ramen-theme');
+      const stored = localStorage.getItem('tomobodo-theme');
       const theme = stored === 'light' || stored === 'dark' ? stored : 'system';
       
       if (theme === 'system') {

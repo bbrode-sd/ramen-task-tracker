@@ -1,5 +1,5 @@
 /**
- * Ramen Task Tracker Service Worker
+ * Tomobodo Service Worker
  * 
  * Provides offline support by caching static assets and the app shell.
  * Firestore handles data persistence through IndexedDB, so this SW
@@ -12,7 +12,7 @@
  * 4. Come back online - app should sync automatically
  */
 
-const CACHE_NAME = 'ramen-task-tracker-v2';
+const CACHE_NAME = 'tomobodo-v2';
 
 // Static assets to cache for offline use
 const STATIC_ASSETS = [

@@ -23,8 +23,8 @@ interface EmptyStateProps {
   className?: string;
 }
 
-// Custom SVG illustrations for each variant - ramen themed with orange accent
-const RamenBowlIcon = ({ className = "" }: { className?: string }) => (
+// Custom SVG illustrations for each variant - Tomobodo themed with orange accent
+const TomobodoBowlIcon = ({ className = "" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* Steam lines */}
     <g className="animate-steam">
@@ -58,7 +58,7 @@ const BoardsIcon = ({ className = "" }: { className?: string }) => (
     <rect x="22" y="18" width="16" height="3" rx="1.5" className="fill-orange-300"/>
     <rect x="22" y="25" width="12" height="2" rx="1" className="fill-slate-200 dark:fill-slate-400"/>
     <rect x="22" y="30" width="14" height="2" rx="1" className="fill-slate-200 dark:fill-slate-400"/>
-    {/* Ramen bowl decoration */}
+    {/* Tomobodo bowl decoration */}
     <g className="translate-x-[40px] translate-y-[32px]">
       <circle cx="16" cy="16" r="14" className="fill-orange-100 dark:fill-orange-900/40"/>
       <circle cx="16" cy="16" r="11" className="fill-orange-400"/>
@@ -137,7 +137,7 @@ const variantIcons: Record<EmptyStateVariant, ReactNode> = {
   cards: <CardsIcon className="w-full h-full" />,
   comments: <CommentsIcon className="w-full h-full" />,
   search: <SearchIcon className="w-full h-full" />,
-  generic: <RamenBowlIcon className="w-full h-full" />,
+  generic: <TomobodoBowlIcon className="w-full h-full" />,
 };
 
 // Size configurations with enhanced spacing

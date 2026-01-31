@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'ramen-task-tracker.firebasestorage.app',
+        hostname: 'tomobodo.firebasestorage.app',
         pathname: '/**',
       },
     ],

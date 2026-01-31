@@ -81,8 +81,8 @@ describe('Export/Import Utilities', () => {
   });
 
   describe('validateImportData', () => {
-    describe('Ramen format validation', () => {
-      it('should validate correct Ramen format', () => {
+    describe('Tomobodo format validation', () => {
+      it('should validate correct Tomobodo format', () => {
         const validData: ExportedBoard = {
           version: '1.0',
           exportedAt: new Date().toISOString(),
@@ -106,7 +106,7 @@ describe('Export/Import Utilities', () => {
 
         const result = validateImportData(validData);
         expect(result.isValid).toBe(true);
-        expect(result.format).toBe('ramen');
+        expect(result.format).toBe('tomobodo');
         expect(result.errors).toHaveLength(0);
         expect(result.preview).toBeDefined();
         expect(result.preview?.boardName).toBe('Test Board');
@@ -114,7 +114,7 @@ describe('Export/Import Utilities', () => {
         expect(result.preview?.cardCount).toBe(1);
       });
 
-      it('should reject Ramen format without board name', () => {
+      it('should reject Tomobodo format without board name', () => {
         const invalidData = {
           version: '1.0',
           board: {},
@@ -127,7 +127,7 @@ describe('Export/Import Utilities', () => {
         expect(result.errors).toContain('Board must have a name');
       });
 
-      it('should not recognize as Ramen format when columns is missing', () => {
+      it('should not recognize as Tomobodo format when columns is missing', () => {
         const invalidData = {
           version: '1.0',
           board: { name: 'Test' },
@@ -135,7 +135,7 @@ describe('Export/Import Utilities', () => {
         };
 
         const result = validateImportData(invalidData);
-        // Without columns field, it's not recognized as Ramen format
+        // Without columns field, it's not recognized as Tomobodo format
         expect(result.isValid).toBe(false);
         expect(result.format).toBe('unknown');
       });

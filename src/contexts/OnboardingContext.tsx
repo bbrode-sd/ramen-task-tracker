@@ -31,14 +31,14 @@ interface OnboardingContextType {
   dismissTip: (tipId: string) => void;
 }
 
-const ONBOARDING_STORAGE_KEY = 'ramen-onboarding-completed';
-const TIPS_STORAGE_KEY = 'ramen-tips-dismissed';
-const SHOW_TIPS_KEY = 'ramen-show-tips';
+const ONBOARDING_STORAGE_KEY = 'tomobodo-onboarding-completed';
+const TIPS_STORAGE_KEY = 'tomobodo-tips-dismissed';
+const SHOW_TIPS_KEY = 'tomobodo-show-tips';
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Ramen Task Tracker! 🍜',
+    title: 'Welcome to Tomobodo! 🍜',
     description: 'Let\'s take a quick tour to help you get started with organizing your tasks.',
     position: 'bottom',
   },

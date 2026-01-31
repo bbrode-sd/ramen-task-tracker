@@ -13,7 +13,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'ramen-theme';
+const STORAGE_KEY = 'tomobodo-theme';
 
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined') return 'light';

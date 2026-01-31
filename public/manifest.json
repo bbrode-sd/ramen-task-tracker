@@ -1,7 +1,7 @@
 {
-  "name": "Ramen Task Tracker",
-  "short_name": "Ramen Tasks",
-  "description": "A delicious Kanban board for managing your tasks",
+  "name": "Tomobodo",
+  "short_name": "Tomobodo",
+  "description": "A bilingual Kanban board for managing your tasks",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f97316",

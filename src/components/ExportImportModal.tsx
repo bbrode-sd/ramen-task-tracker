@@ -191,7 +191,7 @@ export function ExportImportModal({ boardId, boardName, isOpen, onClose }: Expor
       const newBoardId = await importBoardFromJSON(
         importData as ExportedBoard | TrelloBoard,
         user.uid,
-        validationResult.format as 'ramen' | 'trello',
+        validationResult.format as 'tomobodo' | 'trello',
         (progress, message) => {
           setImportProgress(progress);
           setImportMessage(message);
@@ -446,7 +446,7 @@ export function ExportImportModal({ boardId, boardName, isOpen, onClose }: Expor
                     Drop a JSON file here or click to browse
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Supports Ramen Task Tracker and Trello exports
+                    Supports Tomobodo and Trello exports
                   </p>
                 </div>
               ) : (
@@ -500,7 +500,7 @@ export function ExportImportModal({ boardId, boardName, isOpen, onClose }: Expor
                               : 'text-red-700 dark:text-red-300'
                           }`}>
                             {validationResult.isValid
-                              ? `Valid ${validationResult.format === 'trello' ? 'Trello' : 'Ramen'} export`
+                              ? `Valid ${validationResult.format === 'trello' ? 'Trello' : 'Tomobodo'} export`
                               : 'Invalid file format'}
                           </p>
 

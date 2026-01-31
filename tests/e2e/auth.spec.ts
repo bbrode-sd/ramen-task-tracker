@@ -8,7 +8,7 @@ test.describe('Authentication Flow', () => {
 
   test('should display login screen when not authenticated', async ({ page }) => {
     // Should show the login screen
-    await expect(page.getByText('Ramen Task Tracker')).toBeVisible();
+    await expect(page.getByText('Tomobodo')).toBeVisible();
     await expect(page.getByRole('button', { name: /sign in with google/i })).toBeVisible();
   });
 

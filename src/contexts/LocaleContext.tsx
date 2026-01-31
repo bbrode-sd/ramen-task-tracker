@@ -21,7 +21,7 @@ interface LocaleContextType {
 
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'ramen-locale';
+const STORAGE_KEY = 'tomobodo-locale';
 
 const translations: Record<Locale, typeof enTranslations> = {
   en: enTranslations,

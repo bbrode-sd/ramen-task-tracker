@@ -2,7 +2,7 @@
  * Performance Monitoring and Optimization Utilities
  * 
  * This module provides utilities for monitoring and improving performance
- * in the Ramen Task Tracker application.
+ * in the Tomobodo application.
  * 
  * React DevTools Profiler Integration:
  * - Use React DevTools Profiler to identify slow renders
