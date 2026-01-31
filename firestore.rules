@@ -86,21 +86,21 @@ service cloud.firestore {
     // ============================================================================
     // USER PROFILES
     // ============================================================================
-    // Users can only read/write their own profile
+    // Any authenticated user can read profiles (needed for board sharing, member lookup)
+    // Users can only write their own profile
     // 
     // Test cases:
-    //   - User can read their own profile
+    //   - Authenticated user can read any profile (for member lookup/display)
     //   - User can create their own profile with valid fields
     //   - User can update their own profile
-    //   - User cannot read another user's profile
     //   - User cannot write to another user's profile
     //   - Anonymous user cannot access any profile
     //   - Profile creation requires email field
     //   - Profile cannot have unexpected fields
     
     match /users/{userId} {
-      // Only the user can read their own profile
-      allow read: if isAuthenticated() && currentUserId() == userId;
+      // Any authenticated user can read profiles (needed for inviting members, displaying collaborators)
+      allow read: if isAuthenticated();
       
       // Only the user can create their own profile
       allow create: if isAuthenticated() && 
