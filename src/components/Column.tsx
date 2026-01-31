@@ -6,6 +6,7 @@ import { Column as ColumnType, Card as CardType, CardTemplate } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useFilter } from '@/contexts/FilterContext';
 import {
   updateColumn,
   archiveColumn,
@@ -56,8 +57,8 @@ function ColumnComponent({
   index, 
   boardId, 
   onCardClick, 
-  hasActiveFilters = false, 
-  matchesFilter, 
+  hasActiveFilters: hasActiveFiltersProp = false, 
+  matchesFilter: matchesFilterProp, 
   isFocused = false, 
   focusedCardIndex = null,
   selectedCards = new Set(),
@@ -68,6 +69,13 @@ function ColumnComponent({
   const { showToast } = useToast();
   const { locale } = useLocale();
   const { triggerAddCard, setTriggerAddCard, addCardInputRefs } = useKeyboardShortcuts();
+  
+  // Use filter context directly to ensure re-render when filters change
+  const { hasActiveFilters: hasActiveFiltersContext, matchesFilter: matchesFilterContext } = useFilter();
+  
+  // Prefer context values over props for reactivity
+  const hasActiveFilters = hasActiveFiltersContext || hasActiveFiltersProp;
+  const matchesFilter = (card: CardType) => matchesFilterContext(card, user?.uid);
   const [isEditing, setIsEditing] = useState(false);
   const [columnName, setColumnName] = useState(column.name);
   const [columnNameJa, setColumnNameJa] = useState(column.nameJa || '');
