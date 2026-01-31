@@ -623,7 +623,7 @@ function CardComponent({
           className={`relative bg-[var(--surface)] rounded-xl mb-2.5 cursor-pointer border group drag-handle
             ${snapshot.isDragging 
               ? 'card-dragging drag-shadow z-50' 
-              : 'shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-[box-shadow,border-color,opacity,transform] duration-200 hover:border-[var(--primary)]/50'
+              : 'shadow-sm hover:shadow-xl transition-[box-shadow,border-color,opacity,ring] duration-200 hover:ring-2 hover:ring-[var(--primary)] hover:border-[var(--primary)]'
             }
             ${'' /* removed animate-drop - was causing visual hangs */}
             ${isDimmed ? 'opacity-40 scale-[0.98] border-[var(--border-subtle)]' : ''} 
