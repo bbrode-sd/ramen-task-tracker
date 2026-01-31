@@ -322,13 +322,43 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     return 'bg-gradient-to-br from-stone-50 via-amber-50/30 to-orange-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950';
   };
 
+  // Translate text to target language
+  const translate = useCallback(async (text: string, targetLanguage: 'en' | 'ja'): Promise<string> => {
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLanguage }),
+      });
+      const data = await response.json();
+      return data.translation || text;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return text;
+    }
+  }, []);
+
   const handleAddColumn = async () => {
     if (!newColumnName.trim()) return;
 
     const maxOrder = columns.length > 0 ? Math.max(...columns.map((c) => c.order)) : -1;
-    await createColumn(boardId, newColumnName.trim(), maxOrder + 1);
+    const columnNameEn = newColumnName.trim();
+    
+    // Create column with English name first
+    const columnId = await createColumn(boardId, columnNameEn, maxOrder + 1);
     setNewColumnName('');
     setIsAddingColumn(false);
+    
+    // Translate to Japanese in the background and update the column
+    if (columnId) {
+      try {
+        const { updateColumn } = await import('@/lib/firestore');
+        const nameJa = await translate(columnNameEn, 'ja');
+        await updateColumn(boardId, columnId, { nameJa });
+      } catch (error) {
+        console.error('Failed to translate column name:', error);
+      }
+    }
   };
 
   const getCardsForColumn = useCallback((columnId: string) => {

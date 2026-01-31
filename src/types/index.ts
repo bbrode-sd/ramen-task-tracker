@@ -46,6 +46,7 @@ export interface Column {
   id: string;
   boardId: string;
   name: string;
+  nameJa?: string;
   order: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;

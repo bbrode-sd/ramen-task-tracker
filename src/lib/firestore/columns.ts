@@ -24,11 +24,13 @@ import { Column } from '@/types';
 export const createColumn = async (
   boardId: string,
   name: string,
-  order: number
+  order: number,
+  nameJa?: string
 ): Promise<string> => {
   const columnRef = await addDoc(collection(db, 'boards', boardId, 'columns'), {
     boardId,
     name,
+    nameJa: nameJa || '',
     order,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),

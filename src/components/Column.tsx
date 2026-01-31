@@ -5,6 +5,7 @@ import { Draggable, Droppable } from '@hello-pangea/dnd';
 import { Column as ColumnType, Card as CardType, CardTemplate } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import {
   updateColumn,
   archiveColumn,
@@ -65,9 +66,12 @@ function ColumnComponent({
   const renderStart = process.env.NODE_ENV === 'development' ? performance.now() : 0;
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { locale } = useLocale();
   const { triggerAddCard, setTriggerAddCard, addCardInputRefs } = useKeyboardShortcuts();
   const [isEditing, setIsEditing] = useState(false);
   const [columnName, setColumnName] = useState(column.name);
+  const [columnNameJa, setColumnNameJa] = useState(column.nameJa || '');
+  const [isTranslatingName, setIsTranslatingName] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitleEn, setNewCardTitleEn] = useState('');
@@ -148,9 +152,28 @@ function ColumnComponent({
     }
   }, []);
 
+  // Sync column name states when column prop changes
+  useEffect(() => {
+    setColumnName(column.name);
+    setColumnNameJa(column.nameJa || '');
+  }, [column.name, column.nameJa]);
+
   const handleRename = async () => {
     if (columnName.trim() && columnName !== column.name) {
+      // Update with English name first
       await updateColumn(boardId, column.id, { name: columnName.trim() });
+      
+      // Translate to Japanese in the background
+      setIsTranslatingName(true);
+      try {
+        const translatedNameJa = await translate(columnName.trim(), 'ja');
+        await updateColumn(boardId, column.id, { nameJa: translatedNameJa });
+        setColumnNameJa(translatedNameJa);
+      } catch (error) {
+        console.error('Failed to translate column name:', error);
+      } finally {
+        setIsTranslatingName(false);
+      }
     }
     setIsEditing(false);
   };
@@ -418,22 +441,51 @@ function ColumnComponent({
                   if (e.key === 'Enter') handleRename();
                   if (e.key === 'Escape') {
                     setColumnName(column.name);
+                    setColumnNameJa(column.nameJa || '');
                     setIsEditing(false);
                   }
                 }}
                 className="flex-1 px-3 py-1.5 text-sm font-semibold bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
                 autoFocus
+                placeholder="List name (English)"
               />
             ) : (
-              <h3
+              <div
                 onClick={() => setIsEditing(true)}
-                className="flex-1 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] cursor-pointer hover:bg-[var(--surface-hover)] rounded-lg transition-colors flex items-center gap-2.5"
+                className="flex-1 px-2.5 py-1.5 cursor-pointer hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
               >
-                <span className="truncate">{column.name}</span>
-                <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-[var(--text-tertiary)] bg-[var(--surface-active)] rounded-full">
-                  {cards.length}
-                </span>
-              </h3>
+                <div className="flex items-center gap-2.5">
+                  <div className="flex-1 min-w-0">
+                    {/* English name */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
+                        EN
+                      </span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)] truncate">{column.name}</span>
+                    </div>
+                    {/* Japanese name */}
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
+                        JP
+                      </span>
+                      {isTranslatingName || (!columnNameJa && column.name) ? (
+                        <span className="text-xs text-[var(--text-muted)] italic flex items-center gap-1">
+                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          翻訳中...
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--text-secondary)] truncate">{columnNameJa || '—'}</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="flex-shrink-0 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-semibold text-[var(--text-tertiary)] bg-[var(--surface-active)] rounded-full">
+                    {cards.length}
+                  </span>
+                </div>
+              </div>
             )}
 
             {/* Column Menu */}

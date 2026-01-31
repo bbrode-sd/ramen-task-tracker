@@ -127,7 +127,11 @@ export function ArchivedItemsDrawer({ boardId, isOpen, onClose }: ArchivedItemsD
   const filteredColumns = useMemo(() => {
     if (!searchQuery.trim()) return archivedColumns;
     const query = searchQuery.toLowerCase();
-    return archivedColumns.filter((col) => col.name.toLowerCase().includes(query));
+    return archivedColumns.filter(
+      (col) =>
+        col.name.toLowerCase().includes(query) ||
+        (col.nameJa && col.nameJa.toLowerCase().includes(query))
+    );
   }, [archivedColumns, searchQuery]);
 
   const handleRestoreCard = async (cardId: string) => {
@@ -364,6 +368,7 @@ export function ArchivedItemsDrawer({ boardId, isOpen, onClose }: ArchivedItemsD
                   key={column.id}
                   id={column.id}
                   name={column.name}
+                  nameJa={column.nameJa}
                   archivedAt={column.updatedAt}
                   type="column"
                   isRestoring={restoringIds.has(column.id)}
@@ -471,6 +476,7 @@ export function ArchivedItemsDrawer({ boardId, isOpen, onClose }: ArchivedItemsD
 interface ArchivedItemProps {
   id: string;
   name: string;
+  nameJa?: string;
   archivedAt: { toDate: () => Date } | null | undefined;
   type: 'card' | 'column';
   isRestoring: boolean;
@@ -481,6 +487,7 @@ interface ArchivedItemProps {
 
 function ArchivedItem({
   name,
+  nameJa,
   archivedAt,
   type,
   isRestoring,
@@ -520,7 +527,24 @@ function ArchivedItem({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-gray-900 dark:text-white truncate">{name}</h4>
+          {type === 'column' && nameJa ? (
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
+                  EN
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white truncate">{name}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
+                  JP
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-300 truncate">{nameJa}</span>
+              </div>
+            </div>
+          ) : (
+            <h4 className="font-medium text-gray-900 dark:text-white truncate">{name}</h4>
+          )}
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Archived {formatDate(archivedAt)}
           </p>
