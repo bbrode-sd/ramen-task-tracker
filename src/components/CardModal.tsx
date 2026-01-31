@@ -1773,6 +1773,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
                           cancelEditing();
+                        } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          saveDescriptionEn();
                         }
                       }}
                       autoFocus
@@ -1846,6 +1849,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
                           cancelEditing();
+                        } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          saveDescriptionJa();
                         }
                       }}
                       autoFocus
