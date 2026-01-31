@@ -108,15 +108,15 @@ export function BoardActivityPanel({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - z-index must be higher than header (z-50) so clicking header closes panel */}
       <div 
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] transition-opacity"
         onClick={onClose}
       />
       
       {/* Panel */}
       <div 
-        className="fixed top-0 right-0 h-full w-full max-w-md shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300"
+        className="fixed top-0 right-0 h-full w-full max-w-md shadow-2xl z-[70] flex flex-col animate-in slide-in-from-right duration-300"
         style={{ backgroundColor: 'var(--surface)' }}
       >
         {/* Header */}
