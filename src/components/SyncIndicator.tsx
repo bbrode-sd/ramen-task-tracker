@@ -11,7 +11,10 @@ export function SyncIndicator() {
   // Don't render anything in idle state (or render a very subtle indicator)
   if (status === 'idle') {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1.5 text-white/40 transition-opacity duration-300 opacity-0 hover:opacity-100">
+      <div 
+        className="flex items-center gap-1.5 px-2 py-1.5 text-white/40 transition-opacity duration-300 opacity-0 hover:opacity-100"
+        title="All changes saved to cloud"
+      >
         <svg
           className="w-4 h-4"
           fill="none"
