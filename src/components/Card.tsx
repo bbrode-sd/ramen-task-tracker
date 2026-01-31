@@ -57,12 +57,12 @@ const MiniAvatar = memo(function MiniAvatar({
           alt={user.displayName || 'User'}
           width={24}
           height={24}
-          className="w-6 h-6 rounded-full object-cover ring-2 ring-white"
+          className="w-6 h-6 rounded-full object-cover ring-2 ring-[var(--surface)]"
           loading="lazy"
         />
       ) : (
         <div 
-          className={`w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(user.uid)} flex items-center justify-center ring-2 ring-white`}
+          className={`w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(user.uid)} flex items-center justify-center ring-2 ring-[var(--surface)]`}
         >
           <span className="font-medium text-white text-[10px]">{getInitials(user.displayName)}</span>
         </div>
@@ -113,31 +113,31 @@ const PriorityBadge = memo(function PriorityBadge({
   
   const priorityConfig = {
     low: {
-      bg: 'bg-slate-100',
-      text: 'text-slate-600',
-      border: 'border-slate-200',
-      dot: 'bg-slate-400',
+      bg: 'bg-[var(--surface-hover)]',
+      text: 'text-[var(--text-secondary)]',
+      border: 'border-[var(--border)]',
+      dot: 'bg-slate-400 dark:bg-slate-500',
       label: 'Low',
     },
     medium: {
-      bg: 'bg-yellow-50',
-      text: 'text-yellow-700',
-      border: 'border-yellow-200',
-      dot: 'bg-yellow-500',
+      bg: 'bg-[var(--warning-bg)]',
+      text: 'text-[var(--warning)]',
+      border: 'border-[var(--warning)]/30',
+      dot: 'bg-[var(--warning)]',
       label: 'Medium',
     },
     high: {
-      bg: 'bg-orange-50',
-      text: 'text-orange-700',
-      border: 'border-orange-200',
+      bg: 'bg-orange-50 dark:bg-orange-900/30',
+      text: 'text-orange-700 dark:text-orange-400',
+      border: 'border-orange-200 dark:border-orange-800/50',
       dot: 'bg-orange-500',
       label: 'High',
     },
     urgent: {
-      bg: 'bg-red-50',
-      text: 'text-red-700',
-      border: 'border-red-200',
-      dot: 'bg-red-500 animate-pulse',
+      bg: 'bg-[var(--error-bg)]',
+      text: 'text-[var(--error)]',
+      border: 'border-[var(--error)]/30',
+      dot: 'bg-[var(--error)] animate-pulse',
       label: 'Urgent',
     },
   };
@@ -172,7 +172,7 @@ const TranslationStatusBadge = memo(function TranslationStatusBadge({
   if (isTranslating) {
     return (
       <div 
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200"
+        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--info-bg)] text-[var(--info)] border border-[var(--info)]/30"
         title="Translation in progress"
       >
         <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ const TranslationStatusBadge = memo(function TranslationStatusBadge({
   
   return (
     <div 
-      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600 border border-amber-200"
+      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning)]/30"
       title={`${missingLang === 'EN' ? 'English' : 'Japanese'} translation missing`}
     >
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,38 +258,38 @@ const dueDateConfig: Record<DueDateStatus, {
   pulse?: boolean;
 }> = {
   overdue: {
-    bg: 'bg-red-100',
-    text: 'text-red-700',
-    border: 'border-red-200',
+    bg: 'bg-[var(--error-bg)]',
+    text: 'text-[var(--error)]',
+    border: 'border-[var(--error)]/30',
     icon: 'alert',
     label: 'Overdue',
     pulse: true,
   },
   today: {
-    bg: 'bg-red-50',
-    text: 'text-red-600',
-    border: 'border-red-200',
+    bg: 'bg-[var(--error-bg)]',
+    text: 'text-[var(--error)]',
+    border: 'border-[var(--error)]/30',
     icon: 'clock',
     label: 'Due today',
   },
   tomorrow: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-700',
-    border: 'border-orange-200',
+    bg: 'bg-orange-50 dark:bg-orange-900/30',
+    text: 'text-orange-700 dark:text-orange-400',
+    border: 'border-orange-200 dark:border-orange-800/50',
     icon: 'clock',
     label: 'Due tomorrow',
   },
   thisWeek: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-700',
-    border: 'border-yellow-200',
+    bg: 'bg-[var(--warning-bg)]',
+    text: 'text-[var(--warning)]',
+    border: 'border-[var(--warning)]/30',
     icon: 'calendar',
     label: 'Due this week',
   },
   future: {
-    bg: 'bg-slate-100',
-    text: 'text-slate-600',
-    border: 'border-slate-200',
+    bg: 'bg-[var(--surface-hover)]',
+    text: 'text-[var(--text-secondary)]',
+    border: 'border-[var(--border)]',
     icon: 'calendar',
     label: 'Due',
   },
@@ -311,7 +311,7 @@ const DueDateBadge = memo(function DueDateBadge({
   if (isCompleted) {
     return (
       <div
-        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border bg-green-100 text-green-700 border-green-200"
+        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30"
         title={`Completed - was due: ${formattedDate}`}
         aria-label={`Completed, was due: ${formattedDate}`}
       >
@@ -870,14 +870,14 @@ function CardComponent({
                   <div 
                     className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
                       checklistStats.completed === checklistStats.total
-                        ? 'bg-green-100 text-green-700 border-green-200'
-                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                        ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30'
+                        : 'bg-[var(--surface-hover)] text-[var(--text-secondary)] border-[var(--border)]'
                     }`}
                     title={`Checklist: ${checklistStats.completed}/${checklistStats.total} completed`}
                   >
                     <svg
                       className={`w-3.5 h-3.5 ${
-                        checklistStats.completed === checklistStats.total ? 'text-green-600' : 'text-slate-500'
+                        checklistStats.completed === checklistStats.total ? 'text-[var(--success)]' : 'text-[var(--text-tertiary)]'
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -904,8 +904,8 @@ function CardComponent({
                       <MiniAvatar key={assignee.uid} user={assignee} />
                     ))}
                     {extraAssignees > 0 && (
-                      <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-white">
-                        <span className="text-[10px] font-medium text-slate-600">+{extraAssignees}</span>
+                      <div className="w-6 h-6 rounded-full bg-[var(--surface-hover)] flex items-center justify-center ring-2 ring-[var(--surface)]">
+                        <span className="text-[10px] font-medium text-[var(--text-secondary)]">+{extraAssignees}</span>
                       </div>
                     )}
                   </div>
