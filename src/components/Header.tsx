@@ -903,8 +903,8 @@ export function Header({
 
             {/* Active Filters Indicator & Clear Button */}
             {hasActiveFilters && (
-              <div className="flex items-center gap-2" role="status" aria-live="polite">
-                <span className="text-white/80 text-sm hidden sm:inline" aria-label={`Showing ${matchingCards} of ${totalCards} cards`}>
+              <div className="flex items-center gap-2 flex-shrink-0" role="status" aria-live="polite">
+                <span className="text-white/80 text-sm hidden sm:inline whitespace-nowrap" aria-label={`Showing ${matchingCards} of ${totalCards} cards`}>
                   {matchingCards} of {totalCards}
                 </span>
                 <button
