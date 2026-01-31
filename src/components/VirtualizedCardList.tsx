@@ -97,6 +97,7 @@ function VirtualizedCardListComponent({
                 isFocused={focusedCardIndex === cardIndex}
                 onArchive={onArchive}
                 onDuplicate={onDuplicate}
+                commentCount={card.commentCount || 0}
                 data-onboarding={cardIndex === 0 ? "card" : undefined}
               />
             ))}
@@ -127,6 +128,7 @@ function VirtualizedCardListComponent({
             onClick={() => {}}
             isDimmed={false}
             isFocused={false}
+            commentCount={card.commentCount || 0}
           />
         </div>
       );
@@ -174,6 +176,7 @@ function VirtualizedCardListComponent({
                     isFocused={focusedCardIndex === virtualItem.index}
                     onArchive={onArchive}
                     onDuplicate={onDuplicate}
+                    commentCount={card.commentCount || 0}
                     data-onboarding={virtualItem.index === 0 ? "card" : undefined}
                   />
                 </div>

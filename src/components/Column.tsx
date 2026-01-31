@@ -607,6 +607,7 @@ function ColumnComponent({
                       onSelectToggle={onCardSelectToggle}
                       onArchive={handleArchiveCard}
                       onDuplicate={handleDuplicateCard}
+                      commentCount={card.commentCount || 0}
                       data-onboarding={cardIndex === 0 ? "card" : undefined}
                     />
                   ));

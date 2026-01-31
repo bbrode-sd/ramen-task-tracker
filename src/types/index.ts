@@ -81,6 +81,7 @@ export interface Card {
   coverImage?: CardCover;
   priority?: CardPriority;
   watcherIds?: string[];
+  commentCount?: number;
 }
 
 export interface Attachment {

@@ -11,6 +11,7 @@ import {
   orderBy,
   onSnapshot,
   Timestamp,
+  increment,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Comment, Attachment } from '@/types';
@@ -46,6 +47,13 @@ export const addComment = async (
       attachments,
     }
   );
+  
+  // Update the card's comment count
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  await updateDoc(cardRef, {
+    commentCount: increment(1),
+  });
+  
   return commentRef.id;
 };
 
@@ -110,6 +118,12 @@ export const deleteComment = async (
 ) => {
   const commentRef = doc(db, 'boards', boardId, 'cards', cardId, 'comments', commentId);
   await deleteDoc(commentRef);
+  
+  // Update the card's comment count
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  await updateDoc(cardRef, {
+    commentCount: increment(-1),
+  });
 };
 
 /**
