@@ -72,9 +72,9 @@ export function KeyboardShortcutsHelp() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center dark:from-orange-500/20 dark:to-orange-400/10">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center dark:from-emerald-500/20 dark:to-emerald-400/10">
               <svg
-                className="w-5 h-5 text-orange-500 dark:text-orange-300"
+                className="w-5 h-5 text-emerald-500 dark:text-emerald-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

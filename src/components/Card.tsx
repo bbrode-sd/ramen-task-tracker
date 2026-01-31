@@ -15,7 +15,7 @@ import { getUserProfiles } from '@/lib/firestore';
 // Helper to generate consistent color from user ID
 function getAvatarColor(userId: string): string {
   const colors = [
-    'from-orange-400 to-red-500',
+    'from-emerald-400 to-teal-500',
     'from-blue-400 to-indigo-500',
     'from-green-400 to-emerald-500',
     'from-purple-400 to-violet-500',
@@ -645,7 +645,7 @@ function CardComponent({
           
           {/* Selection checkmark */}
           {isSelected && !snapshot.isDragging && (
-            <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center shadow-md z-10">
+            <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md z-10">
               <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
@@ -666,7 +666,7 @@ function CardComponent({
                     e.stopPropagation();
                     onClick();
                   }}
-                  className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:border-orange-200 dark:hover:border-orange-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                  className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                   aria-label="Edit card (e)"
                 >
                   <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

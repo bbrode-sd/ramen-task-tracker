@@ -308,7 +308,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const getBackgroundClasses = () => {
     if (!board?.background) {
       // Default premium background with subtle warmth
-      return 'bg-gradient-to-br from-stone-50 via-amber-50/30 to-orange-50/20 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950';
+      return 'bg-gradient-to-br from-slate-50 via-emerald-50/30 to-blue-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950';
     }
     
     if (board.background.type === 'gradient') {
@@ -902,7 +902,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                         value={newColumnName}
                         onChange={(e) => setNewColumnName(e.target.value)}
                         placeholder="Enter list name..."
-                        className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-3 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                        className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent mb-3 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleAddColumn();
@@ -916,7 +916,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                         <button
                           onClick={handleAddColumn}
                           disabled={!newColumnName.trim()}
-                          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
+                          className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
                         >
                           Add List
                         </button>
@@ -979,7 +979,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                           value={newColumnName}
                           onChange={(e) => setNewColumnName(e.target.value)}
                           placeholder="Enter list name..."
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-3 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent mb-3 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleAddColumn();
@@ -993,7 +993,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
                           <button
                             onClick={handleAddColumn}
                             disabled={!newColumnName.trim()}
-                            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
+                            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98]"
                           >
                             Add List
                           </button>

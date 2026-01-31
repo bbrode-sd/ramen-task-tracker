@@ -4,8 +4,8 @@
   "description": "A bilingual Kanban board for managing your tasks",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f97316",
-  "theme_color": "#f97316",
+  "background_color": "#10b981",
+  "theme_color": "#10b981",
   "orientation": "any",
   "icons": [
     {

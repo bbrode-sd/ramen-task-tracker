@@ -217,14 +217,14 @@ export function BoardList() {
                   {/* Blank board option */}
                   <button
                     onClick={() => handleSelectTemplate(null)}
-                    className="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all text-left group"
+                    className="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all text-left group"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/40 flex items-center justify-center mb-3 transition-colors">
-                      <svg className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40 flex items-center justify-center mb-3 transition-colors">
+                      <svg className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">{t('boards.templates.blank')}</p>
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{t('boards.templates.blank')}</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('boards.templates.blankDescription')}</p>
                   </button>
                   
@@ -279,7 +279,7 @@ export function BoardList() {
               )}
             </div>
           ) : isCreating ? (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-5 border-2 border-orange-400 dark:border-orange-500 ring-4 ring-orange-100 dark:ring-orange-900/30">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-5 border-2 border-emerald-400 dark:border-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-900/30">
               {selectedTemplate && getTemplateInfo(selectedTemplate) && (
                 <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl border border-purple-100 dark:border-purple-800">
                   <div className="flex items-center gap-2 text-sm">
@@ -300,7 +300,7 @@ export function BoardList() {
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
                 placeholder={t('boards.boardName')}
-                className="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 text-gray-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent mb-4 text-gray-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !isCreatingBoard) handleCreateBoard();
@@ -315,7 +315,7 @@ export function BoardList() {
                 <button
                   onClick={handleCreateBoard}
                   disabled={!newBoardName.trim() || isCreatingBoard}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium rounded-xl hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
                 >
                   {isCreatingBoard ? t('boards.creating') : t('boards.createBoard')}
                 </button>

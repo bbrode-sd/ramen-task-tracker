@@ -143,7 +143,7 @@ export function Header({
   // Priority options for filter
   const priorityOptions = [
     { value: 'urgent' as const, label: t('header.priorityUrgent'), color: 'bg-red-500' },
-    { value: 'high' as const, label: t('header.priorityHigh'), color: 'bg-orange-500' },
+    { value: 'high' as const, label: t('header.priorityHigh'), color: 'bg-amber-500' },
     { value: 'medium' as const, label: t('header.priorityMedium'), color: 'bg-yellow-500' },
     { value: 'low' as const, label: t('header.priorityLow'), color: 'bg-blue-500' },
   ];
@@ -368,7 +368,7 @@ export function Header({
 
   return (
     <header 
-      className="relative z-50 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 dark:from-amber-600 dark:via-orange-600 dark:to-rose-600 shadow-lg"
+      className="relative z-50 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 dark:from-emerald-600 dark:via-teal-600 dark:to-blue-600 shadow-lg"
       role="banner"
     >
       {/* Refined pattern overlay */}
@@ -466,7 +466,7 @@ export function Header({
                       value={localSearchQuery}
                       onChange={(e) => setLocalSearchQuery(e.target.value)}
                       placeholder={t('header.searchCards')}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[44px]"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -482,7 +482,7 @@ export function Header({
                           onClick={() => toggleLabel(label)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
                             selectedLabels.includes(label) 
-                              ? 'bg-orange-500 text-white' 
+                              ? 'bg-emerald-500 text-white' 
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                           }`}
                         >
@@ -503,7 +503,7 @@ export function Header({
                         onClick={() => togglePriority(priority.value)}
                         className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center gap-2 ${
                           selectedPriorities.includes(priority.value) 
-                            ? 'bg-orange-500 text-white' 
+                            ? 'bg-emerald-500 text-white' 
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                         }`}
                       >
@@ -548,7 +548,7 @@ export function Header({
                     </svg>
                     {t('common.archive')}
                     {archivedCount > 0 && (
-                      <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-orange-100 text-orange-600 rounded-full">
+                      <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-emerald-100 text-emerald-600 rounded-full">
                         {archivedCount > 99 ? '99+' : archivedCount}
                       </span>
                     )}
@@ -647,7 +647,7 @@ export function Header({
                     </button>
                   </Tip>
                   {/* Subtle shortcut hint badge */}
-                  <kbd className="absolute -bottom-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold bg-white/90 text-orange-600 rounded shadow-sm pointer-events-none">
+                  <kbd className="absolute -bottom-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold bg-white/90 text-emerald-600 rounded shadow-sm pointer-events-none">
                     /
                   </kbd>
                 </div>
@@ -664,7 +664,7 @@ export function Header({
                   aria-label={`${t('header.labels')}${selectedLabels.length > 0 ? `, ${selectedLabels.length} selected` : ''}`}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     selectedLabels.length > 0 
-                      ? 'bg-white text-orange-600' 
+                      ? 'bg-white text-emerald-600' 
                       : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
                   }`}
                 >
@@ -673,7 +673,7 @@ export function Header({
                   </svg>
                   <span className="hidden sm:inline">{t('header.labels')}</span>
                   {selectedLabels.length > 0 && (
-                    <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-orange-100 text-orange-700 rounded-full" aria-hidden="true">
+                    <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-full" aria-hidden="true">
                       {selectedLabels.length}
                     </span>
                   )}
@@ -701,7 +701,7 @@ export function Header({
                           <span 
                             className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
                               selectedLabels.includes(label) 
-                                ? 'bg-orange-500 border-orange-500' 
+                                ? 'bg-emerald-500 border-emerald-500' 
                                 : 'border-gray-300 dark:border-gray-600'
                             }`}
                             aria-hidden="true"
@@ -712,7 +712,7 @@ export function Header({
                               </svg>
                             )}
                           </span>
-                          <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200/50 dark:border-orange-700/50">
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-700/50">
                             {label}
                           </span>
                         </button>
@@ -732,7 +732,7 @@ export function Header({
                 aria-label={`${t('header.priority')}${selectedPriorities.length > 0 ? `, ${selectedPriorities.length} selected` : ''}`}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                   selectedPriorities.length > 0 
-                    ? 'bg-white text-orange-600' 
+                    ? 'bg-white text-emerald-600' 
                     : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
                 }`}
               >
@@ -741,7 +741,7 @@ export function Header({
                 </svg>
                 <span className="hidden sm:inline">{t('header.priority')}</span>
                 {selectedPriorities.length > 0 && (
-                  <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-orange-100 text-orange-700 rounded-full" aria-hidden="true">
+                  <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-full" aria-hidden="true">
                     {selectedPriorities.length}
                   </span>
                 )}
@@ -769,7 +769,7 @@ export function Header({
                         <span 
                           className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
                             selectedPriorities.includes(priority.value) 
-                              ? 'bg-orange-500 border-orange-500' 
+                              ? 'bg-emerald-500 border-emerald-500' 
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           aria-hidden="true"
@@ -839,14 +839,14 @@ export function Header({
                         }}
                         className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
                           sortBy === option.value 
-                            ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' 
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' 
                             : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                       >
                         <span 
                           className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
                             sortBy === option.value 
-                              ? 'bg-orange-500 border-orange-500' 
+                              ? 'bg-emerald-500 border-emerald-500' 
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           aria-hidden="true"
@@ -868,7 +868,7 @@ export function Header({
                         aria-pressed={sortOrder === 'asc'}
                         className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
                           sortOrder === 'asc'
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-emerald-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
@@ -883,7 +883,7 @@ export function Header({
                         aria-pressed={sortOrder === 'desc'}
                         className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1 ${
                           sortOrder === 'desc'
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-emerald-500 text-white'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
@@ -932,7 +932,7 @@ export function Header({
                     </>
                   ) : dueDateStats.today > 0 ? (
                     <>
-                      <svg className="w-4 h-4 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <span className="hidden sm:inline">{dueDateStats.today} due today</span>
@@ -1024,7 +1024,7 @@ export function Header({
                   </svg>
                   <span className="hidden sm:inline">{t('common.more')}</span>
                   {archivedCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-white text-orange-600 rounded-full shadow-sm">
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-white text-emerald-600 rounded-full shadow-sm">
                       {archivedCount > 99 ? '99+' : archivedCount}
                     </span>
                   )}
@@ -1130,7 +1130,7 @@ export function Header({
                       </svg>
                       <span className="flex-1">{t('common.archive')}</span>
                       {archivedCount > 0 && (
-                        <span className="min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-orange-100 text-orange-600 rounded-full">
+                        <span className="min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-emerald-100 text-emerald-600 rounded-full">
                           {archivedCount > 99 ? '99+' : archivedCount}
                         </span>
                       )}

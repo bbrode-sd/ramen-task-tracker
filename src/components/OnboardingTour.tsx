@@ -144,7 +144,7 @@ function OnboardingTooltip({
       />
 
       {/* Header with gradient */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 px-5 py-4">
+      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🍜</span>
@@ -167,9 +167,9 @@ function OnboardingTooltip({
         <p className="text-[var(--text-secondary)] text-sm leading-relaxed mb-4">{step.description}</p>
 
         {step.action && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg border border-orange-100 dark:border-orange-800 mb-4">
-            <span className="text-orange-500">👆</span>
-            <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">{step.action}</span>
+          <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg border border-emerald-100 dark:border-emerald-800 mb-4">
+            <span className="text-emerald-500">👆</span>
+            <span className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">{step.action}</span>
           </div>
         )}
 
@@ -180,9 +180,9 @@ function OnboardingTooltip({
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i + 1 === stepNumber
-                  ? 'w-6 bg-orange-500'
+                  ? 'w-6 bg-emerald-500'
                   : i + 1 < stepNumber
-                  ? 'w-1.5 bg-orange-300'
+                  ? 'w-1.5 bg-emerald-300'
                   : 'w-1.5 bg-[var(--border)]'
               }`}
             />
@@ -205,7 +205,7 @@ function OnboardingTooltip({
 
           <button
             onClick={onNext}
-            className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-sm font-medium rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+            className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-medium rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
           >
             {isLastStep ? 'Get Started! 🚀' : 'Next →'}
           </button>
@@ -299,7 +299,7 @@ function HighlightOverlay({ targetSelector }: { targetSelector?: string }) {
 
       {/* Highlight ring around target */}
       <div
-        className="fixed z-[91] pointer-events-none rounded-xl ring-4 ring-orange-400/60 ring-offset-4 ring-offset-transparent animate-pulse"
+        className="fixed z-[91] pointer-events-none rounded-xl ring-4 ring-emerald-400/60 ring-offset-4 ring-offset-transparent animate-pulse"
         style={{
           top: targetRect.top - padding,
           left: targetRect.left - padding,
@@ -360,7 +360,7 @@ export function ReplayTourButton({ className = '' }: { className?: string }) {
   return (
     <button
       onClick={handleReplay}
-      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-xl transition-all ${className}`}
+      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-all ${className}`}
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path

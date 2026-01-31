@@ -19,7 +19,7 @@ export function LoginScreen() {
   }
 
   const features = [
-    { icon: '🎯', textKey: 'login.features.dragDrop', gradient: 'from-amber-500 to-orange-600' },
+    { icon: '🎯', textKey: 'login.features.dragDrop', gradient: 'from-emerald-500 to-teal-600' },
     { icon: '🌏', textKey: 'login.features.bilingual', gradient: 'from-sky-500 to-blue-600' },
     { icon: '💬', textKey: 'login.features.comments', gradient: 'from-violet-500 to-purple-600' },
     { icon: '📦', textKey: 'login.features.archive', gradient: 'from-emerald-500 to-green-600' },
@@ -30,12 +30,12 @@ export function LoginScreen() {
       {/* Premium gradient background */}
       <div className="fixed inset-0 overflow-hidden">
         {/* Base gradient - warm, sophisticated */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-stone-950 dark:via-stone-900 dark:to-stone-950"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"></div>
         
         {/* Animated gradient orbs */}
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-amber-200/40 to-orange-300/30 dark:from-amber-900/20 dark:to-orange-800/15 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-rose-200/40 to-red-300/30 dark:from-rose-900/20 dark:to-red-800/15 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-orange-100/20 via-transparent to-transparent dark:from-orange-900/10 rounded-full"></div>
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-emerald-200/40 to-teal-300/30 dark:from-emerald-900/20 dark:to-teal-800/15 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-200/40 to-indigo-300/30 dark:from-blue-900/20 dark:to-indigo-800/15 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-teal-100/20 via-transparent to-transparent dark:from-teal-900/10 rounded-full"></div>
         
         {/* Subtle noise texture */}
         <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")'}}></div>
@@ -47,12 +47,12 @@ export function LoginScreen() {
       {/* Main card - glass morphism */}
       <div className="relative w-full max-w-lg mx-4 animate-fade-in">
         {/* Card glow effect */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 rounded-[28px] opacity-20 blur-xl dark:opacity-30"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-blue-500 rounded-[28px] opacity-20 blur-xl dark:opacity-30"></div>
         
         {/* Card container */}
-        <div className="relative bg-white/90 dark:bg-stone-900/90 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 dark:border-stone-700/50 overflow-hidden">
+        <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[24px] shadow-2xl border border-white/60 dark:border-slate-700/50 overflow-hidden">
           {/* Top accent gradient */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500"></div>
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-blue-500"></div>
           
           {/* Content */}
           <div className="p-8 sm:p-10 lg:p-12">
@@ -61,13 +61,13 @@ export function LoginScreen() {
               {/* Tomobodo bowl illustration */}
               <div className="relative inline-block mb-8">
                 {/* Animated glow behind emoji */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full blur-2xl opacity-30 dark:opacity-40 scale-150 animate-pulse-soft"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full blur-2xl opacity-30 dark:opacity-40 scale-150 animate-pulse-soft"></div>
                 
                 {/* Steam wisps */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-none">
-                  <div className="w-1.5 h-10 bg-gradient-to-t from-stone-400/50 via-stone-300/30 to-transparent dark:from-stone-500/40 dark:via-stone-400/20 rounded-full animate-steam-1"></div>
-                  <div className="w-1 h-14 bg-gradient-to-t from-stone-400/40 via-stone-300/20 to-transparent dark:from-stone-500/30 dark:via-stone-400/15 rounded-full animate-steam-2"></div>
-                  <div className="w-1.5 h-8 bg-gradient-to-t from-stone-400/50 via-stone-300/30 to-transparent dark:from-stone-500/40 dark:via-stone-400/20 rounded-full animate-steam-3"></div>
+                  <div className="w-1.5 h-10 bg-gradient-to-t from-slate-400/50 via-slate-300/30 to-transparent dark:from-slate-500/40 dark:via-slate-400/20 rounded-full animate-steam-1"></div>
+                  <div className="w-1 h-14 bg-gradient-to-t from-slate-400/40 via-slate-300/20 to-transparent dark:from-slate-500/30 dark:via-slate-400/15 rounded-full animate-steam-2"></div>
+                  <div className="w-1.5 h-8 bg-gradient-to-t from-slate-400/50 via-slate-300/30 to-transparent dark:from-slate-500/40 dark:via-slate-400/20 rounded-full animate-steam-3"></div>
                 </div>
                 
                 {/* Tomobodo emoji */}
@@ -76,21 +76,21 @@ export function LoginScreen() {
                 </span>
                 
                 {/* Reflection */}
-                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent rounded-full blur-sm"></div>
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent rounded-full blur-sm"></div>
               </div>
               
               {/* Title */}
-              <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-50 mb-3 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-50 mb-3 tracking-tight">
                 {t('app.title')}
               </h1>
               
               {/* Tagline */}
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-500 to-rose-500 dark:from-amber-400 dark:via-orange-400 dark:to-rose-400 mb-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-500 dark:from-emerald-400 dark:via-teal-400 dark:to-blue-400 mb-4">
                 Organize • Track • Accomplish
               </p>
               
               {/* Description */}
-              <p className="text-stone-500 dark:text-stone-400 text-base max-w-sm mx-auto leading-relaxed">
+              <p className="text-slate-500 dark:text-slate-400 text-base max-w-sm mx-auto leading-relaxed">
                 {t('app.description')}
               </p>
             </div>
@@ -98,7 +98,7 @@ export function LoginScreen() {
             {/* Sign in button */}
             <button
               onClick={signInWithGoogle}
-              className="group w-full relative flex items-center justify-center gap-3 px-6 py-4 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-2xl font-semibold text-base overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+              className="group w-full relative flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-semibold text-base overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
             >
               {/* Button shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 dark:via-black/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -117,9 +117,9 @@ export function LoginScreen() {
             
             {/* Divider */}
             <div className="flex items-center gap-4 my-8">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent"></div>
-              <span className="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wider font-medium">Features</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-stone-200 dark:via-stone-700 to-transparent"></div>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent"></div>
+              <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-medium">Features</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-700 to-transparent"></div>
             </div>
 
             {/* Features grid */}
@@ -127,20 +127,20 @@ export function LoginScreen() {
               {features.map((feature, i) => (
                 <div 
                   key={i} 
-                  className="group flex items-center gap-3 p-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-700/50 hover:border-stone-200 dark:hover:border-stone-600 transition-all duration-200 hover:shadow-md cursor-default"
+                  className="group flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 transition-all duration-200 hover:shadow-md cursor-default"
                   style={{animationDelay: `${i * 50}ms`}}
                 >
                   <span className={`flex-shrink-0 w-11 h-11 flex items-center justify-center bg-gradient-to-br ${feature.gradient} rounded-xl text-lg shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-200`}>
                     {feature.icon}
                   </span>
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300 leading-snug">{t(feature.textKey)}</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-snug">{t(feature.textKey)}</span>
                 </div>
               ))}
             </div>
             
             {/* Footer */}
-            <div className="mt-8 pt-6 border-t border-stone-100 dark:border-stone-800 text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-50 dark:bg-stone-800/50 text-xs text-stone-500 dark:text-stone-400">
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 dark:text-slate-400">
                 <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>

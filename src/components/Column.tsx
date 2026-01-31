@@ -514,7 +514,7 @@ function ColumnComponent({
                 {...provided.droppableProps}
                 className={`flex-1 px-2 py-2 min-h-[60px] transition-colors duration-200 column-drop-zone rounded-lg ${
                   snapshot.isDraggingOver 
-                    ? 'dragging-over bg-gradient-to-b from-orange-50/60 to-orange-100/40 dark:from-orange-900/30 dark:to-orange-800/20' 
+                    ? 'dragging-over bg-gradient-to-b from-emerald-50/60 to-emerald-100/40 dark:from-emerald-900/30 dark:to-emerald-800/20' 
                     : ''
                 }`}
               >
@@ -561,7 +561,7 @@ function ColumnComponent({
                   onChange={(e) => setNewCardTitleEn(e.target.value)}
                   placeholder="Enter a title for this card (English)..."
                   aria-describedby={`add-card-help-${column.id}`}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   rows={2}
                   autoFocus
                   onKeyDown={(e) => {
@@ -583,7 +583,7 @@ function ColumnComponent({
                     onClick={handleAddCard}
                     disabled={!newCardTitleEn.trim()}
                     aria-label="Add card to list"
-                    className="px-4 py-2.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98] touch-manipulation min-h-[44px] sm:min-h-0"
+                    className="px-4 py-2.5 sm:py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-medium rounded-lg hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98] touch-manipulation min-h-[44px] sm:min-h-0"
                   >
                     Add card
                   </button>
@@ -620,9 +620,9 @@ function ColumnComponent({
                   aria-label={`Add a card to ${column.name}`}
                   className="w-full px-3 py-3 sm:py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
                 >
-                  <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 dark:bg-slate-700/80 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/40 rounded-lg transition-colors" aria-hidden="true">
+                  <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 dark:bg-slate-700/80 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40 rounded-lg transition-colors" aria-hidden="true">
                     <svg
-                      className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors"
+                      className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

@@ -208,10 +208,10 @@ export function Tip({
   };
 
   const arrowClasses: Record<string, string> = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-orange-500',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-orange-500',
-    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-orange-500',
-    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-orange-500',
+    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-emerald-500',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-emerald-500',
+    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-emerald-500',
+    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-emerald-500',
   };
 
   return (
@@ -230,7 +230,7 @@ export function Tip({
         shouldShow &&
         createPortal(
           <div
-            className={`fixed z-[200] px-3 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-medium rounded-xl shadow-lg pointer-events-none transition-all duration-200 max-w-xs ${positionClasses[position]}`}
+            className={`fixed z-[200] px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium rounded-xl shadow-lg pointer-events-none transition-all duration-200 max-w-xs ${positionClasses[position]}`}
             style={{
               top: coords.top,
               left: coords.left,
