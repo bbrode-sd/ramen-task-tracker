@@ -858,7 +858,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
           availableLabels={availableLabels}
           totalCards={cards.length}
           matchingCards={matchingCardsCount}
-          onActivityClick={() => setShowActivityPanel(true)}
+          onActivityClick={() => setShowActivityPanel(prev => !prev)}
           currentBackground={board?.background}
           onBackgroundChange={handleBackgroundChange}
           dueDateStats={dueDateStats}
