@@ -1685,7 +1685,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   </div>
                 </div>
               ) : (
-                <div className="group flex items-center gap-2">
+                <div 
+                  className="group flex items-center gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
+                  onClick={startEditingTitleEn}
+                >
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                     EN
@@ -1706,12 +1709,6 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     onRetry={handleRetryTitleEn}
                     language="en"
                   />
-                  <button
-                    onClick={startEditingTitleEn}
-                    className="shrink-0 px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  >
-                    {t('common.edit')}
-                  </button>
                 </div>
               )}
               {translationState.errors[fieldKeys.titleEn] && (
@@ -1778,7 +1775,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   </div>
                 </div>
               ) : (
-                <div className="group flex items-center gap-2">
+                <div 
+                  className="group flex items-center gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
+                  onClick={startEditingTitleJa}
+                >
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                     JP
@@ -1799,12 +1799,6 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     onRetry={handleRetryTitleJa}
                     language="ja"
                   />
-                  <button
-                    onClick={startEditingTitleJa}
-                    className="shrink-0 px-2 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  >
-                    {t('common.edit')}
-                  </button>
                 </div>
               )}
               {translationState.errors[fieldKeys.titleJa] && (
