@@ -1,10 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { format } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { Activity } from '@/types';
-import { getAvatarColor, getInitials } from './utils';
 
 // English translations for activities
 const enTranslations: Record<string, string> = {
@@ -90,7 +88,7 @@ export function ActivityItem({ activity }: ActivityItemProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-      {/* English version - no avatar */}
+      {/* English version */}
       <p className="text-sm text-slate-500 dark:text-slate-400">
         <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
         {enText}
@@ -99,31 +97,14 @@ export function ActivityItem({ activity }: ActivityItemProps) {
         </span>
       </p>
       
-      {/* Japanese version - with avatar */}
-      <div className="flex items-start gap-2">
-        {activity.userPhoto ? (
-          <Image
-            src={activity.userPhoto}
-            alt={activity.userName}
-            width={24}
-            height={24}
-            className="w-6 h-6 rounded-full flex-shrink-0 object-cover mt-0.5"
-          />
-        ) : (
-          <div 
-            className={`w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(activity.userId)} flex items-center justify-center flex-shrink-0 mt-0.5`}
-          >
-            <span className="text-[9px] font-medium text-white">{getInitials(activity.userName)}</span>
-          </div>
-        )}
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
-          {jaText}
-          <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-            {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
-          </span>
-        </p>
-      </div>
+      {/* Japanese version */}
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+        {jaText}
+        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+          {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
+        </span>
+      </p>
     </div>
   );
 }
