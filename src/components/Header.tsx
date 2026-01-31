@@ -1029,11 +1029,6 @@ export function Header({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
                   </svg>
                   <span className="hidden sm:inline">{t('common.more')}</span>
-                  {archivedCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-white text-emerald-600 rounded-full shadow-sm">
-                      {archivedCount > 99 ? '99+' : archivedCount}
-                    </span>
-                  )}
                 </button>
 
                 {showMoreMenu && (
