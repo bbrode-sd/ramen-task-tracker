@@ -456,15 +456,50 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     
     setTitleEn(value);
     setLastSavedTitleEn(value);
-    await updateCard(boardId, cardId, { titleEn: value });
+    
+    // Determine if this is the first title or an edit of the original
+    const isFirstTitle = !card?.titleDetectedLanguage && !lastSavedTitleEn && !lastSavedTitleJa;
+    const isEditingOriginal = card?.titleDetectedLanguage === 'en';
+    const isEditingTranslation = card?.titleDetectedLanguage === 'ja';
+    
+    if (isFirstTitle) {
+      // First time entering a title - mark EN as original
+      await updateCard(boardId, cardId, { 
+        titleEn: value,
+        titleDetectedLanguage: 'en',
+      });
+      // Update local card state
+      if (card) {
+        setCard({ ...card, titleDetectedLanguage: 'en', titleTranslatorEn: undefined, titleTranslatorJa: undefined });
+      }
+    } else if (isEditingOriginal) {
+      // Editing the original EN - just update the text
+      await updateCard(boardId, cardId, { titleEn: value });
+    } else if (isEditingTranslation && user) {
+      // Editing the translated EN - mark as manually translated
+      const translatorInfo = { uid: user.uid, displayName: user.displayName || 'Unknown' };
+      await updateCard(boardId, cardId, { 
+        titleEn: value,
+        titleTranslatorEn: translatorInfo,
+      });
+      if (card) {
+        setCard({ ...card, titleTranslatorEn: translatorInfo });
+      }
+    } else {
+      await updateCard(boardId, cardId, { titleEn: value });
+    }
 
-    // Auto-translate to Japanese with debouncing
-    if (value.trim()) {
+    // Auto-translate to Japanese with debouncing (only if editing original or first entry)
+    if (value.trim() && (isFirstTitle || isEditingOriginal)) {
       debouncedTranslate(value, 'ja', fieldKeys.titleJa, async (result) => {
         if (!result.error) {
           setTitleJa(result.translation);
           setLastSavedTitleJa(result.translation);
+          // Auto-translated, so no translator info needed
           await updateCard(boardId, cardId, { titleJa: result.translation });
+          if (card) {
+            setCard(c => c ? { ...c, titleTranslatorJa: undefined } : c);
+          }
         }
       });
     }
@@ -476,15 +511,50 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     
     setTitleJa(value);
     setLastSavedTitleJa(value);
-    await updateCard(boardId, cardId, { titleJa: value });
+    
+    // Determine if this is the first title or an edit of the original
+    const isFirstTitle = !card?.titleDetectedLanguage && !lastSavedTitleEn && !lastSavedTitleJa;
+    const isEditingOriginal = card?.titleDetectedLanguage === 'ja';
+    const isEditingTranslation = card?.titleDetectedLanguage === 'en';
+    
+    if (isFirstTitle) {
+      // First time entering a title - mark JA as original
+      await updateCard(boardId, cardId, { 
+        titleJa: value,
+        titleDetectedLanguage: 'ja',
+      });
+      // Update local card state
+      if (card) {
+        setCard({ ...card, titleDetectedLanguage: 'ja', titleTranslatorEn: undefined, titleTranslatorJa: undefined });
+      }
+    } else if (isEditingOriginal) {
+      // Editing the original JA - just update the text
+      await updateCard(boardId, cardId, { titleJa: value });
+    } else if (isEditingTranslation && user) {
+      // Editing the translated JA - mark as manually translated
+      const translatorInfo = { uid: user.uid, displayName: user.displayName || 'Unknown' };
+      await updateCard(boardId, cardId, { 
+        titleJa: value,
+        titleTranslatorJa: translatorInfo,
+      });
+      if (card) {
+        setCard({ ...card, titleTranslatorJa: translatorInfo });
+      }
+    } else {
+      await updateCard(boardId, cardId, { titleJa: value });
+    }
 
-    // Auto-translate to English with debouncing
-    if (value.trim()) {
+    // Auto-translate to English with debouncing (only if editing original or first entry)
+    if (value.trim() && (isFirstTitle || isEditingOriginal)) {
       debouncedTranslate(value, 'en', fieldKeys.titleEn, async (result) => {
         if (!result.error) {
           setTitleEn(result.translation);
           setLastSavedTitleEn(result.translation);
+          // Auto-translated, so no translator info needed
           await updateCard(boardId, cardId, { titleEn: result.translation });
+          if (card) {
+            setCard(c => c ? { ...c, titleTranslatorEn: undefined } : c);
+          }
         }
       });
     }
@@ -1565,6 +1635,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                       EN
                     </span>
+                    {getTitleTranslationLabel('en') && (
+                      <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                        {getTitleTranslationLabel('en')}
+                      </span>
+                    )}
                     <input
                       id="card-title-en"
                       type="text"
@@ -1615,6 +1690,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                     EN
                   </span>
+                  {getTitleTranslationLabel('en') && (
+                    <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                      {getTitleTranslationLabel('en')}
+                    </span>
+                  )}
                   <p className={`flex-1 px-2 py-1.5 text-xl font-semibold rounded-lg border border-transparent ${
                     titleEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
@@ -1648,6 +1728,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                       JP
                     </span>
+                    {getTitleTranslationLabel('ja') && (
+                      <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                        {getTitleTranslationLabel('ja')}
+                      </span>
+                    )}
                     <input
                       id="card-title-ja"
                       type="text"
@@ -1698,6 +1783,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                     JP
                   </span>
+                  {getTitleTranslationLabel('ja') && (
+                    <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                      {getTitleTranslationLabel('ja')}
+                    </span>
+                  )}
                   <p className={`flex-1 px-2 py-1.5 text-xl font-semibold rounded-lg border border-transparent ${
                     titleJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>

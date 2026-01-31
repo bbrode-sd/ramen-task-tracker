@@ -301,13 +301,15 @@ function ColumnComponent({
     const titleEn = newCardTitleEn.trim();
     
     // Create card with English title first (Japanese shows loading state)
+    // Mark EN as the original language since user typed in English
     const cardId = await createCard(
       boardId,
       column.id,
       titleEn,
       '', // Empty initially, will be filled after translation
       user.uid,
-      maxOrder + 1
+      maxOrder + 1,
+      { titleDetectedLanguage: 'en' }
     );
 
     setNewCardTitleEn('');
@@ -420,13 +422,15 @@ function ColumnComponent({
       const newOrder = cardToDuplicate.order + 0.5; // Will be normalized on save
       
       // Create a new card with the same content
+      // Preserve the original card's titleDetectedLanguage
       const newCardId = await createCard(
         boardId,
         column.id,
         fullCard.titleEn ? `${fullCard.titleEn} (copy)` : '',
         fullCard.titleJa ? `${fullCard.titleJa} (コピー)` : '',
         user.uid,
-        newOrder
+        newOrder,
+        fullCard.titleDetectedLanguage ? { titleDetectedLanguage: fullCard.titleDetectedLanguage } : undefined
       );
       
       // Update with additional properties if present
@@ -435,6 +439,9 @@ function ColumnComponent({
         
         if (fullCard.descriptionEn) updates.descriptionEn = fullCard.descriptionEn;
         if (fullCard.descriptionJa) updates.descriptionJa = fullCard.descriptionJa;
+        // Preserve title translator info if present
+        if (fullCard.titleTranslatorEn) updates.titleTranslatorEn = fullCard.titleTranslatorEn;
+        if (fullCard.titleTranslatorJa) updates.titleTranslatorJa = fullCard.titleTranslatorJa;
         if (fullCard.labels && fullCard.labels.length > 0) updates.labels = fullCard.labels;
         if (fullCard.priority) updates.priority = fullCard.priority;
         if (fullCard.checklists && fullCard.checklists.length > 0) {

@@ -33,7 +33,10 @@ export const createCard = async (
   titleEn: string,
   titleJa: string,
   userId: string,
-  order: number
+  order: number,
+  options?: {
+    titleDetectedLanguage?: 'en' | 'ja';
+  }
 ): Promise<string> => {
   const cardRef = await addDoc(collection(db, 'boards', boardId, 'cards'), {
     boardId,
@@ -49,6 +52,7 @@ export const createCard = async (
     isArchived: false,
     attachments: [],
     labels: [],
+    ...(options?.titleDetectedLanguage && { titleDetectedLanguage: options.titleDetectedLanguage }),
   });
   return cardRef.id;
 };

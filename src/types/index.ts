@@ -67,6 +67,9 @@ export interface Card {
   columnId: string;
   titleEn: string;
   titleJa: string;
+  titleDetectedLanguage?: 'en' | 'ja'; // Which language was originally typed for title
+  titleTranslatorEn?: TranslatorInfo; // Who manually edited the EN title (undefined = auto-translated)
+  titleTranslatorJa?: TranslatorInfo; // Who manually edited the JA title (undefined = auto-translated)
   descriptionEn: string;
   descriptionJa: string;
   descriptionDetectedLanguage?: 'en' | 'ja'; // Which language was originally typed for description

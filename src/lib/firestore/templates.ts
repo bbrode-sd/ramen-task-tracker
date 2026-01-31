@@ -92,6 +92,7 @@ export const createCardFromTemplate = async (
     columnId,
     titleEn: template.titleEn,
     titleJa: template.titleJa || '',
+    titleDetectedLanguage: 'en', // Templates are created with English titles as original
     descriptionEn: template.descriptionEn || '',
     descriptionJa: template.descriptionJa || '',
     order,
