@@ -1467,7 +1467,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       autoFocus
                       aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
                       aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                      className={`flex-1 px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                      className={`flex-1 px-2.5 py-2 text-xl font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                         translationState.errors[fieldKeys.titleEn]
                           ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
@@ -1502,7 +1502,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                     EN
                   </span>
-                  <p className={`flex-1 px-2 py-1.5 text-lg font-semibold rounded-lg border border-transparent ${
+                  <p className={`flex-1 px-2 py-1.5 text-xl font-semibold rounded-lg border border-transparent ${
                     titleEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
                     {titleEn || t('cardModal.noTitle')}
@@ -1550,7 +1550,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       autoFocus
                       aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
                       aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                      className={`flex-1 px-2.5 py-2 text-lg font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                      className={`flex-1 px-2.5 py-2 text-xl font-semibold border rounded-lg focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
                         translationState.errors[fieldKeys.titleJa]
                           ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
                           : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
@@ -1585,7 +1585,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                     JP
                   </span>
-                  <p className={`flex-1 px-2 py-1.5 text-lg font-semibold rounded-lg border border-transparent ${
+                  <p className={`flex-1 px-2 py-1.5 text-xl font-semibold rounded-lg border border-transparent ${
                     titleJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
                     {titleJa || t('cardModal.noTitle')}
