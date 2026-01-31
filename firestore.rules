@@ -248,8 +248,11 @@ service cloud.firestore {
           // nameJa is optional - validate length if present
           (!('nameJa' in request.resource.data) || 
             (isString(request.resource.data.nameJa) && isValidLength(request.resource.data.nameJa, 200))) &&
+          // nameOriginalLanguage is optional - validate value if present
+          (!('nameOriginalLanguage' in request.resource.data) || 
+            isOneOf(request.resource.data.nameOriginalLanguage, ['en', 'ja'])) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'name', 'nameJa', 'order', 'createdAt', 'updatedAt', 'isArchived']);
+          request.resource.data.keys().hasOnly(['boardId', 'name', 'nameJa', 'nameOriginalLanguage', 'order', 'createdAt', 'updatedAt', 'isArchived']);
         
         // Update: must be board member
         allow update: if isBoardMember(boardId) &&
@@ -264,8 +267,11 @@ service cloud.firestore {
           // nameJa is optional - validate length if present
           (!('nameJa' in request.resource.data) || 
             (isString(request.resource.data.nameJa) && isValidLength(request.resource.data.nameJa, 200))) &&
+          // nameOriginalLanguage is optional - validate value if present
+          (!('nameOriginalLanguage' in request.resource.data) || 
+            isOneOf(request.resource.data.nameOriginalLanguage, ['en', 'ja'])) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'name', 'nameJa', 'order', 'createdAt', 'updatedAt', 'isArchived']);
+          request.resource.data.keys().hasOnly(['boardId', 'name', 'nameJa', 'nameOriginalLanguage', 'order', 'createdAt', 'updatedAt', 'isArchived']);
         
         // Delete: must be board member
         // RATE LIMITING NOTE: Consider Cloud Function for cascade delete of cards
