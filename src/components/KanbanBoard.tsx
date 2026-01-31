@@ -279,12 +279,17 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }, [columns.length, registerColumns]);
 
   // Register cards per column for keyboard navigation
+  // Use filtered cards when filters are active so keyboard navigation matches visible cards
   useEffect(() => {
     columns.forEach((column, index) => {
       const columnCards = cards.filter((card) => card.columnId === column.id);
-      registerCardsInColumn(index, columnCards.length);
+      // Apply the same filtering logic as the Column component uses for display
+      const visibleCards = hasActiveFilters 
+        ? columnCards.filter(card => matchesFilter(card, user?.uid))
+        : columnCards;
+      registerCardsInColumn(index, visibleCards.length);
     });
-  }, [columns, cards, registerCardsInColumn]);
+  }, [columns, cards, registerCardsInColumn, hasActiveFilters, matchesFilter, user?.uid]);
 
   const handleBoardNameChange = useCallback(
     async (name: string) => {
@@ -695,7 +700,11 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
               const columnCards = cards
                 .filter((card) => card.columnId === column.id)
                 .sort((a, b) => a.order - b.order);
-              const card = columnCards[focusedCardIndex];
+              // Apply the same filtering as display when filters are active
+              const visibleCards = hasActiveFilters 
+                ? columnCards.filter(card => matchesFilter(card, user?.uid))
+                : columnCards;
+              const card = visibleCards[focusedCardIndex];
               if (card) {
                 handleCardClick(card.id);
               }
@@ -711,7 +720,11 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
               const columnCards = cards
                 .filter((card) => card.columnId === column.id)
                 .sort((a, b) => a.order - b.order);
-              const card = columnCards[focusedCardIndex];
+              // Apply the same filtering as display when filters are active
+              const visibleCards = hasActiveFilters 
+                ? columnCards.filter(card => matchesFilter(card, user?.uid))
+                : columnCards;
+              const card = visibleCards[focusedCardIndex];
               if (card) {
                 handleCardClick(card.id);
               }
@@ -807,6 +820,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     boardId,
     showToast,
     user,
+    hasActiveFilters,
+    matchesFilter,
   ]);
 
   // Show access error state

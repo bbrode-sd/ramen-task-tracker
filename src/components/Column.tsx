@@ -570,20 +570,29 @@ function ColumnComponent({
                     : ''
                 }`}
               >
-                {cards.length === 0 ? (
-                  <ColumnEmptyState 
-                    isDraggingOver={snapshot.isDraggingOver} 
-                    showTip={index === 0} // Only show tip in first column
-                  />
-                ) : (
-                  cards.map((card, cardIndex) => (
+                {(() => {
+                  // Filter cards when filters are active - hide non-matching cards instead of dimming
+                  const visibleCards = hasActiveFilters && matchesFilter 
+                    ? cards.filter(card => matchesFilter(card))
+                    : cards;
+                  
+                  if (visibleCards.length === 0) {
+                    return (
+                      <ColumnEmptyState 
+                        isDraggingOver={snapshot.isDraggingOver} 
+                        showTip={index === 0 && !hasActiveFilters} // Only show tip in first column when no filters
+                      />
+                    );
+                  }
+                  
+                  return visibleCards.map((card, cardIndex) => (
                     <Card
                       key={card.id}
                       card={card}
-                      index={cardIndex}
+                      index={cards.indexOf(card)} // Use original index for drag-drop ordering
                       boardId={boardId}
                       onClick={() => onCardClick(card.id)}
-                      isDimmed={hasActiveFilters && matchesFilter ? !matchesFilter(card) : false}
+                      isDimmed={false}
                       isFocused={focusedCardIndex === cardIndex}
                       isSelected={selectedCards.has(card.id)}
                       selectedCount={selectedCards.size}
@@ -592,8 +601,8 @@ function ColumnComponent({
                       onDuplicate={handleDuplicateCard}
                       data-onboarding={cardIndex === 0 ? "card" : undefined}
                     />
-                  ))
-                )}
+                  ));
+                })()}
                 {provided.placeholder}
               </div>
             )}
