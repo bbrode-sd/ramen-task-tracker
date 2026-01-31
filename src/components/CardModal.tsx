@@ -83,6 +83,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [titleJa, setTitleJa] = useState('');
   const [descriptionEn, setDescriptionEn] = useState('');
   const [descriptionJa, setDescriptionJa] = useState('');
+  
+  // Temp editing values (for cancel functionality)
+  const [editTitleEn, setEditTitleEn] = useState('');
+  const [editTitleJa, setEditTitleJa] = useState('');
+  const [editDescriptionEn, setEditDescriptionEn] = useState('');
+  const [editDescriptionJa, setEditDescriptionJa] = useState('');
 
   // Comment state
   const [newComment, setNewComment] = useState('');
@@ -513,6 +519,63 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       await updateCard(boardId, cardId, { descriptionEn: result.translation });
     }
   }, [descriptionJa, fieldKeys.descriptionEn, clearError, retryTranslation, boardId, cardId]);
+
+  // Edit mode handlers for explicit save/cancel workflow
+  const startEditingTitleEn = useCallback(() => {
+    setEditTitleEn(titleEn);
+    setEditingField('titleEn');
+  }, [titleEn]);
+
+  const startEditingTitleJa = useCallback(() => {
+    setEditTitleJa(titleJa);
+    setEditingField('titleJa');
+  }, [titleJa]);
+
+  const startEditingDescriptionEn = useCallback(() => {
+    setEditDescriptionEn(descriptionEn);
+    setEditingField('descriptionEn');
+  }, [descriptionEn]);
+
+  const startEditingDescriptionJa = useCallback(() => {
+    setEditDescriptionJa(descriptionJa);
+    setEditingField('descriptionJa');
+  }, [descriptionJa]);
+
+  const cancelEditing = useCallback(() => {
+    setEditingField(null);
+    setEditTitleEn('');
+    setEditTitleJa('');
+    setEditDescriptionEn('');
+    setEditDescriptionJa('');
+  }, []);
+
+  const saveTitleEn = useCallback(async () => {
+    if (editTitleEn !== titleEn) {
+      await handleTitleEnChange(editTitleEn);
+    }
+    setEditingField(null);
+  }, [editTitleEn, titleEn, handleTitleEnChange]);
+
+  const saveTitleJa = useCallback(async () => {
+    if (editTitleJa !== titleJa) {
+      await handleTitleJaChange(editTitleJa);
+    }
+    setEditingField(null);
+  }, [editTitleJa, titleJa, handleTitleJaChange]);
+
+  const saveDescriptionEn = useCallback(async () => {
+    if (editDescriptionEn !== descriptionEn) {
+      await handleDescriptionEnChange(editDescriptionEn);
+    }
+    setEditingField(null);
+  }, [editDescriptionEn, descriptionEn, handleDescriptionEnChange]);
+
+  const saveDescriptionJa = useCallback(async () => {
+    if (editDescriptionJa !== descriptionJa) {
+      await handleDescriptionJaChange(editDescriptionJa);
+    }
+    setEditingField(null);
+  }, [editDescriptionJa, descriptionJa, handleDescriptionJaChange]);
 
   const handleDueDateChange = async (value: string) => {
     setDueDate(value);
@@ -1221,12 +1284,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             </button>
           </div>
           
-          {/* Bilingual Title Inputs - Equal Billing */}
+          {/* Bilingual Title Display/Edit - Equal Billing */}
           <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <legend className="sr-only">Card Title in English and Japanese</legend>
             {/* English Title */}
             <div className="space-y-1.5">
-              <label htmlFor="card-title-en" className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                   EN
@@ -1237,28 +1300,61 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   onRetry={handleRetryTitleEn}
                   language="en"
                 />
-              </label>
-              <input
-                id="card-title-en"
-                type="text"
-                value={titleEn}
-                onChange={(e) => setTitleEn(e.target.value)}
-                onBlur={() => handleTitleEnChange(titleEn)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleTitleEnChange(titleEn);
-                    (e.target as HTMLInputElement).blur();
-                  }
-                }}
-                aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
-                aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
-                className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                  translationState.errors[fieldKeys.titleEn]
-                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
-                }`}
-                placeholder="Enter title in English..."
-              />
+              </div>
+              {editingField === 'titleEn' ? (
+                <div className="space-y-2">
+                  <input
+                    id="card-title-en"
+                    type="text"
+                    value={editTitleEn}
+                    onChange={(e) => setEditTitleEn(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        saveTitleEn();
+                      } else if (e.key === 'Escape') {
+                        cancelEditing();
+                      }
+                    }}
+                    autoFocus
+                    aria-describedby={translationState.errors[fieldKeys.titleEn] ? 'title-en-error' : undefined}
+                    aria-invalid={!!translationState.errors[fieldKeys.titleEn]}
+                    className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                      translationState.errors[fieldKeys.titleEn]
+                        ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                        : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
+                    }`}
+                    placeholder={t('cardModal.enterTitleEn')}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveTitleEn}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                    >
+                      {t('common.save')}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="group flex items-start gap-2">
+                  <p className={`flex-1 px-3 py-2.5 text-lg font-semibold rounded-xl border border-transparent ${
+                    titleEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
+                  }`}>
+                    {titleEn || t('cardModal.noTitle')}
+                  </p>
+                  <button
+                    onClick={startEditingTitleEn}
+                    className="shrink-0 mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  >
+                    {t('common.edit')}
+                  </button>
+                </div>
+              )}
               {translationState.errors[fieldKeys.titleEn] && (
                 <span id="title-en-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleEn]}</span>
               )}
@@ -1266,7 +1362,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
             {/* Japanese Title */}
             <div className="space-y-1.5">
-              <label htmlFor="card-title-ja" className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                   JP
@@ -1277,28 +1373,61 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   onRetry={handleRetryTitleJa}
                   language="ja"
                 />
-              </label>
-              <input
-                id="card-title-ja"
-                type="text"
-                value={titleJa}
-                onChange={(e) => setTitleJa(e.target.value)}
-                onBlur={() => handleTitleJaChange(titleJa)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleTitleJaChange(titleJa);
-                    (e.target as HTMLInputElement).blur();
-                  }
-                }}
-                aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
-                aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
-                className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                  translationState.errors[fieldKeys.titleJa]
-                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
-                }`}
-                placeholder="日本語でタイトルを入力..."
-              />
+              </div>
+              {editingField === 'titleJa' ? (
+                <div className="space-y-2">
+                  <input
+                    id="card-title-ja"
+                    type="text"
+                    value={editTitleJa}
+                    onChange={(e) => setEditTitleJa(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        saveTitleJa();
+                      } else if (e.key === 'Escape') {
+                        cancelEditing();
+                      }
+                    }}
+                    autoFocus
+                    aria-describedby={translationState.errors[fieldKeys.titleJa] ? 'title-ja-error' : undefined}
+                    aria-invalid={!!translationState.errors[fieldKeys.titleJa]}
+                    className={`w-full px-3 py-2.5 text-lg font-semibold border rounded-xl focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                      translationState.errors[fieldKeys.titleJa]
+                        ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                        : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
+                    }`}
+                    placeholder={t('cardModal.enterTitleJa')}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveTitleJa}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                    >
+                      {t('common.save')}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="group flex items-start gap-2">
+                  <p className={`flex-1 px-3 py-2.5 text-lg font-semibold rounded-xl border border-transparent ${
+                    titleJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
+                  }`}>
+                    {titleJa || t('cardModal.noTitle')}
+                  </p>
+                  <button
+                    onClick={startEditingTitleJa}
+                    className="shrink-0 mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  >
+                    {t('common.edit')}
+                  </button>
+                </div>
+              )}
               {translationState.errors[fieldKeys.titleJa] && (
                 <span id="title-ja-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleJa]}</span>
               )}
@@ -1346,64 +1475,138 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               <legend className="sr-only">Card Description in English and Japanese</legend>
               {/* English Description */}
               <div className="space-y-2.5">
-                <label htmlFor="card-description-en" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                     EN
                   </span>
-                  Description (English)
+                  {t('cardModal.descriptionEn')}
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionEn] || false}
                     hasError={translationState.errors[fieldKeys.descriptionEn]}
                     onRetry={handleRetryDescriptionEn}
                     language="en"
                   />
-                </label>
-                <textarea
-                  id="card-description-en"
-                  value={descriptionEn}
-                  onChange={(e) => setDescriptionEn(e.target.value)}
-                  onBlur={() => handleDescriptionEnChange(descriptionEn)}
-                  aria-describedby={translationState.errors[fieldKeys.descriptionEn] ? 'desc-en-error' : undefined}
-                  aria-invalid={!!translationState.errors[fieldKeys.descriptionEn]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                    translationState.errors[fieldKeys.descriptionEn]
-                      ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
-                  }`}
-                  placeholder="Add a description in English..."
-                />
+                </div>
+                {editingField === 'descriptionEn' ? (
+                  <div className="space-y-2">
+                    <textarea
+                      id="card-description-en"
+                      value={editDescriptionEn}
+                      onChange={(e) => setEditDescriptionEn(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          cancelEditing();
+                        }
+                      }}
+                      autoFocus
+                      aria-describedby={translationState.errors[fieldKeys.descriptionEn] ? 'desc-en-error' : undefined}
+                      aria-invalid={!!translationState.errors[fieldKeys.descriptionEn]}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                        translationState.errors[fieldKeys.descriptionEn]
+                          ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                          : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
+                      }`}
+                      placeholder={t('cardModal.enterDescriptionEn')}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={saveDescriptionEn}
+                        className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                      >
+                        {t('common.save')}
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="group">
+                    <div className={`min-h-[80px] px-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30 ${
+                      descriptionEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
+                    }`}>
+                      <p className="whitespace-pre-wrap">{descriptionEn || t('cardModal.noDescription')}</p>
+                    </div>
+                    <button
+                      onClick={startEditingDescriptionEn}
+                      className="mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    >
+                      {t('common.edit')}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Japanese Description */}
               <div className="space-y-2.5">
-                <label htmlFor="card-description-ja" className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                     JP
                   </span>
-                  Description (日本語)
+                  {t('cardModal.descriptionJa')}
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionJa] || false}
                     hasError={translationState.errors[fieldKeys.descriptionJa]}
                     onRetry={handleRetryDescriptionJa}
                     language="ja"
                   />
-                </label>
-                <textarea
-                  id="card-description-ja"
-                  value={descriptionJa}
-                  onChange={(e) => setDescriptionJa(e.target.value)}
-                  onBlur={() => handleDescriptionJaChange(descriptionJa)}
-                  aria-describedby={translationState.errors[fieldKeys.descriptionJa] ? 'desc-ja-error' : undefined}
-                  aria-invalid={!!translationState.errors[fieldKeys.descriptionJa]}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                    translationState.errors[fieldKeys.descriptionJa]
-                      ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
-                  }`}
-                  placeholder="日本語で説明を追加..."
-                />
+                </div>
+                {editingField === 'descriptionJa' ? (
+                  <div className="space-y-2">
+                    <textarea
+                      id="card-description-ja"
+                      value={editDescriptionJa}
+                      onChange={(e) => setEditDescriptionJa(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          cancelEditing();
+                        }
+                      }}
+                      autoFocus
+                      aria-describedby={translationState.errors[fieldKeys.descriptionJa] ? 'desc-ja-error' : undefined}
+                      aria-invalid={!!translationState.errors[fieldKeys.descriptionJa]}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                        translationState.errors[fieldKeys.descriptionJa]
+                          ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
+                          : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
+                      }`}
+                      placeholder={t('cardModal.enterDescriptionJa')}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={saveDescriptionJa}
+                        className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                      >
+                        {t('common.save')}
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="group">
+                    <div className={`min-h-[80px] px-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30 ${
+                      descriptionJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
+                    }`}>
+                      <p className="whitespace-pre-wrap">{descriptionJa || t('cardModal.noDescription')}</p>
+                    </div>
+                    <button
+                      onClick={startEditingDescriptionJa}
+                      className="mt-2 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    >
+                      {t('common.edit')}
+                    </button>
+                  </div>
+                )}
               </div>
             </fieldset>
 
@@ -2329,42 +2532,42 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 
                 if (diffDays < 0) {
                   statusConfig = {
-                    bg: 'bg-red-100',
-                    text: 'text-red-700',
-                    border: 'border-red-200',
+                    bg: 'bg-red-100 dark:bg-red-900/30',
+                    text: 'text-red-700 dark:text-red-400',
+                    border: 'border-red-200 dark:border-red-800/50',
                     icon: 'alert',
                     label: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`,
                     pulse: true,
                   };
                 } else if (diffDays === 0) {
                   statusConfig = {
-                    bg: 'bg-red-50',
-                    text: 'text-red-600',
-                    border: 'border-red-200',
+                    bg: 'bg-red-50 dark:bg-red-900/20',
+                    text: 'text-red-600 dark:text-red-400',
+                    border: 'border-red-200 dark:border-red-800/50',
                     icon: 'clock',
                     label: 'Due today',
                   };
                 } else if (diffDays === 1) {
                   statusConfig = {
-                    bg: 'bg-orange-100',
-                    text: 'text-orange-700',
-                    border: 'border-orange-200',
+                    bg: 'bg-orange-100 dark:bg-orange-900/30',
+                    text: 'text-orange-700 dark:text-orange-400',
+                    border: 'border-orange-200 dark:border-orange-800/50',
                     icon: 'clock',
                     label: 'Due tomorrow',
                   };
                 } else if (diffDays <= 7) {
                   statusConfig = {
-                    bg: 'bg-yellow-100',
-                    text: 'text-yellow-700',
-                    border: 'border-yellow-200',
+                    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+                    text: 'text-yellow-700 dark:text-yellow-400',
+                    border: 'border-yellow-200 dark:border-yellow-800/50',
                     icon: 'calendar',
                     label: `Due in ${diffDays} days`,
                   };
                 } else {
                   statusConfig = {
-                    bg: 'bg-slate-100',
-                    text: 'text-slate-600',
-                    border: 'border-slate-200',
+                    bg: 'bg-slate-100 dark:bg-slate-800/50',
+                    text: 'text-slate-600 dark:text-slate-400',
+                    border: 'border-slate-200 dark:border-slate-700/50',
                     icon: 'calendar',
                     label: `Due in ${diffDays} days`,
                   };
@@ -2409,7 +2612,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
                         isSelected
                           ? 'bg-emerald-500 text-white border-emerald-500'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                          : 'bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600'
                       }`}
                     >
                       {option.label}
@@ -2466,11 +2669,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {([
-                  { value: null, label: 'None', color: 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200' },
-                  { value: 'low', label: 'Low', color: 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200', dot: 'bg-slate-400' },
-                  { value: 'medium', label: 'Medium', color: 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100', dot: 'bg-yellow-500' },
-                  { value: 'high', label: 'High', color: 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100', dot: 'bg-orange-500' },
-                  { value: 'urgent', label: 'Urgent', color: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100', dot: 'bg-red-500' },
+                  { value: null, label: 'None', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50' },
+                  { value: 'low', label: 'Low', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50', dot: 'bg-slate-400' },
+                  { value: 'medium', label: 'Medium', color: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-800/40', dot: 'bg-yellow-500' },
+                  { value: 'high', label: 'High', color: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-800/40', dot: 'bg-orange-500' },
+                  { value: 'urgent', label: 'Urgent', color: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-800/40', dot: 'bg-red-500' },
                 ] as { value: CardPriority; label: string; color: string; dot?: string }[]).map((option) => (
                   <button
                     key={option.value ?? 'none'}
