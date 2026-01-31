@@ -47,6 +47,7 @@ export interface Column {
   boardId: string;
   name: string;
   nameJa?: string;
+  nameOriginalLanguage?: 'en' | 'ja'; // Which language was originally typed (undefined = 'en' for backwards compatibility)
   order: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;

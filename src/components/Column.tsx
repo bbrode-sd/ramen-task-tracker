@@ -88,6 +88,8 @@ function ColumnComponent({
   const [editingField, setEditingField] = useState<'en' | 'ja' | null>(null);
   const [columnName, setColumnName] = useState(column.name);
   const [columnNameJa, setColumnNameJa] = useState(column.nameJa || '');
+  // Track which language is the original (undefined = 'en' for backwards compatibility)
+  const [nameOriginalLanguage, setNameOriginalLanguage] = useState<'en' | 'ja'>(column.nameOriginalLanguage || 'en');
   
   // Translation field keys for this column
   const fieldKeys = useMemo(() => ({
@@ -170,9 +172,11 @@ function ColumnComponent({
   useEffect(() => {
     setColumnName(column.name);
     setColumnNameJa(column.nameJa || '');
-  }, [column.name, column.nameJa]);
+    setNameOriginalLanguage(column.nameOriginalLanguage || 'en');
+  }, [column.name, column.nameJa, column.nameOriginalLanguage]);
 
-  // Handle saving English name and auto-translating to Japanese
+  // Handle saving English name
+  // Only translate to Japanese if English is the original language
   const handleSaveNameEn = async (value: string) => {
     const trimmedValue = value.trim();
     setColumnName(trimmedValue);
@@ -180,21 +184,29 @@ function ColumnComponent({
     
     if (!trimmedValue) return;
     
-    // Update English name
-    await updateColumn(boardId, column.id, { name: trimmedValue });
+    // Check if this is the first time setting a name (no Japanese yet) or if English is the original
+    const isOriginal = nameOriginalLanguage === 'en' || (!column.nameJa && !columnNameJa);
     
-    // Auto-translate to Japanese with debouncing
-    if (trimmedValue) {
+    if (isOriginal) {
+      // English is the original - update and translate to Japanese
+      setNameOriginalLanguage('en');
+      await updateColumn(boardId, column.id, { name: trimmedValue, nameOriginalLanguage: 'en' });
+      
+      // Auto-translate to Japanese with debouncing
       debouncedTranslate(trimmedValue, 'ja', fieldKeys.nameJa, async (result) => {
         if (!result.error) {
           setColumnNameJa(result.translation);
           await updateColumn(boardId, column.id, { nameJa: result.translation });
         }
       });
+    } else {
+      // English is the translation - just save without translating back to Japanese
+      await updateColumn(boardId, column.id, { name: trimmedValue });
     }
   };
 
-  // Handle saving Japanese name and auto-translating to English
+  // Handle saving Japanese name
+  // Only translate to English if Japanese is the original language
   const handleSaveNameJa = async (value: string) => {
     const trimmedValue = value.trim();
     setColumnNameJa(trimmedValue);
@@ -202,17 +214,23 @@ function ColumnComponent({
     
     if (!trimmedValue) return;
     
-    // Update Japanese name
-    await updateColumn(boardId, column.id, { nameJa: trimmedValue });
+    // Check if Japanese is the original language
+    const isOriginal = nameOriginalLanguage === 'ja';
     
-    // Auto-translate to English with debouncing
-    if (trimmedValue) {
+    if (isOriginal) {
+      // Japanese is the original - update and translate to English
+      await updateColumn(boardId, column.id, { nameJa: trimmedValue });
+      
+      // Auto-translate to English with debouncing
       debouncedTranslate(trimmedValue, 'en', fieldKeys.nameEn, async (result) => {
         if (!result.error) {
           setColumnName(result.translation);
           await updateColumn(boardId, column.id, { name: result.translation });
         }
       });
+    } else {
+      // Japanese is the translation - just save without translating back to English
+      await updateColumn(boardId, column.id, { nameJa: trimmedValue });
     }
   };
 
