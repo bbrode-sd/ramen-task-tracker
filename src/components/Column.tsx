@@ -69,7 +69,7 @@ function ColumnComponent({
   const renderStart = process.env.NODE_ENV === 'development' ? performance.now() : 0;
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { locale } = useLocale();
+  const { t } = useLocale();
   const { triggerAddCard, setTriggerAddCard, addCardInputRefs } = useKeyboardShortcuts();
   const { 
     debouncedTranslate, 
@@ -831,7 +831,7 @@ function ColumnComponent({
                       />
                     </svg>
                   </span>
-                  Add a card
+                  {t('column.addCard')}
                 </button>
                 
                 {/* Create from template - small icon button with tooltip */}
