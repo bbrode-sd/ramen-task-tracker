@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { BoardMember } from '@/types';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -25,6 +25,35 @@ function getInitials(name: string | null, email: string): string {
   return email.substring(0, 2).toUpperCase();
 }
 
+function calculatePosition(anchorEl: HTMLElement | null) {
+  if (!anchorEl) return null;
+  
+  const rect = anchorEl.getBoundingClientRect();
+  const popoverWidth = 320;
+  const popoverHeight = 280;
+  
+  // Position below the anchor, centered
+  let left = rect.left + rect.width / 2 - popoverWidth / 2;
+  let top = rect.bottom + 8;
+  
+  // Ensure it doesn't go off the right edge
+  if (left + popoverWidth > window.innerWidth - 16) {
+    left = window.innerWidth - popoverWidth - 16;
+  }
+  
+  // Ensure it doesn't go off the left edge
+  if (left < 16) {
+    left = 16;
+  }
+  
+  // If it would go below the viewport, position above
+  if (top + popoverHeight > window.innerHeight - 16) {
+    top = rect.top - popoverHeight - 8;
+  }
+  
+  return { top, left };
+}
+
 export function MemberProfilePopover({
   member,
   isOpen,
@@ -35,37 +64,10 @@ export function MemberProfilePopover({
 }: MemberProfilePopoverProps) {
   const { t } = useLocale();
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-
-  // Calculate position based on anchor element
-  useEffect(() => {
-    if (isOpen && anchorEl) {
-      const rect = anchorEl.getBoundingClientRect();
-      const popoverWidth = 320;
-      const popoverHeight = 280;
-      
-      // Position below the anchor, centered
-      let left = rect.left + rect.width / 2 - popoverWidth / 2;
-      let top = rect.bottom + 8;
-      
-      // Ensure it doesn't go off the right edge
-      if (left + popoverWidth > window.innerWidth - 16) {
-        left = window.innerWidth - popoverWidth - 16;
-      }
-      
-      // Ensure it doesn't go off the left edge
-      if (left < 16) {
-        left = 16;
-      }
-      
-      // If it would go below the viewport, position above
-      if (top + popoverHeight > window.innerHeight - 16) {
-        top = rect.top - popoverHeight - 8;
-      }
-      
-      setPosition({ top, left });
-    }
-  }, [isOpen, anchorEl]);
+  
+  // Calculate position immediately from anchor element
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const position = useMemo(() => calculatePosition(anchorEl), [anchorEl, isOpen]);
 
   // Close on escape key
   useEffect(() => {
@@ -95,7 +97,8 @@ export function MemberProfilePopover({
     }
   }, [isOpen, onClose, anchorEl]);
 
-  if (!isOpen) return null;
+  // Don't render until we have a valid position
+  if (!isOpen || !position) return null;
 
   // Generate a username from email (e.g., "user@example.com" -> "@user")
   const username = member.email ? `@${member.email.split('@')[0]}` : '';
