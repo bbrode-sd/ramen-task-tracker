@@ -593,7 +593,7 @@ export function Header({
             {/* Search Bar */}
             <div 
               className={`relative flex items-center transition-all duration-300 ease-out ${
-                isSearchExpanded ? 'flex-1 max-w-sm' : 'w-10'
+                isSearchExpanded ? 'flex-1 max-w-sm' : ''
               }`}
             >
               {isSearchExpanded ? (
@@ -635,28 +635,25 @@ export function Header({
                   )}
                 </div>
               ) : (
-                <div className="relative">
-                  <Tip
-                    id="search-shortcut"
-                    tip={t('header.searchShortcut')}
-                    shortcut="/"
-                    position="bottom"
+                <Tip
+                  id="search-shortcut"
+                  tip={t('header.searchShortcut')}
+                  shortcut="/"
+                  position="bottom"
+                >
+                  <button
+                    onClick={handleSearchExpand}
+                    className="flex items-center gap-2 px-3 py-2 text-white/80 hover:text-white bg-white/20 hover:bg-white/30 rounded-xl transition-all duration-200 border border-white/20"
+                    aria-label={t('header.searchCards')}
                   >
-                    <button
-                      onClick={handleSearchExpand}
-                      className="p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-                      aria-label={t('header.searchCards')}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </button>
-                  </Tip>
-                  {/* Subtle shortcut hint badge */}
-                  <kbd className="absolute -bottom-1 -right-1 px-1.5 py-0.5 text-[9px] font-bold bg-white/90 text-emerald-600 rounded shadow-sm pointer-events-none">
-                    /
-                  </kbd>
-                </div>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <kbd className="px-1.5 py-0.5 text-[10px] font-bold bg-white/20 text-white rounded pointer-events-none">
+                      /
+                    </kbd>
+                  </button>
+                </Tip>
               )}
             </div>
 
