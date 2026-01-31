@@ -180,7 +180,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         case 'none':
           return !card.assigneeIds || card.assigneeIds.length === 0;
         case 'me':
-          return userId ? (card.assigneeIds?.includes(userId) || card.createdBy === userId) : false;
+          return userId ? (card.assigneeIds?.includes(userId) ?? false) : false;
         default:
           // Specific member ID
           return card.assigneeIds?.includes(filter) ?? false;
