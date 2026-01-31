@@ -654,66 +654,6 @@ function CardComponent({
             </div>
           )}
           
-          {/* Quick action buttons - appear on hover */}
-          {!snapshot.isDragging && !isSelected && (
-            <div 
-              className="absolute top-1 right-1 sm:top-2 sm:right-2 flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20"
-              role="toolbar"
-              aria-label="Quick actions"
-            >
-              {/* Edit button */}
-              <Tooltip content="Edit card" shortcut="e" position="top">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClick();
-                  }}
-                  className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-                  aria-label="Edit card (e)"
-                >
-                  <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
-              </Tooltip>
-              
-              {/* Duplicate button */}
-              {onDuplicate && (
-                <Tooltip content="Duplicate card" position="top">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDuplicate(card.id);
-                    }}
-                    className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-                    aria-label="Duplicate card"
-                  >
-                    <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                </Tooltip>
-              )}
-              
-              {/* Archive button */}
-              {onArchive && (
-                <Tooltip content="Archive card" shortcut="c" position="top">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onArchive(card.id);
-                    }}
-                    className="p-2 sm:p-1.5 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-lg shadow-md border border-slate-200/80 dark:border-slate-600/80 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:border-red-200 dark:hover:border-red-700 transition-all duration-150 touch-manipulation min-w-[36px] min-h-[36px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-                    aria-label="Archive card (c)"
-                  >
-                    <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                  </button>
-                </Tooltip>
-              )}
-            </div>
-          )}
           
           {/* Cover image/color if exists */}
           {coverData && (
