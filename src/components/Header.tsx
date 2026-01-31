@@ -392,11 +392,11 @@ export function Header({
           )}
           <div className="flex items-center gap-2 min-w-0">
             <Image 
-              src="/icon-192.png" 
+              src="/logo-white.png" 
               alt="Tomobodo" 
               width={28} 
               height={28} 
-              className="drop-shadow-sm flex-shrink-0 rounded-md"
+              className="flex-shrink-0"
             />
             {boardName ? (
               isEditingBoardName ? (

@@ -14,7 +14,7 @@ export function LoginScreen() {
         <div className="relative">
           <div className="w-20 h-20 rounded-full border-[3px] border-[var(--border)] border-t-[var(--primary)] animate-spin"></div>
           <span className="absolute inset-0 flex items-center justify-center">
-            <Image src="/icon-192.png" alt="Loading" width={40} height={40} className="rounded-lg" />
+            <Image src="/logo-white.png" alt="Loading" width={40} height={40} className="opacity-30 dark:opacity-50" />
           </span>
         </div>
       </div>
@@ -76,12 +76,11 @@ export function LoginScreen() {
                 {/* Tomobodo icon */}
                 <div className="relative block select-none animate-tomobodo-wobble hover:animate-tomobodo-spin cursor-default">
                   <Image 
-                    src="/icon-192.png" 
+                    src="/logo-white.png" 
                     alt="Tomobodo" 
-                    width={96} 
-                    height={96} 
-                    className="rounded-2xl shadow-2xl"
-                    style={{filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.15))'}}
+                    width={120} 
+                    height={120} 
+                    className="drop-shadow-2xl"
                   />
                 </div>
                 
