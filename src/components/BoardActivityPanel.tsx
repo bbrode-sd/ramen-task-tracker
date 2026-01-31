@@ -130,10 +130,11 @@ export function BoardActivityPanel({
           <div className="flex items-center gap-3">
             <div 
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(to bottom right, rgba(251, 146, 60, 0.2), rgba(251, 146, 60, 0.1))' }}
+              style={{ background: 'var(--primary-light)' }}
             >
               <svg
-                className="w-5 h-5 text-orange-500"
+                className="w-5 h-5"
+                style={{ color: 'var(--primary)' }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -180,7 +181,10 @@ export function BoardActivityPanel({
           {loading ? (
             <div className="flex items-center justify-center h-32">
               <div className="relative">
-                <div className="animate-spin rounded-full h-10 w-10 border-3 border-orange-200 border-t-orange-500"></div>
+                <div 
+                  className="animate-spin rounded-full h-10 w-10 border-3"
+                  style={{ borderColor: 'var(--primary-muted)', borderTopColor: 'var(--primary)' }}
+                ></div>
               </div>
             </div>
           ) : activities.length === 0 ? (
@@ -422,12 +426,8 @@ function ActivityListItem({
               </p>
               {activity.cardTitle && (
                 <p 
-                  className={`text-xs font-medium mt-0.5 truncate ${
-                    hasCard 
-                      ? 'text-orange-500 group-hover:text-orange-400' 
-                      : ''
-                  }`}
-                  style={!hasCard ? { color: 'var(--text-tertiary)' } : undefined}
+                  className="text-xs font-medium mt-0.5 truncate"
+                  style={{ color: hasCard ? 'var(--primary)' : 'var(--text-tertiary)' }}
                 >
                   {activity.cardTitle}
                 </p>
