@@ -511,7 +511,7 @@ export function Header({
             <div 
               ref={searchContainerRef}
               className={`relative flex items-center transition-all duration-300 ease-out ${
-                isSearchExpanded ? 'flex-1 min-w-[240px] max-w-sm' : ''
+                isSearchExpanded ? 'flex-1 min-w-[160px] max-w-xs' : ''
               }`}
             >
               {isSearchExpanded ? (
@@ -656,7 +656,7 @@ export function Header({
             {/* Filter Button */}
             <button
               onClick={() => setShowFilterPanel(true)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex-shrink-0 ${
                 hasActiveFilters 
                   ? 'bg-white text-emerald-600' 
                   : 'text-white/80 hover:text-white bg-white/20 hover:bg-white/30 border border-white/20'
