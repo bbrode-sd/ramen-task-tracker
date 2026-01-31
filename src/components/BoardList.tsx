@@ -434,7 +434,7 @@ export function BoardList() {
               size="lg"
             />
             <div className="flex items-center justify-center gap-4 mt-6">
-              <ShortcutHint shortcut="?" label="Keyboard shortcuts" />
+              <ShortcutHint shortcut="?" label={t('header.keyboardShortcuts')} />
               <ReplayTourButton />
             </div>
           </div>
