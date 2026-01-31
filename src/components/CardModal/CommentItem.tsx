@@ -141,7 +141,7 @@ export function CommentItem({
             <div className="absolute top-0 left-3 z-10">
               {renderAvatar()}
             </div>
-            <div className={`bg-slate-50 dark:bg-slate-900/70 border rounded-xl pt-7 pb-3 px-4 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${detectedLang === 'en' ? 'border-blue-200 dark:border-blue-700/70' : 'border-slate-100 dark:border-slate-700/80'}`}>
+            <div className={`bg-slate-50 dark:bg-slate-900/70 border rounded-xl pt-5 pb-3 px-4 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${detectedLang === 'en' ? 'border-blue-200 dark:border-blue-700/70' : 'border-slate-100 dark:border-slate-700/80'}`}>
               {/* Name, time, and language badge row */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {renderNameAndTime()}
@@ -203,7 +203,7 @@ export function CommentItem({
             <div className="absolute top-0 left-3 z-10">
               {renderAvatar()}
             </div>
-            <div className={`bg-slate-50 dark:bg-slate-900/70 border rounded-xl pt-7 pb-3 px-4 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${detectedLang === 'ja' ? 'border-red-200 dark:border-red-700/70' : 'border-slate-100 dark:border-slate-700/80'}`}>
+            <div className={`bg-slate-50 dark:bg-slate-900/70 border rounded-xl pt-5 pb-3 px-4 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${detectedLang === 'ja' ? 'border-red-200 dark:border-red-700/70' : 'border-slate-100 dark:border-slate-700/80'}`}>
               {/* Name, time, and language badge row */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {renderNameAndTime()}
