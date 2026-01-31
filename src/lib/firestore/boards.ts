@@ -133,14 +133,27 @@ export const addBoardMember = async (
   email: string
 ): Promise<{ success: boolean; error?: string; member?: BoardMember }> => {
   // Find user by email
-  const user = await getUserByEmail(email.toLowerCase());
+  let user;
+  try {
+    user = await getUserByEmail(email.toLowerCase());
+  } catch (error) {
+    console.error('Error looking up user by email:', error);
+    return { success: false, error: 'Failed to look up user. Please try again.' };
+  }
   
   if (!user) {
     return { success: false, error: 'User not found. They need to sign in first.' };
   }
   
   // Get the board
-  const board = await getBoard(boardId);
+  let board;
+  try {
+    board = await getBoard(boardId);
+  } catch (error) {
+    console.error('Error getting board:', error);
+    return { success: false, error: 'Failed to access board. Please try again.' };
+  }
+  
   if (!board) {
     return { success: false, error: 'Board not found.' };
   }
@@ -150,12 +163,21 @@ export const addBoardMember = async (
     return { success: false, error: 'User is already a member of this board.' };
   }
   
-  // Add user to memberIds
-  const boardRef = doc(db, 'boards', boardId);
-  await updateDoc(boardRef, {
-    memberIds: [...board.memberIds, user.uid],
-    updatedAt: Timestamp.now(),
-  });
+  // Add user to memberIds (only board owner can do this)
+  try {
+    const boardRef = doc(db, 'boards', boardId);
+    await updateDoc(boardRef, {
+      memberIds: [...board.memberIds, user.uid],
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error updating board members:', error);
+    // Check if it's a permissions error (likely means user is not the owner)
+    if (error instanceof Error && error.message.includes('permission')) {
+      return { success: false, error: 'Only the board owner can add members.' };
+    }
+    return { success: false, error: 'Failed to add member. Please try again.' };
+  }
   
   return {
     success: true,
