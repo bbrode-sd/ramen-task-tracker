@@ -68,6 +68,9 @@ export interface Card {
   titleJa: string;
   descriptionEn: string;
   descriptionJa: string;
+  descriptionDetectedLanguage?: 'en' | 'ja'; // Which language was originally typed for description
+  descriptionTranslatorEn?: TranslatorInfo; // Who manually edited the EN description (undefined = auto-translated)
+  descriptionTranslatorJa?: TranslatorInfo; // Who manually edited the JA description (undefined = auto-translated)
   order: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;

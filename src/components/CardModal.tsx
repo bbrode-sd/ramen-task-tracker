@@ -496,14 +496,50 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     
     setDescriptionEn(value);
     setLastSavedDescriptionEn(value);
-    await updateCard(boardId, cardId, { descriptionEn: value });
+    
+    // Determine if this is the first description or an edit of the original
+    const isFirstDescription = !card?.descriptionDetectedLanguage && !lastSavedDescriptionEn && !lastSavedDescriptionJa;
+    const isEditingOriginal = card?.descriptionDetectedLanguage === 'en';
+    const isEditingTranslation = card?.descriptionDetectedLanguage === 'ja';
+    
+    if (isFirstDescription) {
+      // First time entering a description - mark EN as original
+      await updateCard(boardId, cardId, { 
+        descriptionEn: value,
+        descriptionDetectedLanguage: 'en',
+        descriptionTranslatorEn: undefined,
+        descriptionTranslatorJa: undefined,
+      });
+      // Update local card state
+      if (card) {
+        setCard({ ...card, descriptionDetectedLanguage: 'en', descriptionTranslatorEn: undefined, descriptionTranslatorJa: undefined });
+      }
+    } else if (isEditingOriginal) {
+      // Editing the original EN - just update the text
+      await updateCard(boardId, cardId, { descriptionEn: value });
+    } else if (isEditingTranslation && user) {
+      // Editing the translated EN - mark as manually translated
+      const translatorInfo = { uid: user.uid, displayName: user.displayName || 'Unknown' };
+      await updateCard(boardId, cardId, { 
+        descriptionEn: value,
+        descriptionTranslatorEn: translatorInfo,
+      });
+      if (card) {
+        setCard({ ...card, descriptionTranslatorEn: translatorInfo });
+      }
+    } else {
+      await updateCard(boardId, cardId, { descriptionEn: value });
+    }
 
-    if (value.trim()) {
+    if (value.trim() && (isFirstDescription || isEditingOriginal)) {
       debouncedTranslate(value, 'ja', fieldKeys.descriptionJa, async (result) => {
         if (!result.error) {
           setDescriptionJa(result.translation);
           setLastSavedDescriptionJa(result.translation);
-          await updateCard(boardId, cardId, { descriptionJa: result.translation });
+          await updateCard(boardId, cardId, { descriptionJa: result.translation, descriptionTranslatorJa: undefined });
+          if (card) {
+            setCard(c => c ? { ...c, descriptionTranslatorJa: undefined } : c);
+          }
         }
       });
     }
@@ -515,14 +551,49 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     
     setDescriptionJa(value);
     setLastSavedDescriptionJa(value);
-    await updateCard(boardId, cardId, { descriptionJa: value });
+    
+    // Determine if this is the first description or an edit of the original
+    const isFirstDescription = !card?.descriptionDetectedLanguage && !lastSavedDescriptionEn && !lastSavedDescriptionJa;
+    const isEditingOriginal = card?.descriptionDetectedLanguage === 'ja';
+    const isEditingTranslation = card?.descriptionDetectedLanguage === 'en';
+    
+    if (isFirstDescription) {
+      // First time entering a description - mark JA as original
+      await updateCard(boardId, cardId, { 
+        descriptionJa: value,
+        descriptionDetectedLanguage: 'ja',
+        descriptionTranslatorEn: undefined,
+        descriptionTranslatorJa: undefined,
+      });
+      if (card) {
+        setCard({ ...card, descriptionDetectedLanguage: 'ja', descriptionTranslatorEn: undefined, descriptionTranslatorJa: undefined });
+      }
+    } else if (isEditingOriginal) {
+      // Editing the original JA - just update the text
+      await updateCard(boardId, cardId, { descriptionJa: value });
+    } else if (isEditingTranslation && user) {
+      // Editing the translated JA - mark as manually translated
+      const translatorInfo = { uid: user.uid, displayName: user.displayName || 'Unknown' };
+      await updateCard(boardId, cardId, { 
+        descriptionJa: value,
+        descriptionTranslatorJa: translatorInfo,
+      });
+      if (card) {
+        setCard({ ...card, descriptionTranslatorJa: translatorInfo });
+      }
+    } else {
+      await updateCard(boardId, cardId, { descriptionJa: value });
+    }
 
-    if (value.trim()) {
+    if (value.trim() && (isFirstDescription || isEditingOriginal)) {
       debouncedTranslate(value, 'en', fieldKeys.descriptionEn, async (result) => {
         if (!result.error) {
           setDescriptionEn(result.translation);
           setLastSavedDescriptionEn(result.translation);
-          await updateCard(boardId, cardId, { descriptionEn: result.translation });
+          await updateCard(boardId, cardId, { descriptionEn: result.translation, descriptionTranslatorEn: undefined });
+          if (card) {
+            setCard(c => c ? { ...c, descriptionTranslatorEn: undefined } : c);
+          }
         }
       });
     }
@@ -568,6 +639,27 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       await updateCard(boardId, cardId, { descriptionEn: result.translation });
     }
   }, [descriptionJa, fieldKeys.descriptionEn, clearError, retryTranslation, boardId, cardId]);
+
+  // Helper to get the description translation status label
+  const getDescriptionTranslationLabel = useCallback((lang: 'en' | 'ja') => {
+    if (!card?.descriptionDetectedLanguage) {
+      // No description yet or legacy data without tracking
+      return null;
+    }
+    
+    const isOriginal = lang === card.descriptionDetectedLanguage;
+    if (isOriginal) {
+      return t('cardModal.comment.original');
+    }
+    
+    // Check if there's a manual translator
+    const translator = lang === 'en' ? card.descriptionTranslatorEn : card.descriptionTranslatorJa;
+    if (translator) {
+      return t('cardModal.comment.translatedBy', { name: translator.displayName });
+    }
+    
+    return t('cardModal.comment.autoTranslated');
+  }, [card?.descriptionDetectedLanguage, card?.descriptionTranslatorEn, card?.descriptionTranslatorJa, t]);
 
   // Edit mode handlers for explicit save/cancel workflow
   const startEditingTitleEn = useCallback(() => {
@@ -1659,6 +1751,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     EN
                   </span>
                   {t('cardModal.descriptionEn')}
+                  {getDescriptionTranslationLabel('en') && (
+                    <span className={`text-[10px] font-medium ${card?.descriptionDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                      {getDescriptionTranslationLabel('en')}
+                    </span>
+                  )}
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionEn] || false}
                     hasError={translationState.errors[fieldKeys.descriptionEn]}
@@ -1727,6 +1824,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     JP
                   </span>
                   {t('cardModal.descriptionJa')}
+                  {getDescriptionTranslationLabel('ja') && (
+                    <span className={`text-[10px] font-medium ${card?.descriptionDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                      {getDescriptionTranslationLabel('ja')}
+                    </span>
+                  )}
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionJa] || false}
                     hasError={translationState.errors[fieldKeys.descriptionJa]}
