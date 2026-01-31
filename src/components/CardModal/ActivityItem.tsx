@@ -89,45 +89,40 @@ export function ActivityItem({ activity }: ActivityItemProps) {
   const jaText = interpolate(jaTranslations[key] || '', params);
 
   return (
-    <div className="flex items-start gap-3">
-      {/* Single avatar on the left */}
-      {activity.userPhoto ? (
-        <Image
-          src={activity.userPhoto}
-          alt={activity.userName}
-          width={28}
-          height={28}
-          className="w-7 h-7 rounded-full flex-shrink-0 object-cover mt-0.5"
-        />
-      ) : (
-        <div 
-          className={`w-7 h-7 rounded-full bg-gradient-to-br ${getAvatarColor(activity.userId)} flex items-center justify-center flex-shrink-0 mt-0.5`}
-        >
-          <span className="text-[10px] font-medium text-white">{getInitials(activity.userName)}</span>
-        </div>
-      )}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+      {/* English version - no avatar */}
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+        {enText}
+        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+          {format(activity.createdAt.toDate(), 'MMM d, h:mm a', { locale: enUS })}
+        </span>
+      </p>
       
-      {/* Bilingual activity text - side by side */}
-      <div className="flex-1 min-w-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-          {/* English version */}
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
-            {enText}
-            <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-              {format(activity.createdAt.toDate(), 'MMM d, h:mm a', { locale: enUS })}
-            </span>
-          </p>
-          
-          {/* Japanese version */}
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
-            {jaText}
-            <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-              {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
-            </span>
-          </p>
-        </div>
+      {/* Japanese version - with avatar */}
+      <div className="flex items-start gap-2">
+        {activity.userPhoto ? (
+          <Image
+            src={activity.userPhoto}
+            alt={activity.userName}
+            width={24}
+            height={24}
+            className="w-6 h-6 rounded-full flex-shrink-0 object-cover mt-0.5"
+          />
+        ) : (
+          <div 
+            className={`w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(activity.userId)} flex items-center justify-center flex-shrink-0 mt-0.5`}
+          >
+            <span className="text-[9px] font-medium text-white">{getInitials(activity.userName)}</span>
+          </div>
+        )}
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+          {jaText}
+          <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+            {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
+          </span>
+        </p>
       </div>
     </div>
   );
