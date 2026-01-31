@@ -37,7 +37,7 @@ import {
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { uploadFile, uploadFromPaste, getFileType } from '@/lib/storage';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, deleteField } from 'firebase/firestore';
 import { CommentsEmptyState } from './EmptyState';
 
 // Import extracted sub-components
@@ -507,9 +507,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       await updateCard(boardId, cardId, { 
         descriptionEn: value,
         descriptionDetectedLanguage: 'en',
-        descriptionTranslatorEn: undefined,
-        descriptionTranslatorJa: undefined,
-      });
+        descriptionTranslatorEn: deleteField(),
+        descriptionTranslatorJa: deleteField(),
+      } as unknown as Partial<Card>);
       // Update local card state
       if (card) {
         setCard({ ...card, descriptionDetectedLanguage: 'en', descriptionTranslatorEn: undefined, descriptionTranslatorJa: undefined });
@@ -536,7 +536,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         if (!result.error) {
           setDescriptionJa(result.translation);
           setLastSavedDescriptionJa(result.translation);
-          await updateCard(boardId, cardId, { descriptionJa: result.translation, descriptionTranslatorJa: undefined });
+          await updateCard(boardId, cardId, { descriptionJa: result.translation, descriptionTranslatorJa: deleteField() } as unknown as Partial<Card>);
           if (card) {
             setCard(c => c ? { ...c, descriptionTranslatorJa: undefined } : c);
           }
@@ -562,9 +562,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       await updateCard(boardId, cardId, { 
         descriptionJa: value,
         descriptionDetectedLanguage: 'ja',
-        descriptionTranslatorEn: undefined,
-        descriptionTranslatorJa: undefined,
-      });
+        descriptionTranslatorEn: deleteField(),
+        descriptionTranslatorJa: deleteField(),
+      } as unknown as Partial<Card>);
       if (card) {
         setCard({ ...card, descriptionDetectedLanguage: 'ja', descriptionTranslatorEn: undefined, descriptionTranslatorJa: undefined });
       }
@@ -590,7 +590,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         if (!result.error) {
           setDescriptionEn(result.translation);
           setLastSavedDescriptionEn(result.translation);
-          await updateCard(boardId, cardId, { descriptionEn: result.translation, descriptionTranslatorEn: undefined });
+          await updateCard(boardId, cardId, { descriptionEn: result.translation, descriptionTranslatorEn: deleteField() } as unknown as Partial<Card>);
           if (card) {
             setCard(c => c ? { ...c, descriptionTranslatorEn: undefined } : c);
           }
