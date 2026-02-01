@@ -273,7 +273,8 @@
       "selectTemplate": "Select Template",
       "blankSubBoard": "Blank Sub-Board",
       "columns": "columns",
-      "cards": "cards"
+      "cards": "cards",
+      "manageTemplates": "Manage Templates"
     },
     "checklistItem": {
       "addItemPlaceholder": "Add an item...",

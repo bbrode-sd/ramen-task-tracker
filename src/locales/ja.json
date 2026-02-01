@@ -273,7 +273,8 @@
       "selectTemplate": "テンプレートを選択",
       "blankSubBoard": "空のサブボード",
       "columns": "リスト",
-      "cards": "カード"
+      "cards": "カード",
+      "manageTemplates": "テンプレートを管理"
     },
     "checklistItem": {
       "addItemPlaceholder": "アイテムを追加...",
