@@ -189,11 +189,18 @@ export interface BoardTemplate {
   createdAt: Timestamp;
 }
 
-// Sub-board template with pre-created cards
-export interface SubBoardTemplateColumn {
-  name: string;
+// Sub-board template with pre-created cards (supports translations)
+export interface SubBoardTemplateCard {
+  titleEn: string;
+  titleJa: string;
   order: number;
-  cards?: { title: string; order: number }[];
+}
+
+export interface SubBoardTemplateColumn {
+  nameEn: string;
+  nameJa: string;
+  order: number;
+  cards?: SubBoardTemplateCard[];
 }
 
 export interface SubBoardTemplate {
@@ -201,7 +208,7 @@ export interface SubBoardTemplate {
   name: string;
   description?: string;
   columns: SubBoardTemplateColumn[];
-  approvalColumnName?: string; // Which column to track for "approved" count
+  approvalColumnName?: string; // Which column to track for "approved" count (uses nameEn)
   createdBy?: string;
   createdAt: Timestamp;
 }

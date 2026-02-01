@@ -232,14 +232,16 @@ export const BoardTemplateSchema = z.object({
   createdAt: firestoreTimestamp,
 });
 
-// Sub-board template schemas
+// Sub-board template schemas (with translation support)
 export const SubBoardTemplateCardSchema = z.object({
-  title: z.string().max(500),
+  titleEn: z.string().max(500),
+  titleJa: z.string().max(500),
   order: z.number().int().min(0),
 });
 
 export const SubBoardTemplateColumnSchema = z.object({
-  name: z.string().max(200),
+  nameEn: z.string().max(200),
+  nameJa: z.string().max(200),
   order: z.number().int().min(0),
   cards: z.array(SubBoardTemplateCardSchema).optional(),
 });

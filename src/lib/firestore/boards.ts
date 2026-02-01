@@ -360,7 +360,9 @@ export const createSubBoardFromTemplate = async (
   for (const col of template.columns) {
     const columnRef = await addDoc(collection(db, 'boards', subBoardId, 'columns'), {
       boardId: subBoardId,
-      name: col.name,
+      name: col.nameEn, // Use English name as the primary column name
+      nameJa: col.nameJa,
+      nameOriginalLanguage: 'en',
       order: col.order,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
@@ -377,8 +379,8 @@ export const createSubBoardFromTemplate = async (
         await addDoc(collection(db, 'boards', subBoardId, 'cards'), {
           boardId: subBoardId,
           columnId,
-          titleEn: card.title,
-          titleJa: '',
+          titleEn: card.titleEn,
+          titleJa: card.titleJa,
           descriptionEn: '',
           descriptionJa: '',
           order: card.order,

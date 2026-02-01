@@ -110,7 +110,6 @@ export {
   deleteBoardTemplate,
   createBoardFromTemplate,
   // Sub-board template operations
-  BUILT_IN_SUB_BOARD_TEMPLATES,
   createSubBoardTemplate,
   getSubBoardTemplates,
   getSubBoardTemplate,

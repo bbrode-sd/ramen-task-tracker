@@ -270,53 +270,6 @@ export const createBoardFromTemplate = async (
 // ============================================================================
 
 /**
- * Built-in sub-board templates
- */
-export const BUILT_IN_SUB_BOARD_TEMPLATES: Omit<SubBoardTemplate, 'id' | 'createdAt'>[] = [
-  {
-    name: 'Animation Workflow',
-    description: 'Track animation assets through approval stages',
-    columns: [
-      { 
-        name: 'Backlog', 
-        order: 0,
-        cards: [
-          { title: 'Idle', order: 0 },
-          { title: 'Attack', order: 1 },
-          { title: 'Death', order: 2 },
-          { title: 'Special', order: 3 },
-        ],
-      },
-      { name: 'In Progress', order: 1 },
-      { name: 'Submitted', order: 2 },
-      { name: 'Approved', order: 3 },
-    ],
-    approvalColumnName: 'Approved',
-  },
-  {
-    name: 'Asset Review',
-    description: 'Simple review workflow for assets',
-    columns: [
-      { name: 'To Review', order: 0 },
-      { name: 'In Review', order: 1 },
-      { name: 'Needs Changes', order: 2 },
-      { name: 'Approved', order: 3 },
-    ],
-    approvalColumnName: 'Approved',
-  },
-  {
-    name: 'Task Breakdown',
-    description: 'Break down a large task into subtasks',
-    columns: [
-      { name: 'To Do', order: 0 },
-      { name: 'In Progress', order: 1 },
-      { name: 'Done', order: 2 },
-    ],
-    approvalColumnName: 'Done',
-  },
-];
-
-/**
  * Create a custom sub-board template
  */
 export const createSubBoardTemplate = async (
@@ -330,10 +283,9 @@ export const createSubBoardTemplate = async (
 };
 
 /**
- * Get all sub-board templates (built-in + user's custom)
+ * Get all sub-board templates for a user
  */
 export const getSubBoardTemplates = async (userId: string): Promise<SubBoardTemplate[]> => {
-  // Get user's custom templates
   const q = query(
     collection(db, 'subBoardTemplates'),
     where('createdBy', '==', userId),
@@ -341,40 +293,16 @@ export const getSubBoardTemplates = async (userId: string): Promise<SubBoardTemp
   );
   
   const snapshot = await getDocs(q);
-  const userTemplates = snapshot.docs.map((doc) => ({
+  return snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as SubBoardTemplate[];
-  
-  // Add built-in templates with generated IDs
-  const builtInTemplates: SubBoardTemplate[] = BUILT_IN_SUB_BOARD_TEMPLATES.map((t, index) => ({
-    ...t,
-    id: `sub-built-in-${index}`,
-    createdAt: Timestamp.now(),
-  }));
-  
-  return [...builtInTemplates, ...userTemplates];
 };
 
 /**
  * Get a single sub-board template by ID
  */
 export const getSubBoardTemplate = async (templateId: string): Promise<SubBoardTemplate | null> => {
-  // Check if it's a built-in template
-  if (templateId.startsWith('sub-built-in-')) {
-    const index = parseInt(templateId.replace('sub-built-in-', ''), 10);
-    const builtInTemplate = BUILT_IN_SUB_BOARD_TEMPLATES[index];
-    if (!builtInTemplate) {
-      return null;
-    }
-    return {
-      ...builtInTemplate,
-      id: templateId,
-      createdAt: Timestamp.now(),
-    };
-  }
-  
-  // Fetch user template
   const templateRef = doc(db, 'subBoardTemplates', templateId);
   const templateDoc = await getDoc(templateRef);
   
@@ -385,26 +313,20 @@ export const getSubBoardTemplate = async (templateId: string): Promise<SubBoardT
 };
 
 /**
- * Delete a custom sub-board template
+ * Delete a sub-board template
  */
 export const deleteSubBoardTemplate = async (templateId: string): Promise<void> => {
-  if (templateId.startsWith('sub-built-in-')) {
-    throw new Error('Cannot delete built-in templates');
-  }
   const templateRef = doc(db, 'subBoardTemplates', templateId);
   await deleteDoc(templateRef);
 };
 
 /**
- * Update a custom sub-board template
+ * Update a sub-board template
  */
 export const updateSubBoardTemplate = async (
   templateId: string,
   updates: Partial<Omit<SubBoardTemplate, 'id' | 'createdAt' | 'createdBy'>>
 ): Promise<void> => {
-  if (templateId.startsWith('sub-built-in-')) {
-    throw new Error('Cannot update built-in templates');
-  }
   const templateRef = doc(db, 'subBoardTemplates', templateId);
   await updateDoc(templateRef, updates);
 };
