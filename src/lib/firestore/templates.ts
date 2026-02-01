@@ -275,8 +275,13 @@ export const createBoardFromTemplate = async (
 export const createSubBoardTemplate = async (
   template: Omit<SubBoardTemplate, 'id' | 'createdAt'>
 ): Promise<string> => {
+  // Filter out undefined values to prevent Firestore errors
+  const cleanedTemplate = Object.fromEntries(
+    Object.entries(template).filter(([, value]) => value !== undefined)
+  );
+  
   const templateRef = await addDoc(collection(db, 'subBoardTemplates'), {
-    ...template,
+    ...cleanedTemplate,
     createdAt: Timestamp.now(),
   });
   return templateRef.id;
@@ -327,6 +332,11 @@ export const updateSubBoardTemplate = async (
   templateId: string,
   updates: Partial<Omit<SubBoardTemplate, 'id' | 'createdAt' | 'createdBy'>>
 ): Promise<void> => {
+  // Filter out undefined values to prevent Firestore errors
+  const cleanedUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([, value]) => value !== undefined)
+  );
+  
   const templateRef = doc(db, 'subBoardTemplates', templateId);
-  await updateDoc(templateRef, updates);
+  await updateDoc(templateRef, cleanedUpdates);
 };
