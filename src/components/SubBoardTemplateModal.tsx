@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -12,6 +11,7 @@ import {
   deleteSubBoardTemplate,
   updateSubBoardTemplate,
 } from '@/lib/firestore';
+import { SubKanbanBoard, TemplateColumn, TemplateCard } from './SubKanbanBoard';
 
 interface SubBoardTemplateModalProps {
   isOpen: boolean;
@@ -19,26 +19,11 @@ interface SubBoardTemplateModalProps {
   boardId?: string; // Templates are stored per-board
 }
 
-interface EditingColumn {
-  id: string;
-  nameEn: string;
-  nameJa: string;
-  order: number;
-  cards: EditingCard[];
-}
-
-interface EditingCard {
-  id: string;
-  titleEn: string;
-  titleJa: string;
-  order: number;
-}
-
 interface EditingTemplate {
   id?: string;
   name: string;
   description: string;
-  columns: EditingColumn[];
+  columns: TemplateColumn[];
   approvalColumnName: string;
 }
 
@@ -54,10 +39,6 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
   const [loading, setLoading] = useState(true);
   const [editingTemplate, setEditingTemplate] = useState<EditingTemplate | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [addingCardToColumn, setAddingCardToColumn] = useState<string | null>(null);
-  const [newCardTitle, setNewCardTitle] = useState('');
-  const [isAddingColumn, setIsAddingColumn] = useState(false);
-  const [newColumnName, setNewColumnName] = useState('');
   const [editingTemplateName, setEditingTemplateName] = useState(false);
 
   // Fetch templates for the current board
@@ -84,13 +65,7 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        if (addingCardToColumn) {
-          setAddingCardToColumn(null);
-          setNewCardTitle('');
-        } else if (isAddingColumn) {
-          setIsAddingColumn(false);
-          setNewColumnName('');
-        } else if (editingTemplate) {
+        if (editingTemplate) {
           setEditingTemplate(null);
         } else {
           onClose();
@@ -103,66 +78,39 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
     }
 
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, editingTemplate, addingCardToColumn, isAddingColumn, onClose]);
+  }, [isOpen, editingTemplate, onClose]);
 
-  // Get cards for a specific column, sorted by order
-  const getCardsForColumn = useCallback((columnId: string): EditingCard[] => {
-    if (!editingTemplate) return [];
-    const column = editingTemplate.columns.find(c => c.id === columnId);
-    return column?.cards.sort((a, b) => a.order - b.order) || [];
+  // Handle columns change from SubKanbanBoard
+  const handleColumnsChange = useCallback((newColumns: TemplateColumn[]) => {
+    if (!editingTemplate) return;
+    setEditingTemplate({
+      ...editingTemplate,
+      columns: newColumns,
+    });
   }, [editingTemplate]);
 
-  // Handle drag end for both columns and cards
-  const handleDragEnd = useCallback((result: DropResult) => {
+  // Handle delete column
+  const handleDeleteColumn = useCallback((columnId: string) => {
     if (!editingTemplate) return;
-    const { destination, source, draggableId, type } = result;
+    setEditingTemplate({
+      ...editingTemplate,
+      columns: editingTemplate.columns.filter(col => col.id !== columnId),
+    });
+  }, [editingTemplate]);
 
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
-
-    if (type === 'column') {
-      // Column reordering
-      const newColumns = Array.from(editingTemplate.columns).sort((a, b) => a.order - b.order);
-      const [removed] = newColumns.splice(source.index, 1);
-      newColumns.splice(destination.index, 0, removed);
-
-      setEditingTemplate({
-        ...editingTemplate,
-        columns: newColumns.map((col, idx) => ({ ...col, order: idx })),
-      });
-    } else if (type === 'card') {
-      // Card reordering
-      const sourceColId = source.droppableId;
-      const destColId = destination.droppableId;
-
-      const newColumns = editingTemplate.columns.map(col => ({
-        ...col,
-        cards: [...col.cards],
-      }));
-
-      const sourceCol = newColumns.find(c => c.id === sourceColId);
-      const destCol = newColumns.find(c => c.id === destColId);
-      if (!sourceCol || !destCol) return;
-
-      // Find and remove the card from source
-      const cardIndex = sourceCol.cards.findIndex(c => c.id === draggableId);
-      if (cardIndex === -1) return;
-      const [movedCard] = sourceCol.cards.splice(cardIndex, 1);
-
-      // Add to destination
-      destCol.cards.splice(destination.index, 0, movedCard);
-
-      // Re-order cards in affected columns
-      sourceCol.cards.forEach((card, idx) => { card.order = idx; });
-      if (sourceColId !== destColId) {
-        destCol.cards.forEach((card, idx) => { card.order = idx; });
-      }
-
-      setEditingTemplate({
-        ...editingTemplate,
-        columns: newColumns,
-      });
-    }
+  // Handle delete card
+  const handleDeleteCard = useCallback((columnId: string, cardId: string) => {
+    if (!editingTemplate) return;
+    setEditingTemplate({
+      ...editingTemplate,
+      columns: editingTemplate.columns.map(col => {
+        if (col.id !== columnId) return col;
+        return {
+          ...col,
+          cards: col.cards.filter(card => card.id !== cardId),
+        };
+      }),
+    });
   }, [editingTemplate]);
 
   if (!isOpen) return null;
@@ -181,12 +129,12 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
       id: template.id,
       name: template.name,
       description: template.description || '',
-      columns: template.columns.map((col) => ({
+      columns: template.columns.map((col): TemplateColumn => ({
         id: generateId(),
-        nameEn: col.nameEn,
+        name: col.nameEn,
         nameJa: col.nameJa,
         order: col.order,
-        cards: col.cards?.map((c) => ({
+        cards: col.cards?.map((c): TemplateCard => ({
           id: generateId(),
           titleEn: c.titleEn,
           titleJa: c.titleJa,
@@ -219,13 +167,14 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
 
     setIsSaving(true);
     try {
+      // Convert TemplateColumn format to SubBoardTemplateColumn format
       const columns: SubBoardTemplateColumn[] = editingTemplate.columns.map((col) => ({
-        nameEn: col.nameEn,
-        nameJa: col.nameJa,
+        nameEn: col.name,
+        nameJa: col.nameJa || col.name,
         order: col.order,
         cards: col.cards.length > 0 ? col.cards.map((c): SubBoardTemplateCard => ({
           titleEn: c.titleEn,
-          titleJa: c.titleJa,
+          titleJa: c.titleJa || c.titleEn,
           order: c.order,
         })) : undefined,
       }));
@@ -261,91 +210,20 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
     }
   };
 
-  // Column management
-  const handleAddColumn = () => {
-    if (!editingTemplate || !newColumnName.trim()) return;
-    const maxOrder = editingTemplate.columns.length > 0 
-      ? Math.max(...editingTemplate.columns.map((c) => c.order)) + 1 
-      : 0;
-    setEditingTemplate({
-      ...editingTemplate,
-      columns: [
-        ...editingTemplate.columns,
-        { 
-          id: generateId(), 
-          nameEn: newColumnName.trim(), 
-          nameJa: newColumnName.trim(), // Will be translated later if needed
-          order: maxOrder, 
-          cards: [] 
-        },
-      ],
-    });
-    setNewColumnName('');
-    setIsAddingColumn(false);
-  };
-
-  const removeColumn = (columnId: string) => {
-    if (!editingTemplate) return;
-    setEditingTemplate({
-      ...editingTemplate,
-      columns: editingTemplate.columns.filter((col) => col.id !== columnId),
-    });
-  };
-
-  // Card management
-  const handleAddCard = (columnId: string) => {
-    if (!editingTemplate || !newCardTitle.trim()) return;
-    setEditingTemplate({
-      ...editingTemplate,
-      columns: editingTemplate.columns.map((col) => {
-        if (col.id !== columnId) return col;
-        const maxOrder = col.cards.length > 0 
-          ? Math.max(...col.cards.map((c) => c.order)) + 1 
-          : 0;
-        return {
-          ...col,
-          cards: [
-            ...col.cards,
-            { 
-              id: generateId(), 
-              titleEn: newCardTitle.trim(), 
-              titleJa: newCardTitle.trim(), // Will be translated later if needed
-              order: maxOrder 
-            },
-          ],
-        };
-      }),
-    });
-    setNewCardTitle('');
-    setAddingCardToColumn(null);
-  };
-
-  const removeCard = (columnId: string, cardId: string) => {
-    if (!editingTemplate) return;
-    setEditingTemplate({
-      ...editingTemplate,
-      columns: editingTemplate.columns.map((col) => {
-        if (col.id !== columnId) return col;
-        return {
-          ...col,
-          cards: col.cards.filter((card) => card.id !== cardId),
-        };
-      }),
-    });
-  };
-
   // Get display name based on locale
-  const getColumnName = (col: EditingColumn) => locale === 'ja' ? col.nameJa || col.nameEn : col.nameEn;
-  const getCardTitle = (card: EditingCard) => locale === 'ja' ? card.titleJa || card.titleEn : card.titleEn;
   const getTemplateColumnName = (col: SubBoardTemplateColumn) => locale === 'ja' ? col.nameJa || col.nameEn : col.nameEn;
 
-  // When editing, show a full-screen board view
+  // Total card count for header display
+  const totalCardCount = useMemo(() => {
+    if (!editingTemplate) return 0;
+    return editingTemplate.columns.reduce((acc, col) => acc + col.cards.length, 0);
+  }, [editingTemplate]);
+
+  // When editing, show a full-screen board view using SubKanbanBoard
   if (editingTemplate) {
-    const sortedColumns = [...editingTemplate.columns].sort((a, b) => a.order - b.order);
-    
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-50 via-purple-50/30 to-blue-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        {/* Template Editor Header - styled like a board header but indicates template mode */}
+        {/* Template Editor Header */}
         <header className="flex-shrink-0 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {/* Back button */}
@@ -398,9 +276,9 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
             {/* Column/card count */}
             <div className="text-sm text-slate-500 dark:text-slate-400 hidden sm:block">
               {editingTemplate.columns.length} {t('subBoardTemplate.columnsLabel')}
-              {editingTemplate.columns.reduce((acc, c) => acc + c.cards.length, 0) > 0 && (
+              {totalCardCount > 0 && (
                 <span className="ml-1">
-                  · {editingTemplate.columns.reduce((acc, c) => acc + c.cards.length, 0)} {t('subBoardTemplate.cardsLabel')}
+                  · {totalCardCount} {t('subBoardTemplate.cardsLabel')}
                 </span>
               )}
             </div>
@@ -427,226 +305,15 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
           </div>
         </header>
 
-        {/* Main board area - matches KanbanBoard layout */}
+        {/* Main board area - using SubKanbanBoard in template mode */}
         <main className="flex-1 overflow-x-auto p-4 sm:p-6">
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="template-board" type="column" direction="horizontal">
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`flex gap-5 h-full items-start pb-4 transition-all duration-200 ${
-                    snapshot.isDraggingOver ? 'gap-6' : ''
-                  }`}
-                >
-                  {sortedColumns.map((column, index) => (
-                    <Draggable key={column.id} draggableId={column.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`flex-shrink-0 w-[300px] max-h-[calc(100vh-160px)] flex flex-col bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/40 dark:border-slate-700/60 overflow-hidden ${
-                            snapshot.isDragging ? 'shadow-2xl ring-2 ring-purple-400 rotate-2' : ''
-                          }`}
-                        >
-                          {/* Column header - styled like real Column component */}
-                          <div
-                            {...provided.dragHandleProps}
-                            className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 cursor-grab active:cursor-grabbing"
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <h3 className="font-semibold text-slate-800 dark:text-slate-100 truncate">
-                                {getColumnName(column)}
-                              </h3>
-                              <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full">
-                                {column.cards.length}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => removeColumn(column.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              title={t('subBoardTemplate.removeColumn')}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-
-                          {/* Cards area with drag-and-drop */}
-                          <Droppable droppableId={column.id} type="card">
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.droppableProps}
-                                className={`flex-1 overflow-y-auto p-2 space-y-2 min-h-[100px] transition-colors ${
-                                  snapshot.isDraggingOver ? 'bg-purple-50 dark:bg-purple-900/20' : ''
-                                }`}
-                              >
-                                {getCardsForColumn(column.id).map((card, cardIndex) => (
-                                  <Draggable key={card.id} draggableId={card.id} index={cardIndex}>
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className={`group bg-white dark:bg-slate-900 rounded-xl p-3 shadow-sm border border-slate-200/80 dark:border-slate-700/60 cursor-grab active:cursor-grabbing transition-all ${
-                                          snapshot.isDragging ? 'shadow-xl ring-2 ring-purple-400 rotate-2' : 'hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600'
-                                        }`}
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <span className="text-sm text-slate-800 dark:text-slate-200 break-words">
-                                            {getCardTitle(card)}
-                                          </span>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              removeCard(column.id, card.id);
-                                            }}
-                                            className="p-1 text-slate-300 dark:text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded"
-                                            title={t('subBoardTemplate.removeCard')}
-                                          >
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                                {provided.placeholder}
-                              </div>
-                            )}
-                          </Droppable>
-
-                          {/* Add card section - styled like real Column component */}
-                          <div className="p-2 border-t border-slate-100 dark:border-slate-700/50">
-                            {addingCardToColumn === column.id ? (
-                              <div className="space-y-2">
-                                <textarea
-                                  value={newCardTitle}
-                                  onChange={(e) => setNewCardTitle(e.target.value)}
-                                  placeholder={t('column.enterTitle')}
-                                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-none"
-                                  rows={2}
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey && newCardTitle.trim()) {
-                                      e.preventDefault();
-                                      handleAddCard(column.id);
-                                    }
-                                    if (e.key === 'Escape') {
-                                      setAddingCardToColumn(null);
-                                      setNewCardTitle('');
-                                    }
-                                  }}
-                                />
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleAddCard(column.id)}
-                                    disabled={!newCardTitle.trim()}
-                                    className="flex-1 px-3 py-2 text-sm bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                  >
-                                    {t('column.addCard')}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setAddingCardToColumn(null);
-                                      setNewCardTitle('');
-                                    }}
-                                    className="px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-                                  >
-                                    {t('common.cancel')}
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setAddingCardToColumn(column.id)}
-                                className="w-full px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl flex items-center gap-2 transition-colors"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                {t('column.addCard')}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-
-                  {/* Add column button - styled like real KanbanBoard */}
-                  <div className="flex-shrink-0 w-[300px]">
-                    {isAddingColumn ? (
-                      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/40 dark:border-slate-700/60 p-4">
-                        <input
-                          type="text"
-                          value={newColumnName}
-                          onChange={(e) => setNewColumnName(e.target.value)}
-                          placeholder={t('column.enterListName')}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && newColumnName.trim()) {
-                              handleAddColumn();
-                            }
-                            if (e.key === 'Escape') {
-                              setIsAddingColumn(false);
-                              setNewColumnName('');
-                            }
-                          }}
-                        />
-                        <div className="flex gap-2 mt-3">
-                          <button
-                            onClick={handleAddColumn}
-                            disabled={!newColumnName.trim()}
-                            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                          >
-                            {t('column.addList')}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setIsAddingColumn(false);
-                              setNewColumnName('');
-                            }}
-                            className="px-4 py-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-                          >
-                            {t('common.cancel')}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setIsAddingColumn(true)}
-                        className="w-full px-4 py-3.5 bg-white/60 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800/80 backdrop-blur-sm rounded-2xl text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all flex items-center gap-3 shadow-sm hover:shadow-md border border-slate-200/50 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 group"
-                      >
-                        <span className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-700 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/30 rounded-xl transition-colors">
-                          <svg
-                            className="w-5 h-5 text-slate-400 group-hover:text-purple-500 transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4v16m8-8H4"
-                            />
-                          </svg>
-                        </span>
-                        <span className="font-medium">{t('column.addAnotherList')}</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+          <SubKanbanBoard
+            templateMode={true}
+            columns={editingTemplate.columns}
+            onColumnsChange={handleColumnsChange}
+            onDeleteColumn={handleDeleteColumn}
+            onDeleteCard={handleDeleteCard}
+          />
         </main>
       </div>
     );

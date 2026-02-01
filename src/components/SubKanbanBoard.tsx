@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,57 +18,110 @@ import {
   getBoard,
 } from '@/lib/firestore';
 
-interface SubKanbanBoardProps {
+// Template mode column/card types (for local state management)
+export interface TemplateColumn {
+  id: string;
+  name: string;
+  nameJa?: string;
+  order: number;
+  cards: TemplateCard[];
+}
+
+export interface TemplateCard {
+  id: string;
+  titleEn: string;
+  titleJa?: string;
+  order: number;
+}
+
+interface SubKanbanBoardBaseProps {
+  compact?: boolean; // For embedded view in CardModal
+}
+
+interface FirestoreModeProps extends SubKanbanBoardBaseProps {
+  templateMode?: false;
   subBoardId: string;
   parentCardId: string;
   parentBoardId: string;
-  compact?: boolean; // For embedded view in CardModal
 }
+
+interface TemplateModeProps extends SubKanbanBoardBaseProps {
+  templateMode: true;
+  columns: TemplateColumn[];
+  onColumnsChange: (columns: TemplateColumn[]) => void;
+  onDeleteColumn?: (columnId: string) => void;
+  onDeleteCard?: (columnId: string, cardId: string) => void;
+}
+
+type SubKanbanBoardProps = FirestoreModeProps | TemplateModeProps;
+
+const generateId = () => Math.random().toString(36).substring(2, 9);
 
 /**
  * SubKanbanBoard Component - Mini Kanban board for sub-boards within cards
  * A simplified version of KanbanBoard for embedding within card modals
+ * 
+ * Supports two modes:
+ * 1. Firestore mode (default): Connects to a real sub-board in Firestore
+ * 2. Template mode: Works with local state for template editing
  */
-export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compact = false }: SubKanbanBoardProps) {
+export function SubKanbanBoard(props: SubKanbanBoardProps) {
+  const { compact = false } = props;
   const { user } = useAuth();
   const { showToast } = useToast();
   const { t, locale } = useLocale();
   
+  // Firestore mode state
   const [board, setBoard] = useState<Board | null>(null);
-  const [columns, setColumns] = useState<ColumnType[]>([]);
-  const [cards, setCards] = useState<CardType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [firestoreColumns, setFirestoreColumns] = useState<ColumnType[]>([]);
+  const [firestoreCards, setFirestoreCards] = useState<CardType[]>([]);
+  const [loading, setLoading] = useState(!props.templateMode);
+  
+  // Shared UI state
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [addingCardToColumn, setAddingCardToColumn] = useState<string | null>(null);
   const [newCardTitle, setNewCardTitle] = useState('');
   
-  // Pending updates ref to prevent subscription overwrites
+  // Pending updates ref to prevent subscription overwrites (Firestore mode only)
   const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; expiresAt: number }>>(new Map());
 
-  // Fetch board data
+  // Extract props based on mode
+  const isTemplateMode = props.templateMode === true;
+  const subBoardId = !isTemplateMode ? props.subBoardId : '';
+  const parentCardId = !isTemplateMode ? props.parentCardId : '';
+  const parentBoardId = !isTemplateMode ? props.parentBoardId : '';
+  const templateColumns = isTemplateMode ? props.columns : [];
+  const onColumnsChange = isTemplateMode ? props.onColumnsChange : undefined;
+  const onDeleteColumn = isTemplateMode ? props.onDeleteColumn : undefined;
+  const onDeleteCard = isTemplateMode ? props.onDeleteCard : undefined;
+
+  // Fetch board data (Firestore mode only)
   useEffect(() => {
+    if (isTemplateMode) return;
     const fetchBoard = async () => {
       const boardData = await getBoard(subBoardId);
       setBoard(boardData);
     };
     fetchBoard();
-  }, [subBoardId]);
+  }, [subBoardId, isTemplateMode]);
 
-  // Subscribe to columns
+  // Subscribe to columns (Firestore mode only)
   useEffect(() => {
+    if (isTemplateMode) return;
     const unsubscribe = subscribeToColumns(
       subBoardId,
-      setColumns,
+      setFirestoreColumns,
       (error) => {
         console.error('Error subscribing to sub-board columns:', error);
       }
     );
     return () => unsubscribe();
-  }, [subBoardId]);
+  }, [subBoardId, isTemplateMode]);
 
-  // Subscribe to cards
+  // Subscribe to cards (Firestore mode only)
   useEffect(() => {
+    if (isTemplateMode) return;
     const unsubscribe = subscribeToCards(
       subBoardId,
       (newCards) => {
@@ -89,7 +142,7 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
           }
         });
         
-        setCards(updatedCards);
+        setFirestoreCards(updatedCards);
         setLoading(false);
       },
       {
@@ -100,14 +153,49 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
       }
     );
     return () => unsubscribe();
-  }, [subBoardId]);
+  }, [subBoardId, isTemplateMode]);
+
+  // Get the active columns based on mode
+  const columns = isTemplateMode 
+    ? templateColumns.map(tc => ({
+        id: tc.id,
+        boardId: '',
+        name: tc.name,
+        nameJa: tc.nameJa,
+        order: tc.order,
+        isArchived: false,
+        createdAt: null as unknown as import('firebase/firestore').Timestamp,
+        updatedAt: null as unknown as import('firebase/firestore').Timestamp,
+      }))
+    : firestoreColumns;
 
   // Get cards for a specific column
   const getCardsForColumn = useCallback((columnId: string): CardType[] => {
-    return cards
+    if (isTemplateMode) {
+      const col = templateColumns.find(c => c.id === columnId);
+      if (!col) return [];
+      return col.cards.map(card => ({
+        id: card.id,
+        boardId: '',
+        columnId,
+        titleEn: card.titleEn,
+        titleJa: card.titleJa || '',
+        titleDetectedLanguage: 'en' as const,
+        descriptionEn: '',
+        descriptionJa: '',
+        order: card.order,
+        isArchived: false,
+        createdBy: '',
+        attachments: [],
+        labels: [],
+        createdAt: null as unknown as import('firebase/firestore').Timestamp,
+        updatedAt: null as unknown as import('firebase/firestore').Timestamp,
+      }));
+    }
+    return firestoreCards
       .filter((card) => card.columnId === columnId)
       .sort((a, b) => a.order - b.order);
-  }, [cards]);
+  }, [isTemplateMode, templateColumns, firestoreCards]);
 
   // Handle drag end
   const handleDragEnd = async (result: DropResult) => {
@@ -116,15 +204,55 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
+    if (isTemplateMode && onColumnsChange) {
+      // Template mode: update local state
+      if (type === 'column') {
+        const newColumns = [...templateColumns].sort((a, b) => a.order - b.order);
+        const [removed] = newColumns.splice(source.index, 1);
+        newColumns.splice(destination.index, 0, removed);
+        onColumnsChange(newColumns.map((col, idx) => ({ ...col, order: idx })));
+      } else if (type === 'card') {
+        const sourceColId = source.droppableId;
+        const destColId = destination.droppableId;
+        
+        const newColumns = templateColumns.map(col => ({
+          ...col,
+          cards: [...col.cards],
+        }));
+        
+        const sourceCol = newColumns.find(c => c.id === sourceColId);
+        const destCol = newColumns.find(c => c.id === destColId);
+        if (!sourceCol || !destCol) return;
+        
+        // Find and remove card from source
+        const cardIndex = sourceCol.cards.findIndex(c => c.id === draggableId);
+        if (cardIndex === -1) return;
+        const [movedCard] = sourceCol.cards.splice(cardIndex, 1);
+        
+        // Add to destination
+        destCol.cards.splice(destination.index, 0, movedCard);
+        
+        // Re-order cards
+        sourceCol.cards.forEach((card, idx) => { card.order = idx; });
+        if (sourceColId !== destColId) {
+          destCol.cards.forEach((card, idx) => { card.order = idx; });
+        }
+        
+        onColumnsChange(newColumns);
+      }
+      return;
+    }
+
+    // Firestore mode
     if (type === 'column') {
       // Column reordering
-      const newColumns = Array.from(columns);
+      const newColumns = Array.from(firestoreColumns);
       const [removed] = newColumns.splice(source.index, 1);
       newColumns.splice(destination.index, 0, removed);
 
       // Optimistic update
       flushSync(() => {
-        setColumns(newColumns);
+        setFirestoreColumns(newColumns);
       });
 
       // Persist to Firestore
@@ -141,7 +269,7 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
       const destCards = sourceColId === destColId ? sourceCards : getCardsForColumn(destColId);
 
       // Find the moved card
-      const movedCard = cards.find((c) => c.id === cardId);
+      const movedCard = firestoreCards.find((c) => c.id === cardId);
       if (!movedCard) return;
 
       // Calculate new card order
@@ -170,7 +298,7 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
 
       // Optimistic update
       flushSync(() => {
-        setCards((prev) =>
+        setFirestoreCards((prev) =>
           prev.map((card) => {
             const update = cardUpdates.find((u) => u.id === card.id);
             if (update) {
@@ -195,8 +323,25 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
   const handleAddColumn = async () => {
     if (!newColumnName.trim()) return;
     
+    if (isTemplateMode && onColumnsChange) {
+      // Template mode: add to local state
+      const maxOrder = templateColumns.length > 0 ? Math.max(...templateColumns.map((c) => c.order)) : -1;
+      const newColumn: TemplateColumn = {
+        id: generateId(),
+        name: newColumnName.trim(),
+        nameJa: newColumnName.trim(),
+        order: maxOrder + 1,
+        cards: [],
+      };
+      onColumnsChange([...templateColumns, newColumn]);
+      setNewColumnName('');
+      setIsAddingColumn(false);
+      return;
+    }
+    
+    // Firestore mode
     try {
-      const maxOrder = columns.length > 0 ? Math.max(...columns.map((c) => c.order)) : -1;
+      const maxOrder = firestoreColumns.length > 0 ? Math.max(...firestoreColumns.map((c) => c.order)) : -1;
       await createColumn(subBoardId, newColumnName.trim(), maxOrder + 1);
       setNewColumnName('');
       setIsAddingColumn(false);
@@ -208,8 +353,34 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
 
   // Add card
   const handleAddCard = async (columnId: string) => {
-    if (!newCardTitle.trim() || !user) return;
+    if (!newCardTitle.trim()) return;
     
+    if (isTemplateMode && onColumnsChange) {
+      // Template mode: add to local state
+      const newColumns = templateColumns.map(col => {
+        if (col.id !== columnId) return col;
+        const maxOrder = col.cards.length > 0 ? Math.max(...col.cards.map((c) => c.order)) : -1;
+        return {
+          ...col,
+          cards: [
+            ...col.cards,
+            {
+              id: generateId(),
+              titleEn: newCardTitle.trim(),
+              titleJa: newCardTitle.trim(),
+              order: maxOrder + 1,
+            },
+          ],
+        };
+      });
+      onColumnsChange(newColumns);
+      setNewCardTitle('');
+      setAddingCardToColumn(null);
+      return;
+    }
+    
+    // Firestore mode
+    if (!user) return;
     try {
       const columnCards = getCardsForColumn(columnId);
       const maxOrder = columnCards.length > 0 ? Math.max(...columnCards.map((c) => c.order)) : -1;
@@ -219,7 +390,7 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
 
       // Update approved count if this was added to the approval column
       if (board?.approvalColumnName) {
-        const column = columns.find((c) => c.id === columnId);
+        const column = firestoreColumns.find((c) => c.id === columnId);
         if (column?.name.toLowerCase() === board.approvalColumnName.toLowerCase()) {
           await recalculateAndUpdateApprovedCount(parentBoardId, parentCardId, subBoardId, board.approvalColumnName);
         }
@@ -227,6 +398,20 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
     } catch (error) {
       console.error('Failed to add card:', error);
       showToast('error', t('subBoard.toast.addCardFailed'));
+    }
+  };
+  
+  // Delete column (template mode only)
+  const handleDeleteColumn = (columnId: string) => {
+    if (isTemplateMode && onDeleteColumn) {
+      onDeleteColumn(columnId);
+    }
+  };
+  
+  // Delete card (template mode only)
+  const handleDeleteCard = (columnId: string, cardId: string) => {
+    if (isTemplateMode && onDeleteCard) {
+      onDeleteCard(columnId, cardId);
     }
   };
 
@@ -261,14 +446,30 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
                       {/* Column Header */}
                       <div
                         {...provided.dragHandleProps}
-                        className="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-700/50"
+                        className="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-700/50 cursor-grab active:cursor-grabbing"
                       >
-                        <span className="font-medium text-sm text-slate-700 dark:text-slate-200 truncate">
+                        <span className="font-medium text-sm text-slate-700 dark:text-slate-200 truncate flex-1">
                           {locale === 'ja' && column.nameJa ? column.nameJa : column.name}
                         </span>
-                        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-                          {getCardsForColumn(column.id).length}
-                        </span>
+                        <div className="flex items-center gap-1 ml-2">
+                          <span className="text-xs text-slate-400 dark:text-slate-500">
+                            {getCardsForColumn(column.id).length}
+                          </span>
+                          {isTemplateMode && onDeleteColumn && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteColumn(column.id);
+                              }}
+                              className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                              title={t('subBoardTemplate.removeColumn')}
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Column Cards */}
@@ -288,13 +489,29 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className={`bg-white dark:bg-slate-900/70 rounded-lg p-2 text-xs shadow-sm border border-slate-200 dark:border-slate-700/50 cursor-grab ${
+                                    className={`group bg-white dark:bg-slate-900/70 rounded-lg p-2 text-xs shadow-sm border border-slate-200 dark:border-slate-700/50 cursor-grab active:cursor-grabbing ${
                                       snapshot.isDragging ? 'shadow-lg ring-2 ring-purple-400' : 'hover:shadow-md'
                                     }`}
                                   >
-                                    <span className="text-slate-700 dark:text-slate-200 line-clamp-2">
-                                      {locale === 'ja' && card.titleJa ? card.titleJa : card.titleEn}
-                                    </span>
+                                    <div className="flex items-start justify-between gap-1">
+                                      <span className="text-slate-700 dark:text-slate-200 line-clamp-2 flex-1">
+                                        {locale === 'ja' && card.titleJa ? card.titleJa : card.titleEn}
+                                      </span>
+                                      {isTemplateMode && onDeleteCard && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteCard(column.id, card.id);
+                                          }}
+                                          className="p-0.5 text-slate-300 dark:text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded"
+                                          title={t('subBoardTemplate.removeCard')}
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                          </svg>
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                               </Draggable>
