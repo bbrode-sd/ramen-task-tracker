@@ -88,6 +88,7 @@
   },
   "header": {
     "backToBoards": "Back to boards",
+    "backToBoard": "Back to board",
     "backToCard": "Back to card",
     "searchCards": "Search cards...",
     "searchShortcut": "Press / to search",

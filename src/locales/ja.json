@@ -88,6 +88,7 @@
   },
   "header": {
     "backToBoards": "ボード一覧に戻る",
+    "backToBoard": "ボードに戻る",
     "backToCard": "カードに戻る",
     "searchCards": "カードを検索...",
     "searchShortcut": "/ で検索",

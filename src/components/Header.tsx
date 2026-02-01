@@ -354,9 +354,9 @@ export function Header({
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 min-w-0">
           {boardId && (
             <Link
-              href={parentCard ? `/boards/${parentCard.boardId}?card=${parentCard.id}` : "/"}
+              href={isTemplate && templateForBoardId ? `/boards/${templateForBoardId}` : parentCard ? `/boards/${parentCard.boardId}?card=${parentCard.id}` : "/"}
               className="p-2.5 sm:p-2 -ml-1 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label={parentCard ? t('header.backToCard') : t('header.backToBoards')}
+              aria-label={isTemplate ? t('header.backToBoard') : parentCard ? t('header.backToCard') : t('header.backToBoards')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
