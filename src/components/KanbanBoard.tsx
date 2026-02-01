@@ -22,6 +22,7 @@ import {
   logActivity,
   archiveCard,
   restoreCard,
+  recalculateAndUpdateApprovedCount,
 } from '@/lib/firestore';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -207,7 +208,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           }
           setBoard(boardData);
           
-          // If this is a sub-board, fetch parent card info
+          // If this is a sub-board, fetch parent card info and recalculate approved count
           if (boardData.parentCardId && boardData.parentBoardId) {
             try {
               const parentCardDoc = await getDoc(
@@ -221,6 +222,15 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                   titleJa: cardData.titleJa || '',
                   boardId: boardData.parentBoardId,
                 });
+                
+                // Recalculate and update approved count on the parent card
+                // This ensures the count is accurate when loading a sub-board
+                recalculateAndUpdateApprovedCount(
+                  boardData.parentBoardId,
+                  boardData.parentCardId,
+                  boardId,
+                  boardData.approvalColumnName || 'Approved'
+                ).catch(console.error);
               }
             } catch (parentError) {
               console.error('Error fetching parent card:', parentError);
@@ -702,6 +712,16 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           to: destColumn?.name || 'Unknown',
         },
       }).catch(console.error);
+      
+      // If this is a sub-board, update the approved count on the parent card
+      if (board?.parentBoardId && board?.parentCardId) {
+        recalculateAndUpdateApprovedCount(
+          board.parentBoardId,
+          board.parentCardId,
+          boardId,
+          board.approvalColumnName || 'Approved'
+        ).catch(console.error);
+      }
       
       announceToScreenReader(`Card ${draggedCard.titleEn} moved from ${sourceColumn?.name} to ${destColumn?.name}.`);
     } else {
