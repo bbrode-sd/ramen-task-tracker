@@ -1937,18 +1937,28 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
         {/* Sub-ticket banner - shows parent card info when this is a sub-ticket */}
         {parentCardInfo && (
           <div className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-purple-50 via-violet-50 to-purple-50 dark:from-purple-900/30 dark:via-violet-900/20 dark:to-purple-900/30 border-b border-purple-200/70 dark:border-purple-700/50 rounded-t-none sm:rounded-t-2xl">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-purple-100 dark:bg-purple-800/50 rounded-full">
                 <svg className="w-3 h-3 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                 </svg>
                 <span className="text-xs font-semibold text-purple-700 dark:text-purple-200">{t('cardModal.subTicket')}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-sm">
-                <span className="text-purple-600/70 dark:text-purple-300/70">{t('cardModal.parentTicket')}:</span>
-                <span className="font-medium text-purple-700 dark:text-purple-200 truncate max-w-[300px]">
-                  {locale === 'ja' && parentCardInfo.titleJa ? parentCardInfo.titleJa : parentCardInfo.titleEn}
-                </span>
+              <div className="flex items-center gap-1.5 text-sm min-w-0">
+                <span className="text-purple-600/70 dark:text-purple-300/70 flex-shrink-0">{t('cardModal.parentTicket')}:</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-medium text-purple-700 dark:text-purple-200 truncate">
+                    {parentCardInfo.titleEn}
+                  </span>
+                  {parentCardInfo.titleJa && parentCardInfo.titleJa !== parentCardInfo.titleEn && (
+                    <>
+                      <span className="text-purple-400 dark:text-purple-500">/</span>
+                      <span className="font-medium text-purple-700 dark:text-purple-200 truncate">
+                        {parentCardInfo.titleJa}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
