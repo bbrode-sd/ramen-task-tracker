@@ -772,3 +772,71 @@ export const permanentlyDeleteCard = async (
   
   await batch.commit();
 };
+
+// ============================================================================
+// SUB-BOARD SUPPORT
+// ============================================================================
+
+/**
+ * Update the sub-board approved count on a parent card
+ */
+export const updateSubBoardApprovedCount = async (
+  boardId: string,
+  cardId: string,
+  count: number
+): Promise<void> => {
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  await updateDoc(cardRef, {
+    subBoardApprovedCount: count,
+    updatedAt: Timestamp.now(),
+  });
+};
+
+/**
+ * Calculate the approved count for a sub-board
+ * Counts cards in the column matching the approvalColumnName
+ */
+export const calculateSubBoardApprovedCount = async (
+  subBoardId: string,
+  approvalColumnName: string = 'Approved'
+): Promise<number> => {
+  // First, find the approval column
+  const columnsQuery = query(
+    collection(db, 'boards', subBoardId, 'columns'),
+    where('isArchived', '==', false)
+  );
+  const columnsSnapshot = await getDocs(columnsQuery);
+  
+  // Find column with matching name (case-insensitive)
+  const approvalColumn = columnsSnapshot.docs.find(
+    (doc) => doc.data().name.toLowerCase() === approvalColumnName.toLowerCase()
+  );
+  
+  if (!approvalColumn) {
+    return 0;
+  }
+  
+  // Count cards in the approval column
+  const cardsQuery = query(
+    collection(db, 'boards', subBoardId, 'cards'),
+    where('columnId', '==', approvalColumn.id),
+    where('isArchived', '==', false)
+  );
+  const cardsSnapshot = await getDocs(cardsQuery);
+  
+  return cardsSnapshot.size;
+};
+
+/**
+ * Recalculate and update the approved count for a parent card
+ * Call this after cards are moved in a sub-board
+ */
+export const recalculateAndUpdateApprovedCount = async (
+  parentBoardId: string,
+  parentCardId: string,
+  subBoardId: string,
+  approvalColumnName: string = 'Approved'
+): Promise<void> => {
+  const count = await calculateSubBoardApprovedCount(subBoardId, approvalColumnName);
+  await updateSubBoardApprovedCount(parentBoardId, parentCardId, count);
+};

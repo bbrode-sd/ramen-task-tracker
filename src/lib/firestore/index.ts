@@ -25,6 +25,12 @@ export {
   addBoardMember,
   removeBoardMember,
   subscribeToBoardMembers,
+  // Sub-board operations
+  createSubBoard,
+  createSubBoardFromTemplate,
+  getSubBoardForCard,
+  subscribeToSubBoard,
+  subscribeToBoardsExcludingSubBoards,
 } from './boards';
 
 // Column operations
@@ -69,6 +75,10 @@ export {
   toggleCardWatch,
   addCardWatcher,
   removeCardWatcher,
+  // Sub-board support
+  updateSubBoardApprovedCount,
+  calculateSubBoardApprovedCount,
+  recalculateAndUpdateApprovedCount,
 } from './cards';
 
 // Comment operations
@@ -99,4 +109,11 @@ export {
   getBoardTemplates,
   deleteBoardTemplate,
   createBoardFromTemplate,
+  // Sub-board template operations
+  BUILT_IN_SUB_BOARD_TEMPLATES,
+  createSubBoardTemplate,
+  getSubBoardTemplates,
+  getSubBoardTemplate,
+  deleteSubBoardTemplate,
+  updateSubBoardTemplate,
 } from './templates';

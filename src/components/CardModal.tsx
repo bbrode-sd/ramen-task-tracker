@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
-import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column } from '@/types';
+import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board, SubBoardTemplate } from '@/types';
 import {
   getCard,
   updateCard,
@@ -33,6 +33,10 @@ import {
   subscribeToColumns,
   subscribeToCards,
   moveCard,
+  subscribeToSubBoard,
+  createSubBoard,
+  createSubBoardFromTemplate,
+  getSubBoardTemplates,
 } from '@/lib/firestore';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -47,6 +51,7 @@ import { AttachmentItem } from './CardModal/AttachmentItem';
 import { CommentItem } from './CardModal/CommentItem';
 import { ActivityItem } from './CardModal/ActivityItem';
 import { COVER_COLORS, getAvatarColor, getInitials } from './CardModal/utils';
+import { SubKanbanBoard } from './SubKanbanBoard';
 
 interface CardModalProps {
   boardId: string;
@@ -179,6 +184,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [allCards, setAllCards] = useState<Card[]>([]);
   const columnDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sub-board state
+  const [subBoard, setSubBoard] = useState<Board | null>(null);
+  const [showSubBoardTemplates, setShowSubBoardTemplates] = useState(false);
+  const [subBoardTemplates, setSubBoardTemplates] = useState<SubBoardTemplate[]>([]);
+  const [isCreatingSubBoard, setIsCreatingSubBoard] = useState(false);
+
   // Track last saved values to avoid re-translating unchanged content
   const [lastSavedTitleEn, setLastSavedTitleEn] = useState('');
   const [lastSavedTitleJa, setLastSavedTitleJa] = useState('');
@@ -280,6 +291,29 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     );
     return () => unsubscribe();
   }, [boardId, cardId]);
+
+  // Subscribe to sub-board (if card has one)
+  useEffect(() => {
+    const unsubscribe = subscribeToSubBoard(
+      cardId,
+      setSubBoard,
+      (error) => {
+        console.error('Error subscribing to sub-board:', error);
+      }
+    );
+    return () => unsubscribe();
+  }, [cardId]);
+
+  // Fetch sub-board templates when template picker is shown
+  useEffect(() => {
+    if (showSubBoardTemplates && user) {
+      const fetchTemplates = async () => {
+        const templates = await getSubBoardTemplates(user.uid);
+        setSubBoardTemplates(templates);
+      };
+      fetchTemplates();
+    }
+  }, [showSubBoardTemplates, user]);
 
   // Fetch board members
   useEffect(() => {
@@ -1729,6 +1763,39 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     }
   };
 
+  // Sub-board handlers
+  const handleCreateSubBoard = async () => {
+    if (!user || !card) return;
+    
+    setIsCreatingSubBoard(true);
+    try {
+      await createSubBoard(cardId, boardId, `${card.titleEn} Sub-Board`, user.uid);
+      showToast('success', t('cardModal.toast.subBoardCreated'));
+      setShowSubBoardTemplates(false);
+    } catch (error) {
+      console.error('Failed to create sub-board:', error);
+      showToast('error', t('cardModal.toast.subBoardFailed'));
+    } finally {
+      setIsCreatingSubBoard(false);
+    }
+  };
+
+  const handleCreateSubBoardFromTemplate = async (template: SubBoardTemplate) => {
+    if (!user || !card) return;
+    
+    setIsCreatingSubBoard(true);
+    try {
+      await createSubBoardFromTemplate(cardId, boardId, template, user.uid);
+      showToast('success', t('cardModal.toast.subBoardCreated'));
+      setShowSubBoardTemplates(false);
+    } catch (error) {
+      console.error('Failed to create sub-board from template:', error);
+      showToast('error', t('cardModal.toast.subBoardFailed'));
+    } finally {
+      setIsCreatingSubBoard(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -2896,6 +2963,58 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               </div>
             )}
 
+            {/* Sub-Board Section */}
+            {subBoard && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40 dark:ring-1 dark:ring-purple-700/50 flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-purple-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                      />
+                    </svg>
+                  </div>
+                  {t('cardModal.subBoard.title')}
+                  {typeof card.subBoardApprovedCount === 'number' && card.subBoardApprovedCount > 0 && (
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full">
+                      {card.subBoardApprovedCount} {t('cardModal.sidebar.approved')}
+                    </span>
+                  )}
+                </h4>
+                
+                {/* Sub-board preview - links to full board */}
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700/70">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{subBoard.name}</span>
+                    <a
+                      href={`/boards/${subBoard.id}`}
+                      className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                    >
+                      {t('cardModal.subBoard.openFull')}
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                  {/* Embedded SubKanbanBoard component */}
+                  <SubKanbanBoard
+                    subBoardId={subBoard.id}
+                    parentCardId={cardId}
+                    parentBoardId={boardId}
+                    compact={true}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Attachments */}
             {card.attachments && card.attachments.length > 0 && (
               <div className="space-y-4">
@@ -3185,6 +3304,109 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   </svg>
                 </span>
                 <span className="text-slate-600 dark:text-slate-200 font-medium">{t('cardModal.sidebar.checklist')}</span>
+              </button>
+            )}
+
+            {/* Sub-Board */}
+            {card.subBoardId ? (
+              <a
+                href={`/boards/${card.subBoardId}`}
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+              >
+                <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
+                  <svg
+                    className="w-4 h-4 text-purple-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                    />
+                  </svg>
+                </span>
+                <span className="text-purple-600 dark:text-purple-400 font-medium flex items-center gap-2">
+                  {t('cardModal.sidebar.viewSubBoard')}
+                  {typeof card.subBoardApprovedCount === 'number' && card.subBoardApprovedCount > 0 && (
+                    <span className="bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 text-xs px-1.5 py-0.5 rounded-full">
+                      {card.subBoardApprovedCount} {t('cardModal.sidebar.approved')}
+                    </span>
+                  )}
+                </span>
+              </a>
+            ) : showSubBoardTemplates ? (
+              <div className="space-y-2.5 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('cardModal.sidebar.selectTemplate')}</span>
+                  <button
+                    onClick={() => setShowSubBoardTemplates(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {/* Blank sub-board option */}
+                <button
+                  onClick={handleCreateSubBoard}
+                  disabled={isCreatingSubBoard}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg text-sm text-left flex items-center gap-2 transition-colors border border-slate-200 dark:border-slate-600/50 disabled:opacity-50"
+                >
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="text-slate-600 dark:text-slate-300">{t('cardModal.sidebar.blankSubBoard')}</span>
+                </button>
+                {/* Template options */}
+                <div className="max-h-48 overflow-y-auto space-y-1.5">
+                  {subBoardTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => handleCreateSubBoardFromTemplate(template)}
+                      disabled={isCreatingSubBoard}
+                      className="w-full px-3 py-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg text-sm text-left transition-colors border border-purple-200 dark:border-purple-700/50 disabled:opacity-50"
+                    >
+                      <div className="font-medium text-purple-600 dark:text-purple-400">{template.name}</div>
+                      {template.description && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{template.description}</div>
+                      )}
+                      <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                        {template.columns.length} {t('cardModal.sidebar.columns')}
+                        {template.columns.some(c => c.cards && c.cards.length > 0) && (
+                          <span className="ml-1">
+                            · {template.columns.reduce((acc, c) => acc + (c.cards?.length || 0), 0)} {t('cardModal.sidebar.cards')}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSubBoardTemplates(true)}
+                className="w-full px-4 py-2.5 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 hover:border-slate-300 dark:hover:border-slate-600/80 rounded-xl text-sm text-left flex items-center gap-3 transition-all group shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+              >
+                <span className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-600 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 flex items-center justify-center transition-colors">
+                  <svg
+                    className="w-4 h-4 text-slate-400 dark:text-slate-300 group-hover:text-purple-500 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                    />
+                  </svg>
+                </span>
+                <span className="text-slate-600 dark:text-slate-200 font-medium">{t('cardModal.sidebar.subBoard')}</span>
               </button>
             )}
 

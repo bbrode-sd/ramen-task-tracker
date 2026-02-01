@@ -40,6 +40,10 @@ export interface Board {
   updatedAt: Timestamp;
   isArchived: boolean;
   background?: BoardBackground;
+  // Sub-board support
+  parentCardId?: string;      // If set, this is a sub-board linked to a parent card
+  parentBoardId?: string;     // Reference to the parent board (for queries)
+  approvalColumnName?: string; // Column name to track for "approved" count (default: "Approved")
 }
 
 export interface Column {
@@ -89,6 +93,9 @@ export interface Card {
   priority?: CardPriority;
   watcherIds?: string[];
   commentCount?: number;
+  // Sub-board support
+  subBoardId?: string;              // ID of linked sub-board
+  subBoardApprovedCount?: number;   // Cached count of cards in approval column
 }
 
 export interface Attachment {
@@ -178,6 +185,23 @@ export interface BoardTemplate {
   description: string;
   columns: { name: string; order: number }[];
   isBuiltIn: boolean;
+  createdBy?: string;
+  createdAt: Timestamp;
+}
+
+// Sub-board template with pre-created cards
+export interface SubBoardTemplateColumn {
+  name: string;
+  order: number;
+  cards?: { title: string; order: number }[];
+}
+
+export interface SubBoardTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  columns: SubBoardTemplateColumn[];
+  approvalColumnName?: string; // Which column to track for "approved" count
   createdBy?: string;
   createdAt: Timestamp;
 }

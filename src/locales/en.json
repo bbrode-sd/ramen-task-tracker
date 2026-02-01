@@ -266,7 +266,14 @@
       "updating": "Updating...",
       "watchersCount": "{{count}} Watching",
       "saveAsTemplate": "Save as Template",
-      "archive": "Archive"
+      "archive": "Archive",
+      "subBoard": "Sub-Board",
+      "viewSubBoard": "View Sub-Board",
+      "approved": "Approved",
+      "selectTemplate": "Select Template",
+      "blankSubBoard": "Blank Sub-Board",
+      "columns": "columns",
+      "cards": "cards"
     },
     "checklistItem": {
       "addItemPlaceholder": "Add an item...",
@@ -300,7 +307,9 @@
       "templateSaved": "Card saved as template",
       "templateFailed": "Failed to save template",
       "failedToMove": "Failed to move card",
-      "failedToWatch": "Failed to update watch status"
+      "failedToWatch": "Failed to update watch status",
+      "subBoardCreated": "Sub-board created",
+      "subBoardFailed": "Failed to create sub-board"
     },
     "template": {
       "title": "Save as Template",
@@ -315,6 +324,11 @@
       "checklistCountPlural": "{{count}} Checklists",
       "saveTemplate": "Save Template",
       "savingTemplate": "Saving..."
+    },
+    "subBoard": {
+      "title": "Sub-Board",
+      "description": "A mini Kanban board for tracking sub-tasks",
+      "openFull": "Open Full Board"
     }
   },
   "archiveDrawer": {
@@ -449,5 +463,57 @@
   "member": {
     "editProfile": "Edit profile info",
     "viewActivity": "View member's board activity"
+  },
+  "subBoard": {
+    "addCardPlaceholder": "Card title...",
+    "add": "Add",
+    "cancel": "Cancel",
+    "addCard": "Add card",
+    "columnNamePlaceholder": "List name...",
+    "addColumn": "Add",
+    "addColumnButton": "Add list",
+    "toast": {
+      "addColumnFailed": "Failed to add list",
+      "addCardFailed": "Failed to add card"
+    }
+  },
+  "subBoardTemplate": {
+    "title": "Sub-Board Templates",
+    "description": "Manage templates for sub-boards with pre-set lists and cards",
+    "createTitle": "Create Template",
+    "editTitle": "Edit Template",
+    "editDescription": "Configure lists and cards for this template",
+    "createNew": "Create New Template",
+    "noTemplates": "No custom templates yet. Create one to get started!",
+    "builtIn": "Built-in",
+    "name": "Template Name",
+    "namePlaceholder": "e.g., Animation Workflow, Asset Review...",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Brief description of this template...",
+    "approvalColumn": "Approval Column",
+    "approvalColumnHelp": "Cards in this column will be counted as 'approved' on the parent card",
+    "columns": "Lists",
+    "columnsLabel": "lists",
+    "cardsLabel": "cards",
+    "approvalLabel": "Approval",
+    "addColumn": "Add List",
+    "columnNamePlaceholder": "List name...",
+    "removeColumn": "Remove list",
+    "unnamedColumn": "(unnamed)",
+    "addCard": "Add card",
+    "cardTitlePlaceholder": "Card title...",
+    "removeCard": "Remove card",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "create": "Create",
+    "created": "Template created",
+    "updated": "Template updated",
+    "deleted": "Template deleted",
+    "saveFailed": "Failed to save template",
+    "deleteFailed": "Failed to delete template",
+    "confirmDelete": "Are you sure you want to delete this template?",
+    "cannotEditBuiltIn": "Built-in templates cannot be edited",
+    "cannotDeleteBuiltIn": "Built-in templates cannot be deleted"
   }
 }

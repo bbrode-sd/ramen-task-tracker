@@ -10,10 +10,12 @@ import {
   where,
   onSnapshot,
   getDoc,
+  getDocs,
+  writeBatch,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Board, BoardMember } from '@/types';
+import { Board, BoardMember, SubBoardTemplate } from '@/types';
 import { getUserProfiles, getUserByEmail } from './users';
 
 // ============================================================================
@@ -256,4 +258,221 @@ export const subscribeToBoardMembers = (
     
     callback(members);
   });
+};
+
+// ============================================================================
+// SUB-BOARDS
+// ============================================================================
+
+/**
+ * Create a sub-board for a card
+ * The sub-board is linked to the parent card and parent board
+ */
+export const createSubBoard = async (
+  parentCardId: string,
+  parentBoardId: string,
+  name: string,
+  userId: string,
+  approvalColumnName: string = 'Approved'
+): Promise<string> => {
+  // Get the parent board to inherit memberIds
+  const parentBoard = await getBoard(parentBoardId);
+  if (!parentBoard) {
+    throw new Error('Parent board not found');
+  }
+
+  const boardRef = await addDoc(collection(db, 'boards'), {
+    name,
+    ownerId: userId,
+    memberIds: parentBoard.memberIds, // Inherit members from parent board
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    isArchived: false,
+    parentCardId,
+    parentBoardId,
+    approvalColumnName,
+  });
+
+  // Update the parent card with the subBoardId
+  const cardRef = doc(db, 'boards', parentBoardId, 'cards', parentCardId);
+  await updateDoc(cardRef, {
+    subBoardId: boardRef.id,
+    subBoardApprovedCount: 0,
+    updatedAt: Timestamp.now(),
+  });
+
+  return boardRef.id;
+};
+
+/**
+ * Create a sub-board from a template
+ * Creates the board, columns, and pre-populated cards
+ */
+export const createSubBoardFromTemplate = async (
+  parentCardId: string,
+  parentBoardId: string,
+  template: SubBoardTemplate,
+  userId: string
+): Promise<string> => {
+  // Get the parent board to inherit memberIds
+  const parentBoard = await getBoard(parentBoardId);
+  if (!parentBoard) {
+    throw new Error('Parent board not found');
+  }
+
+  // Create the sub-board
+  const boardRef = await addDoc(collection(db, 'boards'), {
+    name: template.name,
+    ownerId: userId,
+    memberIds: parentBoard.memberIds,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    isArchived: false,
+    parentCardId,
+    parentBoardId,
+    approvalColumnName: template.approvalColumnName || 'Approved',
+  });
+
+  const subBoardId = boardRef.id;
+
+  // Create columns and cards in a batch
+  const batch = writeBatch(db);
+  const columnIdMap: Map<number, string> = new Map();
+
+  // First, create all columns
+  for (const col of template.columns) {
+    const columnRef = doc(collection(db, 'boards', subBoardId, 'columns'));
+    columnIdMap.set(col.order, columnRef.id);
+    batch.set(columnRef, {
+      boardId: subBoardId,
+      name: col.name,
+      order: col.order,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      isArchived: false,
+    });
+  }
+
+  // Then, create cards for each column
+  for (const col of template.columns) {
+    const columnId = columnIdMap.get(col.order);
+    if (columnId && col.cards) {
+      for (const card of col.cards) {
+        const cardRef = doc(collection(db, 'boards', subBoardId, 'cards'));
+        batch.set(cardRef, {
+          boardId: subBoardId,
+          columnId,
+          titleEn: card.title,
+          titleJa: '',
+          descriptionEn: '',
+          descriptionJa: '',
+          order: card.order,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          createdBy: userId,
+          isArchived: false,
+          attachments: [],
+          labels: [],
+        });
+      }
+    }
+  }
+
+  await batch.commit();
+
+  // Update the parent card with the subBoardId
+  const cardRef = doc(db, 'boards', parentBoardId, 'cards', parentCardId);
+  await updateDoc(cardRef, {
+    subBoardId,
+    subBoardApprovedCount: 0,
+    updatedAt: Timestamp.now(),
+  });
+
+  return subBoardId;
+};
+
+/**
+ * Get the sub-board for a card (if one exists)
+ */
+export const getSubBoardForCard = async (cardId: string): Promise<Board | null> => {
+  const q = query(
+    collection(db, 'boards'),
+    where('parentCardId', '==', cardId),
+    where('isArchived', '==', false)
+  );
+  
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) {
+    return null;
+  }
+  
+  const doc = snapshot.docs[0];
+  return { id: doc.id, ...doc.data() } as Board;
+};
+
+/**
+ * Subscribe to a sub-board (real-time updates)
+ */
+export const subscribeToSubBoard = (
+  cardId: string,
+  callback: (board: Board | null) => void,
+  onError?: (error: Error) => void
+) => {
+  const q = query(
+    collection(db, 'boards'),
+    where('parentCardId', '==', cardId),
+    where('isArchived', '==', false)
+  );
+  
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      if (snapshot.empty) {
+        callback(null);
+        return;
+      }
+      const boardDoc = snapshot.docs[0];
+      callback({ id: boardDoc.id, ...boardDoc.data() } as Board);
+    },
+    (error) => {
+      console.error('Error subscribing to sub-board:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
+};
+
+/**
+ * Subscribe to boards for a user, excluding sub-boards
+ */
+export const subscribeToBoardsExcludingSubBoards = (
+  userId: string,
+  callback: (boards: Board[]) => void,
+  onError?: (error: Error) => void
+) => {
+  const q = query(
+    collection(db, 'boards'),
+    where('memberIds', 'array-contains', userId),
+    where('isArchived', '==', false)
+  );
+  
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const allBoards = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Board[];
+      // Filter out sub-boards (boards with parentCardId)
+      const boards = allBoards.filter((board) => !board.parentCardId);
+      callback(boards);
+    },
+    (error) => {
+      console.error('Error subscribing to boards:', error);
+      if (onError) {
+        onError(error);
+      }
+    }
+  );
 };

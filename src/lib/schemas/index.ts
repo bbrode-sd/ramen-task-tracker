@@ -66,6 +66,10 @@ export const BoardSchema = z.object({
   updatedAt: firestoreTimestamp,
   isArchived: z.boolean(),
   background: BoardBackgroundSchema.optional(),
+  // Sub-board support
+  parentCardId: z.string().optional(),
+  parentBoardId: z.string().optional(),
+  approvalColumnName: z.string().max(200).optional(),
 });
 
 // ============================================================================
@@ -136,6 +140,9 @@ export const CardSchema = z.object({
   checklists: z.array(ChecklistSchema).optional(),
   coverImage: CardCoverSchema.optional(),
   priority: CardPrioritySchema.optional(),
+  // Sub-board support
+  subBoardId: z.string().optional(),
+  subBoardApprovedCount: z.number().int().min(0).optional(),
 });
 
 // ============================================================================
@@ -225,6 +232,28 @@ export const BoardTemplateSchema = z.object({
   createdAt: firestoreTimestamp,
 });
 
+// Sub-board template schemas
+export const SubBoardTemplateCardSchema = z.object({
+  title: z.string().max(500),
+  order: z.number().int().min(0),
+});
+
+export const SubBoardTemplateColumnSchema = z.object({
+  name: z.string().max(200),
+  order: z.number().int().min(0),
+  cards: z.array(SubBoardTemplateCardSchema).optional(),
+});
+
+export const SubBoardTemplateSchema = z.object({
+  id: z.string(),
+  name: z.string().max(200),
+  description: z.string().max(1000).optional(),
+  columns: z.array(SubBoardTemplateColumnSchema).min(1).max(20),
+  approvalColumnName: z.string().max(200).optional(),
+  createdBy: z.string().optional(),
+  createdAt: firestoreTimestamp,
+});
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -270,3 +299,4 @@ export type ValidatedColumn = z.infer<typeof ColumnSchema>;
 export type ValidatedCard = z.infer<typeof CardSchema>;
 export type ValidatedComment = z.infer<typeof CommentSchema>;
 export type ValidatedActivity = z.infer<typeof ActivitySchema>;
+export type ValidatedSubBoardTemplate = z.infer<typeof SubBoardTemplateSchema>;

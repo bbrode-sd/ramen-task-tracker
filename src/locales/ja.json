@@ -266,7 +266,14 @@
       "updating": "更新中...",
       "watchersCount": "{{count}}人がウォッチ中",
       "saveAsTemplate": "テンプレートとして保存",
-      "archive": "アーカイブ"
+      "archive": "アーカイブ",
+      "subBoard": "サブボード",
+      "viewSubBoard": "サブボードを表示",
+      "approved": "承認済み",
+      "selectTemplate": "テンプレートを選択",
+      "blankSubBoard": "空のサブボード",
+      "columns": "リスト",
+      "cards": "カード"
     },
     "checklistItem": {
       "addItemPlaceholder": "アイテムを追加...",
@@ -300,7 +307,14 @@
       "templateSaved": "カードをテンプレートとして保存しました",
       "templateFailed": "テンプレートの保存に失敗しました",
       "failedToMove": "カードの移動に失敗しました",
-      "failedToWatch": "ウォッチ状態の更新に失敗しました"
+      "failedToWatch": "ウォッチ状態の更新に失敗しました",
+      "subBoardCreated": "サブボードを作成しました",
+      "subBoardFailed": "サブボードの作成に失敗しました"
+    },
+    "subBoard": {
+      "title": "サブボード",
+      "description": "サブタスクを追跡するミニかんばんボード",
+      "openFull": "フルボードを開く"
     },
     "template": {
       "title": "テンプレートとして保存",
@@ -449,5 +463,57 @@
   "member": {
     "editProfile": "プロフィールを編集",
     "viewActivity": "メンバーのボードアクティビティを表示"
+  },
+  "subBoard": {
+    "addCardPlaceholder": "カードのタイトル...",
+    "add": "追加",
+    "cancel": "キャンセル",
+    "addCard": "カードを追加",
+    "columnNamePlaceholder": "リスト名...",
+    "addColumn": "追加",
+    "addColumnButton": "リストを追加",
+    "toast": {
+      "addColumnFailed": "リストの追加に失敗しました",
+      "addCardFailed": "カードの追加に失敗しました"
+    }
+  },
+  "subBoardTemplate": {
+    "title": "サブボードテンプレート",
+    "description": "事前設定されたリストとカードを持つサブボードのテンプレートを管理",
+    "createTitle": "テンプレートを作成",
+    "editTitle": "テンプレートを編集",
+    "editDescription": "このテンプレートのリストとカードを設定",
+    "createNew": "新しいテンプレートを作成",
+    "noTemplates": "カスタムテンプレートがありません。作成して始めましょう！",
+    "builtIn": "組み込み",
+    "name": "テンプレート名",
+    "namePlaceholder": "例：アニメーションワークフロー、アセットレビュー...",
+    "descriptionLabel": "説明",
+    "descriptionPlaceholder": "このテンプレートの簡単な説明...",
+    "approvalColumn": "承認リスト",
+    "approvalColumnHelp": "このリストのカードは親カードで「承認済み」としてカウントされます",
+    "columns": "リスト",
+    "columnsLabel": "リスト",
+    "cardsLabel": "カード",
+    "approvalLabel": "承認",
+    "addColumn": "リストを追加",
+    "columnNamePlaceholder": "リスト名...",
+    "removeColumn": "リストを削除",
+    "unnamedColumn": "（名前なし）",
+    "addCard": "カードを追加",
+    "cardTitlePlaceholder": "カードのタイトル...",
+    "removeCard": "カードを削除",
+    "edit": "編集",
+    "delete": "削除",
+    "save": "保存",
+    "create": "作成",
+    "created": "テンプレートを作成しました",
+    "updated": "テンプレートを更新しました",
+    "deleted": "テンプレートを削除しました",
+    "saveFailed": "テンプレートの保存に失敗しました",
+    "deleteFailed": "テンプレートの削除に失敗しました",
+    "confirmDelete": "このテンプレートを削除してもよろしいですか？",
+    "cannotEditBuiltIn": "組み込みテンプレートは編集できません",
+    "cannotDeleteBuiltIn": "組み込みテンプレートは削除できません"
   }
 }

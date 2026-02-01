@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { Board, BoardTemplate } from '@/types';
-import { subscribeToBoards, createBoard, getBoardTemplates, createBoardFromTemplate, BUILT_IN_BOARD_TEMPLATES } from '@/lib/firestore';
+import { subscribeToBoardsExcludingSubBoards, createBoard, getBoardTemplates, createBoardFromTemplate, BUILT_IN_BOARD_TEMPLATES } from '@/lib/firestore';
 import { Header } from './Header';
 import { EmptyState } from './EmptyState';
 import { ReplayTourButton } from './OnboardingTour';
@@ -51,7 +51,8 @@ export function BoardList() {
     // Reset onboarding trigger flag when user changes
     onboardingTriggeredRef.current = false;
 
-    const unsubscribe = subscribeToBoards(
+    // Use subscribeToBoardsExcludingSubBoards to filter out sub-boards from the list
+    const unsubscribe = subscribeToBoardsExcludingSubBoards(
       user.uid,
       (fetchedBoards) => {
         setBoards(fetchedBoards);
