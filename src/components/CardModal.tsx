@@ -1630,16 +1630,18 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <div className="space-y-1">
               {editingField === 'titleEn' ? (
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
-                      EN
-                    </span>
-                    {getTitleTranslationLabel('en') && (
-                      <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
-                        {getTitleTranslationLabel('en')}
+                  <div className="flex items-start gap-2">
+                    <div className="flex flex-col items-center shrink-0">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                        EN
                       </span>
-                    )}
+                      {getTitleTranslationLabel('en') && (
+                        <span className={`text-[10px] font-medium whitespace-nowrap ${card?.titleDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                          {getTitleTranslationLabel('en')}
+                        </span>
+                      )}
+                    </div>
                     <input
                       id="card-title-en"
                       type="text"
@@ -1686,18 +1688,20 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </div>
               ) : (
                 <div 
-                  className="group flex items-center gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
+                  className="group flex items-start gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
                   onClick={startEditingTitleEn}
                 >
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
-                    EN
-                  </span>
-                  {getTitleTranslationLabel('en') && (
-                    <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
-                      {getTitleTranslationLabel('en')}
+                  <div className="flex flex-col items-center shrink-0">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                      EN
                     </span>
-                  )}
+                    {getTitleTranslationLabel('en') && (
+                      <span className={`text-[10px] font-medium whitespace-nowrap ${card?.titleDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                        {getTitleTranslationLabel('en')}
+                      </span>
+                    )}
+                  </div>
                   <p className={`flex-1 px-2 py-1.5 text-xl font-semibold rounded-lg border border-transparent ${
                     titleEn ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
@@ -1720,16 +1724,18 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             <div className="space-y-1">
               {editingField === 'titleJa' ? (
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
-                      JP
-                    </span>
-                    {getTitleTranslationLabel('ja') && (
-                      <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
-                        {getTitleTranslationLabel('ja')}
+                  <div className="flex items-start gap-2">
+                    <div className="flex flex-col items-center shrink-0">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                        JP
                       </span>
-                    )}
+                      {getTitleTranslationLabel('ja') && (
+                        <span className={`text-[10px] font-medium whitespace-nowrap ${card?.titleDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                          {getTitleTranslationLabel('ja')}
+                        </span>
+                      )}
+                    </div>
                     <input
                       id="card-title-ja"
                       type="text"
@@ -1776,18 +1782,20 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </div>
               ) : (
                 <div 
-                  className="group flex items-center gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
+                  className="group flex items-start gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
                   onClick={startEditingTitleJa}
                 >
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full shrink-0" aria-hidden="true">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
-                    JP
-                  </span>
-                  {getTitleTranslationLabel('ja') && (
-                    <span className={`text-[10px] font-medium ${card?.titleDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
-                      {getTitleTranslationLabel('ja')}
+                  <div className="flex flex-col items-center shrink-0">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                      JP
                     </span>
-                  )}
+                    {getTitleTranslationLabel('ja') && (
+                      <span className={`text-[10px] font-medium whitespace-nowrap ${card?.titleDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                        {getTitleTranslationLabel('ja')}
+                      </span>
+                    )}
+                  </div>
                   <p className={`flex-1 px-2 py-1.5 text-xl font-semibold rounded-lg border border-transparent ${
                     titleJa ? 'text-gray-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 italic'
                   }`}>
@@ -1849,17 +1857,19 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               <legend className="sr-only">Card Description in English and Japanese</legend>
               {/* English Description */}
               <div className="space-y-2.5">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
-                    EN
-                  </span>
-                  {t('cardModal.descriptionEn')}
-                  {getDescriptionTranslationLabel('en') && (
-                    <span className={`text-[10px] font-medium ${card?.descriptionDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
-                      {getDescriptionTranslationLabel('en')}
+                <div className="flex items-start gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="flex flex-col items-center shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+                      EN
                     </span>
-                  )}
+                    {getDescriptionTranslationLabel('en') && (
+                      <span className={`text-[10px] font-medium whitespace-nowrap ${card?.descriptionDetectedLanguage === 'en' ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                        {getDescriptionTranslationLabel('en')}
+                      </span>
+                    )}
+                  </div>
+                  {t('cardModal.descriptionEn')}
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionEn] || false}
                     hasError={translationState.errors[fieldKeys.descriptionEn]}
@@ -1922,17 +1932,19 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
               {/* Japanese Description */}
               <div className="space-y-2.5">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
-                    JP
-                  </span>
-                  {t('cardModal.descriptionJa')}
-                  {getDescriptionTranslationLabel('ja') && (
-                    <span className={`text-[10px] font-medium ${card?.descriptionDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
-                      {getDescriptionTranslationLabel('ja')}
+                <div className="flex items-start gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="flex flex-col items-center shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
+                      JP
                     </span>
-                  )}
+                    {getDescriptionTranslationLabel('ja') && (
+                      <span className={`text-[10px] font-medium whitespace-nowrap ${card?.descriptionDetectedLanguage === 'ja' ? 'text-red-500 dark:text-red-300' : 'text-slate-400 dark:text-slate-400'}`}>
+                        {getDescriptionTranslationLabel('ja')}
+                      </span>
+                    )}
+                  </div>
+                  {t('cardModal.descriptionJa')}
                   <TranslationIndicator
                     isTranslating={translationState.isTranslating[fieldKeys.descriptionJa] || false}
                     hasError={translationState.errors[fieldKeys.descriptionJa]}
