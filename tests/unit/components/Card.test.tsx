@@ -27,6 +27,13 @@ vi.mock('@/contexts/KeyboardShortcutsContext', () => ({
   }),
 }));
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { uid: 'test-user-id', displayName: 'Test User', photoURL: null },
+    loading: false,
+  }),
+}));
+
 vi.mock('next/image', () => ({
   default: function MockImage({ src, alt, ...props }: { src: string; alt: string }) {
     // eslint-disable-next-line @next/next/no-img-element
@@ -117,7 +124,7 @@ describe('Card Component', () => {
 
     const cardElement = screen.getByRole('button', { name: /Test Card/ });
     expect(cardElement.className).toContain('ring-2');
-    expect(cardElement.className).toContain('ring-orange-500');
+    expect(cardElement.className).toContain('ring-[var(--primary)]');
   });
 
   it('should apply selected styles when isSelected is true', () => {
@@ -125,7 +132,7 @@ describe('Card Component', () => {
 
     const cardElement = screen.getByRole('button', { name: /Test Card/ });
     expect(cardElement.className).toContain('ring-2');
-    expect(cardElement.className).toContain('bg-orange-50/50');
+    expect(cardElement.className).toContain('bg-[var(--primary-light)]');
   });
 
   it('should display due date when present', () => {
@@ -146,7 +153,7 @@ describe('Card Component', () => {
 
     // The title now includes status info like "Overdue:"
     const dueDateElement = screen.getByTitle(/^Overdue:/);
-    expect(dueDateElement.className).toContain('bg-red-100');
+    expect(dueDateElement.className).toContain('bg-[var(--error-bg)]');
   });
 
   it('should display checklist progress when checklists exist', () => {

@@ -147,8 +147,8 @@ describe('EmptyState Component', () => {
       const { container } = render(<ColumnEmptyState isDraggingOver={true} />);
 
       const emptyState = container.firstChild;
-      expect(emptyState).toHaveClass('border-orange-400');
-      expect(emptyState).toHaveClass('bg-orange-50/60');
+      expect(emptyState).toHaveClass('border-emerald-400');
+      expect(emptyState).toHaveClass('bg-emerald-50/60');
     });
   });
 
