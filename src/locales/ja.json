@@ -116,7 +116,9 @@
       "system": "テーマ: システム",
       "light": "テーマ: ライト",
       "dark": "テーマ: ダーク"
-    }
+    },
+    "templateIndicator": "テンプレートボード",
+    "editingTemplate": "サブボードテンプレート"
   },
   "column": {
     "listWith": "{{name}} リスト（{{count}}枚のカード）",

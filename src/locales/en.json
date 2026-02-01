@@ -116,7 +116,9 @@
       "system": "Theme: System",
       "light": "Theme: Light",
       "dark": "Theme: Dark"
-    }
+    },
+    "templateIndicator": "Template Board",
+    "editingTemplate": "Sub-Board Template"
   },
   "column": {
     "listWith": "{{name}} list with {{count}} cards",

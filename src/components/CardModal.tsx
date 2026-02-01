@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
-import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board, SubBoardTemplate } from '@/types';
+import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board } from '@/types';
 import {
   getCard,
   updateCard,
@@ -35,8 +35,8 @@ import {
   moveCard,
   subscribeToSubBoard,
   createSubBoard,
-  createSubBoardFromTemplate,
-  getSubBoardTemplates,
+  cloneTemplateBoardAsSubBoard,
+  getTemplateBoardsForBoard,
 } from '@/lib/firestore';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -52,7 +52,7 @@ import { SubBoardTemplateModal } from './SubBoardTemplateModal';
 import { CommentItem } from './CardModal/CommentItem';
 import { ActivityItem } from './CardModal/ActivityItem';
 import { COVER_COLORS, getAvatarColor, getInitials } from './CardModal/utils';
-import { SubKanbanBoard } from './SubKanbanBoard';
+import { KanbanBoard } from './KanbanBoard';
 
 interface CardModalProps {
   boardId: string;
@@ -188,7 +188,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   // Sub-board state
   const [subBoard, setSubBoard] = useState<Board | null>(null);
   const [showSubBoardTemplates, setShowSubBoardTemplates] = useState(false);
-  const [subBoardTemplates, setSubBoardTemplates] = useState<SubBoardTemplate[]>([]);
+  const [templateBoards, setTemplateBoards] = useState<Board[]>([]);
   const [isCreatingSubBoard, setIsCreatingSubBoard] = useState(false);
   const [showSubBoardTemplateManager, setShowSubBoardTemplateManager] = useState(false);
 
@@ -309,16 +309,16 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     return () => unsubscribe();
   }, [cardId, user]);
 
-  // Fetch sub-board templates when template picker is shown
+  // Fetch template boards when template picker is shown
   useEffect(() => {
-    if (showSubBoardTemplates && boardId) {
+    if (showSubBoardTemplates && boardId && user) {
       const fetchTemplates = async () => {
-        const templates = await getSubBoardTemplates(boardId);
-        setSubBoardTemplates(templates);
+        const templates = await getTemplateBoardsForBoard(boardId, user.uid);
+        setTemplateBoards(templates);
       };
       fetchTemplates();
     }
-  }, [showSubBoardTemplates, boardId]);
+  }, [showSubBoardTemplates, boardId, user]);
 
   // Fetch board members
   useEffect(() => {
@@ -1785,12 +1785,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     }
   };
 
-  const handleCreateSubBoardFromTemplate = async (template: SubBoardTemplate) => {
+  const handleCreateSubBoardFromTemplate = async (templateBoard: Board) => {
     if (!user || !card) return;
     
     setIsCreatingSubBoard(true);
     try {
-      await createSubBoardFromTemplate(cardId, boardId, template, user.uid);
+      await cloneTemplateBoardAsSubBoard(templateBoard.id, cardId, boardId, user.uid);
       showToast('success', t('cardModal.toast.subBoardCreated'));
       setShowSubBoardTemplates(false);
     } catch (error) {
@@ -3009,12 +3009,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       </svg>
                     </a>
                   </div>
-                  {/* Embedded SubKanbanBoard component */}
-                  <SubKanbanBoard
-                    subBoardId={subBoard.id}
-                    parentCardId={cardId}
-                    parentBoardId={boardId}
-                    compact={true}
+                  {/* Embedded KanbanBoard component */}
+                  <KanbanBoard
+                    boardId={subBoard.id}
+                    embedded={true}
+                    maxHeight="320px"
                   />
                 </div>
               </div>
@@ -3368,7 +3367,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </button>
                 {/* Template options */}
                 <div className="max-h-48 overflow-y-auto space-y-1.5">
-                  {subBoardTemplates.map((template) => (
+                  {templateBoards.map((template) => (
                     <button
                       key={template.id}
                       onClick={() => handleCreateSubBoardFromTemplate(template)}
@@ -3376,17 +3375,6 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                       className="w-full px-3 py-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg text-sm text-left transition-colors border border-purple-200 dark:border-purple-700/50 disabled:opacity-50"
                     >
                       <div className="font-medium text-purple-600 dark:text-purple-400">{template.name}</div>
-                      {template.description && (
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{template.description}</div>
-                      )}
-                      <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                        {template.columns.length} {t('cardModal.sidebar.columns')}
-                        {template.columns.some(c => c.cards && c.cards.length > 0) && (
-                          <span className="ml-1">
-                            · {template.columns.reduce((acc, c) => acc + (c.cards?.length || 0), 0)} {t('cardModal.sidebar.cards')}
-                          </span>
-                        )}
-                      </div>
                     </button>
                   ))}
                 </div>
@@ -4151,8 +4139,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         onClose={() => {
           setShowSubBoardTemplateManager(false);
           // Refresh templates after closing the manager
-          if (boardId) {
-            getSubBoardTemplates(boardId).then(setSubBoardTemplates);
+          if (boardId && user) {
+            getTemplateBoardsForBoard(boardId, user.uid).then(setTemplateBoards);
           }
         }}
         boardId={boardId}

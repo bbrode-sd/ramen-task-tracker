@@ -44,6 +44,9 @@ export interface Board {
   parentCardId?: string;      // If set, this is a sub-board linked to a parent card
   parentBoardId?: string;     // Reference to the parent board (for queries)
   approvalColumnName?: string; // Column name to track for "approved" count (default: "Approved")
+  // Template support - templates are real boards that can be cloned
+  isTemplate?: boolean;       // If true, this board is a template (not shown in board list)
+  templateForBoardId?: string; // The parent board this template belongs to
 }
 
 export interface Column {

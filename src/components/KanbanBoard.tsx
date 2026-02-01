@@ -59,6 +59,16 @@ const SCROLL_ACCELERATION = 0.5; // how fast scroll speed increases
 interface KanbanBoardProps {
   boardId: string;
   selectedCardId?: string | null;
+  /** 
+   * Embedded mode for displaying within other components (e.g., CardModal sub-boards)
+   * - Hides the header
+   * - Uses compact column widths
+   * - Constrains max height
+   * - Disables keyboard shortcuts at board level
+   */
+  embedded?: boolean;
+  /** Max height for embedded mode */
+  maxHeight?: string;
 }
 
 /**
@@ -69,7 +79,7 @@ interface KanbanBoardProps {
  * - Drag operations should announce to aria-live region
  * - Filter results should be announced
  */
-export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
+export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeight = '400px' }: KanbanBoardProps) {
   const { user } = useAuth();
   const { filterCards, getMatchCount, hasActiveFilters, matchesFilter } = useFilter();
   const {
@@ -861,6 +871,13 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
 
   // Show access error state
   if (accessError) {
+    if (embedded) {
+      return (
+        <div className="p-4 text-center text-red-500">
+          {accessError}
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
         <div className="bg-[var(--surface)] rounded-2xl shadow-xl border border-[var(--border)] p-8 max-w-md w-full text-center">
@@ -883,6 +900,13 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   }
 
   if (loading) {
+    if (embedded) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent"></div>
+        </div>
+      );
+    }
     return (
       <div className={`min-h-screen transition-colors duration-500 ${getBackgroundClasses()}`}>
         <Header 
@@ -896,6 +920,8 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
           onBackgroundChange={handleBackgroundChange}
           dueDateStats={dueDateStats}
           parentCard={parentCard}
+          isTemplate={board?.isTemplate}
+          templateForBoardId={board?.templateForBoardId}
         />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
@@ -909,6 +935,105 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
     );
   }
 
+  // Embedded mode: compact view for sub-boards in card modals
+  if (embedded) {
+    return (
+      <div 
+        className="overflow-x-auto" 
+        style={{ maxHeight }}
+        ref={boardContainerRef}
+      >
+        <DragDropContext 
+          onDragStart={handleDragStart}
+          onDragUpdate={handleDragUpdate}
+          onDragEnd={handleDragEnd}
+        >
+          <Droppable droppableId="board" type="column" direction="horizontal">
+            {(provided, boardSnapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`flex gap-3 pb-2 min-w-max ${
+                  boardSnapshot.isDraggingOver ? 'gap-4' : ''
+                }`}
+              >
+                {columns.map((column, index) => (
+                  <Column
+                    key={column.id}
+                    column={column}
+                    cards={getCardsForColumn(column.id)}
+                    index={index}
+                    boardId={boardId}
+                    onCardClick={handleCardClick}
+                    hasActiveFilters={false}
+                    matchesFilter={() => true}
+                    isFocused={false}
+                    focusedCardIndex={null}
+                    selectedCards={selectedCards}
+                    onCardSelectToggle={handleCardSelectToggle}
+                  />
+                ))}
+                {provided.placeholder}
+
+                {/* Add column button */}
+                <div className="flex-shrink-0 w-64">
+                  {isAddingColumn ? (
+                    <div className="bg-slate-100 dark:bg-slate-800/70 rounded-xl p-3">
+                      <input
+                        type="text"
+                        value={newColumnName}
+                        onChange={(e) => setNewColumnName(e.target.value)}
+                        placeholder={t('column.enterListName')}
+                        className="w-full px-2 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleAddColumn();
+                          if (e.key === 'Escape') {
+                            setIsAddingColumn(false);
+                            setNewColumnName('');
+                          }
+                        }}
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={handleAddColumn}
+                          disabled={!newColumnName.trim()}
+                          className="flex-1 px-3 py-1.5 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white text-sm rounded-lg"
+                        >
+                          {t('column.addList')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsAddingColumn(false);
+                            setNewColumnName('');
+                          }}
+                          className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600"
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setIsAddingColumn(true)}
+                      className="w-full h-10 bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-xl flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors border-2 border-dashed border-slate-300 dark:border-slate-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      {t('column.addAnotherList')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </div>
+    );
+  }
+
+  // Full board view
   return (
     <div className={`min-h-screen transition-colors duration-500 ${getBackgroundClasses()}`}>
       <Header
@@ -923,8 +1048,10 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         onBackgroundChange={handleBackgroundChange}
         dueDateStats={dueDateStats}
         parentCard={parentCard}
+        isTemplate={board?.isTemplate}
+        templateForBoardId={board?.templateForBoardId}
       />
-      
+
       {/* Accessibility: Live region for screen reader announcements */}
       <div 
         role="status"

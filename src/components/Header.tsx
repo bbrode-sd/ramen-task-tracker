@@ -89,6 +89,8 @@ interface HeaderProps {
   onBackgroundChange?: (background: BoardBackground) => void;
   dueDateStats?: DueDateStats;
   parentCard?: ParentCardInfo | null;
+  isTemplate?: boolean;
+  templateForBoardId?: string;
 }
 
 export function Header({ 
@@ -103,6 +105,8 @@ export function Header({
   onBackgroundChange,
   dueDateStats,
   parentCard,
+  isTemplate,
+  templateForBoardId,
 }: HeaderProps) {
   const router = useRouter();
   const { user, signOut } = useAuth();
@@ -368,8 +372,25 @@ export function Header({
               className="flex-shrink-0"
             />
             <div className="min-w-0">
+              {/* Template indicator */}
+              {isTemplate && (
+                <Link
+                  href={templateForBoardId ? `/boards/${templateForBoardId}` : '/'}
+                  className="block text-xs text-purple-200 hover:text-purple-100 truncate max-w-[140px] sm:max-w-[200px] md:max-w-[300px] transition-colors"
+                  title={t('header.templateIndicator')}
+                >
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                    <span className="truncate">
+                      {t('header.editingTemplate')}
+                    </span>
+                  </span>
+                </Link>
+              )}
               {/* Parent card name (for sub-boards) */}
-              {parentCard && (
+              {parentCard && !isTemplate && (
                 <Link
                   href={`/boards/${parentCard.boardId}?card=${parentCard.id}`}
                   className="block text-xs text-white/70 hover:text-white/90 truncate max-w-[140px] sm:max-w-[200px] md:max-w-[300px] transition-colors"
@@ -410,7 +431,7 @@ export function Header({
                   <button
                     type="button"
                     onClick={() => setIsEditingBoardName(true)}
-                    className={`text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate px-2 sm:px-3 py-1.5 -mx-2 rounded-lg hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors max-w-[140px] sm:max-w-[200px] md:max-w-none ${parentCard ? '-my-0.5' : '-my-1.5'}`}
+                    className={`text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate px-2 sm:px-3 py-1.5 -mx-2 rounded-lg hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors max-w-[140px] sm:max-w-[200px] md:max-w-none ${parentCard || isTemplate ? '-my-0.5' : '-my-1.5'}`}
                     aria-label="Edit board name"
                   >
                     {boardName}

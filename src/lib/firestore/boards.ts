@@ -6,6 +6,7 @@ import {
   doc,
   addDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   onSnapshot,
@@ -472,7 +473,7 @@ export const subscribeToSubBoard = (
 };
 
 /**
- * Subscribe to boards for a user, excluding sub-boards
+ * Subscribe to boards for a user, excluding sub-boards and templates
  */
 export const subscribeToBoardsExcludingSubBoards = (
   userId: string,
@@ -492,8 +493,8 @@ export const subscribeToBoardsExcludingSubBoards = (
         id: doc.id,
         ...doc.data(),
       })) as Board[];
-      // Filter out sub-boards (boards with parentCardId)
-      const boards = allBoards.filter((board) => !board.parentCardId);
+      // Filter out sub-boards (boards with parentCardId) and templates
+      const boards = allBoards.filter((board) => !board.parentCardId && !board.isTemplate);
       callback(boards);
     },
     (error) => {
@@ -503,4 +504,199 @@ export const subscribeToBoardsExcludingSubBoards = (
       }
     }
   );
+};
+
+// ============================================================================
+// TEMPLATE BOARDS
+// ============================================================================
+
+/**
+ * Get all template boards for a given board
+ * Templates are real boards with isTemplate=true and templateForBoardId set
+ */
+export const getTemplateBoardsForBoard = async (
+  boardId: string,
+  userId: string
+): Promise<Board[]> => {
+  const q = query(
+    collection(db, 'boards'),
+    where('templateForBoardId', '==', boardId),
+    where('isTemplate', '==', true),
+    where('memberIds', 'array-contains', userId),
+    where('isArchived', '==', false)
+  );
+  
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Board[];
+};
+
+/**
+ * Create a new template board for a parent board
+ */
+export const createTemplateBoard = async (
+  parentBoardId: string,
+  name: string,
+  userId: string
+): Promise<string> => {
+  // Get the parent board to inherit memberIds
+  const parentBoard = await getBoard(parentBoardId);
+  if (!parentBoard) {
+    throw new Error('Parent board not found');
+  }
+
+  // Truncate name to 200 characters (security rule limit for board names)
+  const truncatedName = name.length > 200 ? name.substring(0, 197) + '...' : name;
+
+  const boardRef = await addDoc(collection(db, 'boards'), {
+    name: truncatedName,
+    ownerId: userId,
+    memberIds: parentBoard.memberIds,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    isArchived: false,
+    isTemplate: true,
+    templateForBoardId: parentBoardId,
+  });
+
+  return boardRef.id;
+};
+
+/**
+ * Clone a template board to create a sub-board
+ * Copies all columns and cards from the template
+ */
+export const cloneTemplateBoardAsSubBoard = async (
+  templateBoardId: string,
+  parentCardId: string,
+  parentBoardId: string,
+  userId: string
+): Promise<string> => {
+  // Get the template board
+  const templateBoard = await getBoard(templateBoardId);
+  if (!templateBoard) {
+    throw new Error('Template board not found');
+  }
+
+  // Get the parent board to inherit memberIds
+  const parentBoard = await getBoard(parentBoardId);
+  if (!parentBoard) {
+    throw new Error('Parent board not found');
+  }
+
+  // Verify current user is in memberIds
+  if (!parentBoard.memberIds.includes(userId)) {
+    throw new Error('User is not a member of the parent board');
+  }
+
+  // Truncate name to 200 characters
+  const truncatedName = templateBoard.name.length > 200 
+    ? templateBoard.name.substring(0, 197) + '...' 
+    : templateBoard.name;
+
+  // Create the sub-board
+  const boardRef = await addDoc(collection(db, 'boards'), {
+    name: truncatedName,
+    ownerId: userId,
+    memberIds: parentBoard.memberIds,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    isArchived: false,
+    parentCardId,
+    parentBoardId,
+    approvalColumnName: templateBoard.approvalColumnName || 'Approved',
+  });
+
+  const subBoardId = boardRef.id;
+
+  // Get template's columns
+  const columnsSnapshot = await getDocs(
+    query(
+      collection(db, 'boards', templateBoardId, 'columns'),
+      where('isArchived', '==', false)
+    )
+  );
+
+  // Create a map of old column ID -> new column ID
+  const columnIdMap = new Map<string, string>();
+
+  // Clone columns one by one
+  for (const colDoc of columnsSnapshot.docs) {
+    const colData = colDoc.data();
+    const newColRef = await addDoc(collection(db, 'boards', subBoardId, 'columns'), {
+      boardId: subBoardId,
+      name: colData.name,
+      nameJa: colData.nameJa || '',
+      nameOriginalLanguage: colData.nameOriginalLanguage || 'en',
+      order: colData.order,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      isArchived: false,
+    });
+    columnIdMap.set(colDoc.id, newColRef.id);
+  }
+
+  // Get template's cards
+  const cardsSnapshot = await getDocs(
+    query(
+      collection(db, 'boards', templateBoardId, 'cards'),
+      where('isArchived', '==', false)
+    )
+  );
+
+  // Clone cards one by one
+  for (const cardDoc of cardsSnapshot.docs) {
+    const cardData = cardDoc.data();
+    const newColumnId = columnIdMap.get(cardData.columnId);
+    if (!newColumnId) continue; // Skip if column wasn't cloned
+
+    await addDoc(collection(db, 'boards', subBoardId, 'cards'), {
+      boardId: subBoardId,
+      columnId: newColumnId,
+      titleEn: cardData.titleEn || '',
+      titleJa: cardData.titleJa || '',
+      titleDetectedLanguage: cardData.titleDetectedLanguage || 'en',
+      descriptionEn: cardData.descriptionEn || '',
+      descriptionJa: cardData.descriptionJa || '',
+      order: cardData.order,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      createdBy: userId,
+      isArchived: false,
+      attachments: [], // Don't copy attachments
+      labels: cardData.labels || [],
+      checklists: cardData.checklists || [],
+    });
+  }
+
+  // Update the parent card with the subBoardId
+  const cardRef = doc(db, 'boards', parentBoardId, 'cards', parentCardId);
+  await updateDoc(cardRef, {
+    subBoardId,
+    subBoardApprovedCount: 0,
+    updatedAt: Timestamp.now(),
+  });
+
+  return subBoardId;
+};
+
+/**
+ * Delete a template board
+ */
+export const deleteTemplateBoard = async (templateBoardId: string): Promise<void> => {
+  // Get all columns and cards and delete them
+  const columnsSnapshot = await getDocs(collection(db, 'boards', templateBoardId, 'columns'));
+  for (const colDoc of columnsSnapshot.docs) {
+    await deleteDoc(colDoc.ref);
+  }
+
+  const cardsSnapshot = await getDocs(collection(db, 'boards', templateBoardId, 'cards'));
+  for (const cardDoc of cardsSnapshot.docs) {
+    await deleteDoc(cardDoc.ref);
+  }
+
+  // Delete the board itself
+  await deleteDoc(doc(db, 'boards', templateBoardId));
 };

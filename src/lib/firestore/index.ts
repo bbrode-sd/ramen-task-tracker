@@ -31,6 +31,11 @@ export {
   getSubBoardForCard,
   subscribeToSubBoard,
   subscribeToBoardsExcludingSubBoards,
+  // Template board operations (templates are real boards)
+  getTemplateBoardsForBoard,
+  createTemplateBoard,
+  cloneTemplateBoardAsSubBoard,
+  deleteTemplateBoard,
 } from './boards';
 
 // Column operations
