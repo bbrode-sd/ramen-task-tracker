@@ -51,12 +51,6 @@ const TranslationSettingsModal = dynamic(() => import('./TranslationSettingsModa
   loading: () => null,
 });
 
-// BatchTranslationModal - loaded when user opens batch translation
-const BatchTranslationModal = dynamic(() => import('./BatchTranslationModal').then(mod => ({ default: mod.BatchTranslationModal })), {
-  ssr: false,
-  loading: () => null,
-});
-
 // LanguageSettingsModal - loaded when user opens language settings
 const LanguageSettingsModal = dynamic(() => import('./LanguageSettingsModal').then(mod => ({ default: mod.LanguageSettingsModal })), {
   ssr: false,
@@ -120,7 +114,6 @@ export function Header({
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false);
   const [showExportImportModal, setShowExportImportModal] = useState(false);
   const [showTranslationSettings, setShowTranslationSettings] = useState(false);
-  const [showBatchTranslation, setShowBatchTranslation] = useState(false);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [showSubBoardTemplates, setShowSubBoardTemplates] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -882,21 +875,6 @@ export function Header({
                       {t('header.translationSettings')}
                     </button>
 
-                    {/* Batch Translation */}
-                    <button
-                      role="menuitem"
-                      onClick={() => {
-                        setShowBatchTranslation(true);
-                        setShowMoreMenu(false);
-                      }}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
-                    >
-                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      {t('header.batchTranslation')}
-                    </button>
-
                     {/* Archive */}
                     <button
                       role="menuitem"
@@ -1124,16 +1102,6 @@ export function Header({
         isOpen={showTranslationSettings}
         onClose={() => setShowTranslationSettings(false)}
       />
-
-      {/* Batch Translation Modal */}
-      {boardId && (
-        <BatchTranslationModal
-          isOpen={showBatchTranslation}
-          onClose={() => setShowBatchTranslation(false)}
-          cards={cards}
-          boardId={boardId}
-        />
-      )}
 
       {/* Language Settings Modal */}
       <LanguageSettingsModal
