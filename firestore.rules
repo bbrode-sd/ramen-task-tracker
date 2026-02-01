@@ -188,8 +188,11 @@ service cloud.firestore {
         (!('parentCardId' in request.resource.data) || isString(request.resource.data.parentCardId)) &&
         (!('parentBoardId' in request.resource.data) || isString(request.resource.data.parentBoardId)) &&
         (!('approvalColumnName' in request.resource.data) || isString(request.resource.data.approvalColumnName)) &&
+        // Template fields validation (optional)
+        (!('isTemplate' in request.resource.data) || isBool(request.resource.data.isTemplate)) &&
+        (!('templateForBoardId' in request.resource.data) || isString(request.resource.data.templateForBoardId)) &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName']);
+        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName', 'isTemplate', 'templateForBoardId']);
       
       // Update: different rules for owner vs member
       allow update: if isAuthenticated() && 
@@ -207,8 +210,13 @@ service cloud.firestore {
           request.resource.data.parentCardId == resource.data.parentCardId) &&
         ((!('parentBoardId' in resource.data) && !('parentBoardId' in request.resource.data)) ||
           request.resource.data.parentBoardId == resource.data.parentBoardId) &&
+        // Template fields cannot be changed after creation
+        ((!('isTemplate' in resource.data) && !('isTemplate' in request.resource.data)) ||
+          request.resource.data.isTemplate == resource.data.isTemplate) &&
+        ((!('templateForBoardId' in resource.data) && !('templateForBoardId' in request.resource.data)) ||
+          request.resource.data.templateForBoardId == resource.data.templateForBoardId) &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName']) &&
+        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName', 'isTemplate', 'templateForBoardId']) &&
         // PRIVILEGE ESCALATION PREVENTION:
         // Only owner can modify memberIds
         (request.resource.data.memberIds == resource.data.memberIds || 
