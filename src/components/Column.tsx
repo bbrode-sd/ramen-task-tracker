@@ -41,6 +41,8 @@ interface ColumnProps {
   focusedCardIndex?: number | null;
   selectedCards?: Set<string>;
   onCardSelectToggle?: (cardId: string, shiftKey: boolean) => void;
+  /** Embedded mode for sub-boards - uses narrower columns */
+  embedded?: boolean;
 }
 
 /**
@@ -58,7 +60,8 @@ function ColumnComponent({
   cards, 
   index, 
   boardId, 
-  onCardClick, 
+  onCardClick,
+  embedded = false, 
   hasActiveFilters: hasActiveFiltersProp = false, 
   matchesFilter: matchesFilterProp, 
   isFocused = false, 
@@ -502,7 +505,7 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-[var(--surface)] rounded-2xl flex flex-col border ${
+          className={`flex-shrink-0 ${embedded ? 'w-[200px]' : 'w-[280px] sm:w-[300px]'} bg-[var(--surface)] rounded-2xl flex flex-col border ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
               : 'shadow-md transition-all duration-300'
