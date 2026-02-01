@@ -161,6 +161,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   // Checklist item assignee and due date pickers
   const [activeItemAssigneePickerId, setActiveItemAssigneePickerId] = useState<string | null>(null);
   const [activeItemDueDatePickerId, setActiveItemDueDatePickerId] = useState<string | null>(null);
+  // Checklist delete confirmation
+  const [confirmingDeleteChecklistId, setConfirmingDeleteChecklistId] = useState<string | null>(null);
 
   // Template state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
@@ -2515,15 +2517,38 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                             </div>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDeleteChecklist(checklist.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title={t('cardModal.checklistItem.deleteChecklist')}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                        {confirmingDeleteChecklistId === checklist.id ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              {t('common.confirmDelete')}
+                            </span>
+                            <button
+                              onClick={() => {
+                                handleDeleteChecklist(checklist.id);
+                                setConfirmingDeleteChecklistId(null);
+                              }}
+                              className="text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-medium transition-colors"
+                            >
+                              {t('common.yes')}
+                            </button>
+                            <button
+                              onClick={() => setConfirmingDeleteChecklistId(null)}
+                              className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                            >
+                              {t('common.no')}
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmingDeleteChecklistId(checklist.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                            title={t('cardModal.checklistItem.deleteChecklist')}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                       
                       {/* Progress bar */}
