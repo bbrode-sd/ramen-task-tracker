@@ -986,13 +986,12 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                     focusedCardIndex={null}
                     selectedCards={selectedCards}
                     onCardSelectToggle={handleCardSelectToggle}
-                    embedded={true}
                   />
                 ))}
                 {provided.placeholder}
 
                 {/* Add column button */}
-                <div className="flex-shrink-0 w-[200px]">
+                <div className="flex-shrink-0 w-64">
                   {isAddingColumn ? (
                     <div className="bg-slate-100 dark:bg-slate-800/70 rounded-xl p-3">
                       <input

@@ -2210,7 +2210,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
         <div className="flex flex-col lg:flex-row">
           {/* Main Content */}
-          <div className="flex-1 p-4 sm:p-5 md:p-6 space-y-5 sm:space-y-6">
+          <div className="flex-1 min-w-0 p-4 sm:p-5 md:p-6 space-y-5 sm:space-y-6">
             {/* Bilingual Description Section */}
             <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <legend className="sr-only">Card Description in English and Japanese</legend>
@@ -2996,7 +2996,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 </h4>
                 
                 {/* Sub-board preview - links to full board */}
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700/70 overflow-x-auto">
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700/70 overflow-x-auto max-w-full">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{subBoard.name}</span>
                     <a
