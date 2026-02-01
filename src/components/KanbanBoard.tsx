@@ -189,13 +189,18 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
 
   // Fetch board data
   useEffect(() => {
-    const fetchBoard = async () => {
+    const fetchBoard = async (retryCount = 0) => {
       try {
         const boardDoc = await getDoc(doc(db, 'boards', boardId));
         if (boardDoc.exists()) {
           const boardData = { id: boardDoc.id, ...boardDoc.data() } as Board;
           // Check if user is a member of the board
           if (user && !boardData.memberIds.includes(user.uid)) {
+            // In embedded mode, retry a few times as the board may have just been created
+            if (embedded && retryCount < 3) {
+              setTimeout(() => fetchBoard(retryCount + 1), 500 * (retryCount + 1));
+              return;
+            }
             setAccessError('You do not have access to this board.');
             setLoading(false);
             return;
@@ -223,11 +228,21 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
             }
           }
         } else {
+          // In embedded mode, retry a few times as the board may have just been created
+          if (embedded && retryCount < 3) {
+            setTimeout(() => fetchBoard(retryCount + 1), 500 * (retryCount + 1));
+            return;
+          }
           setAccessError('Board not found.');
           setLoading(false);
         }
       } catch (error) {
         const firebaseError = error as { code?: string; message?: string };
+        // In embedded mode, retry on permission-denied as the board may have just been created
+        if (embedded && firebaseError.code === 'permission-denied' && retryCount < 3) {
+          setTimeout(() => fetchBoard(retryCount + 1), 500 * (retryCount + 1));
+          return;
+        }
         if (firebaseError.code === 'permission-denied') {
           setAccessError('You do not have access to this board.');
         } else {
@@ -240,7 +255,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     if (user) {
       fetchBoard();
     }
-  }, [boardId, user]);
+  }, [boardId, user, embedded]);
 
   // Subscribe to columns - only if we have board access
   useEffect(() => {
