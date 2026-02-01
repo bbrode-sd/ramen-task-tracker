@@ -37,6 +37,9 @@ export function CommentItem({
   const [editingContent, setEditingContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
+  // Delete confirmation state
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  
   // Get content for both languages, falling back to original content for old comments
   const englishContent = comment.contentEn || comment.content;
   const japaneseContent = comment.contentJa || comment.content;
@@ -120,12 +123,35 @@ export function CommentItem({
           : ''}
       </span>
       {isOwner && (
-        <button
-          onClick={onDelete}
-          className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-        >
-          {t('common.delete')}
-        </button>
+        isConfirmingDelete ? (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {t('common.confirmDelete')}
+            </span>
+            <button
+              onClick={() => {
+                onDelete();
+                setIsConfirmingDelete(false);
+              }}
+              className="text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-medium transition-colors"
+            >
+              {t('common.yes')}
+            </button>
+            <button
+              onClick={() => setIsConfirmingDelete(false)}
+              className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+            >
+              {t('common.no')}
+            </button>
+          </span>
+        ) : (
+          <button
+            onClick={() => setIsConfirmingDelete(true)}
+            className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            {t('common.delete')}
+          </button>
+        )
       )}
     </div>
   );
