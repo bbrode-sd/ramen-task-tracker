@@ -239,14 +239,14 @@ export function SubKanbanBoard({ subBoardId, parentCardId, parentBoardId, compac
   }
 
   return (
-    <div className={`${compact ? 'max-h-80 overflow-x-auto' : ''}`}>
+    <div className={`overflow-x-auto ${compact ? 'max-h-80' : ''}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="sub-board" type="column" direction="horizontal">
           {(provided) => (
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex gap-3 pb-2"
+              className="flex gap-3 pb-2 min-w-max"
             >
               {columns.map((column, index) => (
                 <Draggable key={column.id} draggableId={column.id} index={index}>
