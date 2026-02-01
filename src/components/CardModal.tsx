@@ -1350,6 +1350,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // Set dropEffect to indicate this is a valid drop target
+    e.dataTransfer.dropEffect = 'copy';
   }, []);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
