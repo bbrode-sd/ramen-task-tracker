@@ -205,6 +205,7 @@ export interface SubBoardTemplateColumn {
 
 export interface SubBoardTemplate {
   id: string;
+  boardId: string; // Templates are stored per-board
   name: string;
   description?: string;
   columns: SubBoardTemplateColumn[];

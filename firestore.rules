@@ -661,27 +661,31 @@ service cloud.firestore {
     // ============================================================================
     // SUB-BOARD TEMPLATES
     // ============================================================================
-    // User can read/write their own sub-board templates
+    // Templates are stored per-board - board members can read/write
     // Sub-board templates include columns with pre-created cards
     //
     // Test cases:
-    //   - User can read their own sub-board templates
-    //   - User cannot read other users' templates
-    //   - User can create sub-board template
-    //   - User can update their own template
-    //   - User can delete their own template
+    //   - Board member can read board's sub-board templates
+    //   - Non-member cannot read templates
+    //   - Board member can create sub-board template
+    //   - Board member can update template
+    //   - Board member can delete template
     
     match /subBoardTemplates/{templateId} {
-      // Read: only creator can read their templates
+      // Read: must be member of the associated board
       allow read: if isAuthenticated() && 
-        resource.data.createdBy == currentUserId();
+        isBoardMember(resource.data.boardId);
       
-      // Create: authenticated user with valid fields
+      // Create: must be member of the associated board
       allow create: if isAuthenticated() &&
+        // boardId is required
+        isString(request.resource.data.boardId) &&
+        // Must be a member of the board
+        isBoardMember(request.resource.data.boardId) &&
         // createdBy must be current user
         request.resource.data.createdBy == currentUserId() &&
         // Required fields
-        request.resource.data.keys().hasAll(['name', 'columns', 'createdBy', 'createdAt']) &&
+        request.resource.data.keys().hasAll(['boardId', 'name', 'columns', 'createdBy', 'createdAt']) &&
         // Field type validation
         isString(request.resource.data.name) &&
         isList(request.resource.data.columns) &&
@@ -694,11 +698,13 @@ service cloud.firestore {
         request.resource.data.columns.size() <= 20 &&
         request.resource.data.columns.size() >= 1 &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['name', 'description', 'columns', 'approvalColumnName', 'createdBy', 'createdAt']);
+        request.resource.data.keys().hasOnly(['boardId', 'name', 'description', 'columns', 'approvalColumnName', 'createdBy', 'createdAt']);
       
-      // Update: only creator can update
+      // Update: must be member of the associated board
       allow update: if isAuthenticated() &&
-        isResourceOwner(resource) &&
+        isBoardMember(resource.data.boardId) &&
+        // boardId cannot be changed
+        request.resource.data.boardId == resource.data.boardId &&
         // createdBy cannot be changed
         request.resource.data.createdBy == resource.data.createdBy &&
         // createdAt cannot be changed
@@ -711,10 +717,10 @@ service cloud.firestore {
         request.resource.data.columns.size() <= 20 &&
         request.resource.data.columns.size() >= 1 &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['name', 'description', 'columns', 'approvalColumnName', 'createdBy', 'createdAt']);
+        request.resource.data.keys().hasOnly(['boardId', 'name', 'description', 'columns', 'approvalColumnName', 'createdBy', 'createdAt']);
       
-      // Delete: only creator can delete
-      allow delete: if isAuthenticated() && isResourceOwner(resource);
+      // Delete: must be member of the associated board
+      allow delete: if isAuthenticated() && isBoardMember(resource.data.boardId);
     }
     
     // ============================================================================

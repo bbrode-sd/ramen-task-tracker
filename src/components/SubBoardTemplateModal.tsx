@@ -15,6 +15,7 @@ import {
 interface SubBoardTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  boardId?: string; // Templates are stored per-board
 }
 
 interface EditingColumn {
@@ -42,7 +43,7 @@ interface EditingTemplate {
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
-export function SubBoardTemplateModal({ isOpen, onClose }: SubBoardTemplateModalProps) {
+export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemplateModalProps) {
   const { user } = useAuth();
   const { t, locale } = useLocale();
   const { showToast } = useToast();
@@ -59,18 +60,18 @@ export function SubBoardTemplateModal({ isOpen, onClose }: SubBoardTemplateModal
   const [newColumnNameEn, setNewColumnNameEn] = useState('');
   const [newColumnNameJa, setNewColumnNameJa] = useState('');
 
-  // Fetch templates
+  // Fetch templates for the current board
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen && boardId) {
       const fetchTemplates = async () => {
         setLoading(true);
-        const templates = await getSubBoardTemplates(user.uid);
+        const templates = await getSubBoardTemplates(boardId);
         setTemplates(templates);
         setLoading(false);
       };
       fetchTemplates();
     }
-  }, [isOpen, user]);
+  }, [isOpen, boardId]);
 
   // Handle escape key
   useEffect(() => {
@@ -146,7 +147,7 @@ export function SubBoardTemplateModal({ isOpen, onClose }: SubBoardTemplateModal
   };
 
   const handleSaveTemplate = async () => {
-    if (!editingTemplate || !user || !editingTemplate.name.trim()) return;
+    if (!editingTemplate || !user || !boardId || !editingTemplate.name.trim()) return;
     if (editingTemplate.columns.length === 0) {
       showToast('error', t('subBoardTemplate.needAtLeastOneColumn'));
       return;
@@ -175,6 +176,7 @@ export function SubBoardTemplateModal({ isOpen, onClose }: SubBoardTemplateModal
         showToast('success', t('subBoardTemplate.updated'));
       } else {
         await createSubBoardTemplate({
+          boardId,
           name: editingTemplate.name.trim(),
           description: editingTemplate.description.trim() || undefined,
           columns,
@@ -184,7 +186,7 @@ export function SubBoardTemplateModal({ isOpen, onClose }: SubBoardTemplateModal
         showToast('success', t('subBoardTemplate.created'));
       }
 
-      const updated = await getSubBoardTemplates(user.uid);
+      const updated = await getSubBoardTemplates(boardId);
       setTemplates(updated);
       setEditingTemplate(null);
     } catch (error) {

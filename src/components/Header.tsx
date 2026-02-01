@@ -1113,6 +1113,7 @@ export function Header({
       <SubBoardTemplateModal
         isOpen={showSubBoardTemplates}
         onClose={() => setShowSubBoardTemplates(false)}
+        boardId={boardId}
       />
 
       {/* Filter Panel */}

@@ -283,12 +283,12 @@ export const createSubBoardTemplate = async (
 };
 
 /**
- * Get all sub-board templates for a user
+ * Get all sub-board templates for a board
  */
-export const getSubBoardTemplates = async (userId: string): Promise<SubBoardTemplate[]> => {
+export const getSubBoardTemplates = async (boardId: string): Promise<SubBoardTemplate[]> => {
   const q = query(
     collection(db, 'subBoardTemplates'),
-    where('createdBy', '==', userId),
+    where('boardId', '==', boardId),
     orderBy('createdAt', 'desc')
   );
   

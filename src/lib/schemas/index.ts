@@ -248,6 +248,7 @@ export const SubBoardTemplateColumnSchema = z.object({
 
 export const SubBoardTemplateSchema = z.object({
   id: z.string(),
+  boardId: z.string(),
   name: z.string().max(200),
   description: z.string().max(1000).optional(),
   columns: z.array(SubBoardTemplateColumnSchema).min(1).max(20),

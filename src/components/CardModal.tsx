@@ -311,14 +311,14 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Fetch sub-board templates when template picker is shown
   useEffect(() => {
-    if (showSubBoardTemplates && user) {
+    if (showSubBoardTemplates && boardId) {
       const fetchTemplates = async () => {
-        const templates = await getSubBoardTemplates(user.uid);
+        const templates = await getSubBoardTemplates(boardId);
         setSubBoardTemplates(templates);
       };
       fetchTemplates();
     }
-  }, [showSubBoardTemplates, user]);
+  }, [showSubBoardTemplates, boardId]);
 
   // Fetch board members
   useEffect(() => {
@@ -4151,10 +4151,11 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         onClose={() => {
           setShowSubBoardTemplateManager(false);
           // Refresh templates after closing the manager
-          if (user) {
-            getSubBoardTemplates(user.uid).then(setSubBoardTemplates);
+          if (boardId) {
+            getSubBoardTemplates(boardId).then(setSubBoardTemplates);
           }
         }}
+        boardId={boardId}
       />
     </div>
   );

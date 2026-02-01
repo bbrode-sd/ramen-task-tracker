@@ -24,6 +24,14 @@
         { "fieldPath": "memberIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isArchived", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "subBoardTemplates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "boardId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
