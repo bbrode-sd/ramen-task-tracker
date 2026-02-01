@@ -3035,15 +3035,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     </svg>
                   </div>
                   {t('cardModal.subBoard.title')}
-                  {(typeof card.subBoardTotalCount === 'number' || typeof card.subBoardApprovedCount === 'number') && (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0
-                        ? 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40'
-                        : 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40'
-                    }`}>
-                      {card.subBoardApprovedCount || 0}{typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''} {t('cardModal.sidebar.approved')}
-                    </span>
-                  )}
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0
+                      ? 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40'
+                      : 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40'
+                  }`}>
+                    {card.subBoardApprovedCount ?? 0}{typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''} {t('cardModal.sidebar.approved')}
+                  </span>
                 </h4>
                 
                 {/* Sub-board preview - links to full board */}

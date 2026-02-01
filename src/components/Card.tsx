@@ -726,7 +726,7 @@ function CardComponent({
             </div>
 
             {/* Card metadata */}
-            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0)) && (
+            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId) && (
               <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700">
                 {/* Priority badge */}
                 <PriorityBadge priority={card.priority} />
@@ -862,15 +862,15 @@ function CardComponent({
                 )}
 
                 {/* Sub-board progress indicator */}
-                {card.subBoardId && (typeof card.subBoardTotalCount === 'number' || typeof card.subBoardApprovedCount === 'number') && (
-                  <Tooltip content={`Sub-board: ${card.subBoardApprovedCount || 0} approved${typeof card.subBoardTotalCount === 'number' ? ` of ${card.subBoardTotalCount} total` : ''}`} position="top">
+                {card.subBoardId && (
+                  <Tooltip content={`Sub-board: ${card.subBoardApprovedCount ?? 0} approved${typeof card.subBoardTotalCount === 'number' ? ` of ${card.subBoardTotalCount} total` : ''}`} position="top">
                     <div 
                       className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${
                         typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0
                           ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30'
                           : 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-700/50'
                       }`}
-                      title={`Sub-board: ${card.subBoardApprovedCount || 0}${typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}`}
+                      title={`Sub-board: ${card.subBoardApprovedCount ?? 0}${typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}`}
                     >
                       <svg
                         className="w-3.5 h-3.5"
@@ -885,7 +885,7 @@ function CardComponent({
                           d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
                         />
                       </svg>
-                      <span>{card.subBoardApprovedCount || 0}{typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}</span>
+                      <span>{card.subBoardApprovedCount ?? 0}{typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}</span>
                       {typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0 && (
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
