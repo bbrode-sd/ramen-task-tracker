@@ -315,12 +315,18 @@
       "failedToMove": "カードの移動に失敗しました",
       "failedToWatch": "ウォッチ状態の更新に失敗しました",
       "subBoardCreated": "サブボードを作成しました",
-      "subBoardFailed": "サブボードの作成に失敗しました"
+      "subBoardFailed": "サブボードの作成に失敗しました",
+      "subBoardRemoved": "サブボードを削除しました",
+      "subBoardRemoveFailed": "サブボードの削除に失敗しました"
     },
     "subBoard": {
       "title": "サブボード",
       "description": "サブタスクを追跡するミニかんばんボード",
-      "openFull": "フルボードを開く"
+      "openFull": "フルボードを開く",
+      "remove": "削除",
+      "removeConfirmTitle": "サブボードを削除しますか？",
+      "removeConfirmMessage": "このカードからサブボードのリンクを解除します。サブボードとその内容はアーカイブされますが、必要に応じて復元できます。",
+      "removeConfirmButton": "サブボードを削除"
     },
     "template": {
       "title": "テンプレートとして保存",

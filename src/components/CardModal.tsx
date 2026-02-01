@@ -37,6 +37,7 @@ import {
   createSubBoard,
   cloneTemplateBoardAsSubBoard,
   getTemplateBoardsForBoard,
+  removeSubBoard,
 } from '@/lib/firestore';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -193,6 +194,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [templateBoards, setTemplateBoards] = useState<Board[]>([]);
   const [isCreatingSubBoard, setIsCreatingSubBoard] = useState(false);
   const [showSubBoardTemplateManager, setShowSubBoardTemplateManager] = useState(false);
+  const [showRemoveSubBoardConfirm, setShowRemoveSubBoardConfirm] = useState(false);
+  const [isRemovingSubBoard, setIsRemovingSubBoard] = useState(false);
 
   // Track last saved values to avoid re-translating unchanged content
   const [lastSavedTitleEn, setLastSavedTitleEn] = useState('');
@@ -1803,6 +1806,23 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     }
   };
 
+  const handleRemoveSubBoard = async () => {
+    if (!card || !subBoard) return;
+    
+    setIsRemovingSubBoard(true);
+    try {
+      await removeSubBoard(boardId, cardId, subBoard.id);
+      showToast('success', t('cardModal.toast.subBoardRemoved'));
+      setShowRemoveSubBoardConfirm(false);
+      setSubBoard(null);
+    } catch (error) {
+      console.error('Failed to remove sub-board:', error);
+      showToast('error', t('cardModal.toast.subBoardRemoveFailed'));
+    } finally {
+      setIsRemovingSubBoard(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -3024,15 +3044,27 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700/70 overflow-x-auto max-w-full">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-300">{subBoard.name}</span>
-                    <a
-                      href={`/boards/${subBoard.id}`}
-                      className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
-                    >
-                      {t('cardModal.subBoard.openFull')}
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowRemoveSubBoardConfirm(true)}
+                        className="px-3 py-1.5 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                        title={t('cardModal.subBoard.remove')}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        {t('cardModal.subBoard.remove')}
+                      </button>
+                      <a
+                        href={`/boards/${subBoard.id}`}
+                        className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                      >
+                        {t('cardModal.subBoard.openFull')}
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
                   {/* Embedded KanbanBoard component */}
                   <KanbanBoard
@@ -3357,13 +3389,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     />
                   </svg>
                 </span>
-                <span className="text-purple-600 dark:text-purple-400 font-medium flex items-center gap-2">
+                <span className="text-purple-600 dark:text-purple-400 font-medium">
                   {t('cardModal.sidebar.viewSubBoard')}
-                  {typeof card.subBoardApprovedCount === 'number' && card.subBoardApprovedCount > 0 && (
-                    <span className="bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 text-xs px-1.5 py-0.5 rounded-full">
-                      {card.subBoardApprovedCount} {t('cardModal.sidebar.approved')}
-                    </span>
-                  )}
                 </span>
               </a>
             ) : showSubBoardTemplates ? (
@@ -4170,6 +4197,59 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         }}
         boardId={boardId}
       />
+
+      {/* Remove Sub-Board Confirmation Dialog */}
+      {showRemoveSubBoardConfirm && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60]"
+          onClick={() => setShowRemoveSubBoardConfirm(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {t('cardModal.subBoard.removeConfirmTitle')}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">
+              {t('cardModal.subBoard.removeConfirmMessage')}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowRemoveSubBoardConfirm(false)}
+                disabled={isRemovingSubBoard}
+                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleRemoveSubBoard}
+                disabled={isRemovingSubBoard}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 dark:disabled:bg-red-800 rounded-lg transition-colors flex items-center gap-2"
+              >
+                {isRemovingSubBoard ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {t('common.loading')}
+                  </>
+                ) : (
+                  t('cardModal.subBoard.removeConfirmButton')
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

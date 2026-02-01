@@ -315,7 +315,9 @@
       "failedToMove": "Failed to move card",
       "failedToWatch": "Failed to update watch status",
       "subBoardCreated": "Sub-board created",
-      "subBoardFailed": "Failed to create sub-board"
+      "subBoardFailed": "Failed to create sub-board",
+      "subBoardRemoved": "Sub-board removed",
+      "subBoardRemoveFailed": "Failed to remove sub-board"
     },
     "template": {
       "title": "Save as Template",
@@ -334,7 +336,11 @@
     "subBoard": {
       "title": "Sub-Board",
       "description": "A mini Kanban board for tracking sub-tasks",
-      "openFull": "Open Full Board"
+      "openFull": "Open Full Board",
+      "remove": "Remove",
+      "removeConfirmTitle": "Remove Sub-Board?",
+      "removeConfirmMessage": "This will unlink the sub-board from this card. The sub-board and its contents will be archived but can be recovered if needed.",
+      "removeConfirmButton": "Remove Sub-Board"
     }
   },
   "archiveDrawer": {

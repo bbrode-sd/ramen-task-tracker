@@ -31,6 +31,7 @@ export {
   getSubBoardForCard,
   subscribeToSubBoard,
   subscribeToBoardsExcludingSubBoards,
+  removeSubBoard,
   // Template board operations (templates are real boards)
   getTemplateBoardsForBoard,
   createTemplateBoard,

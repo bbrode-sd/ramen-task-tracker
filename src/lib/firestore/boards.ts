@@ -683,6 +683,35 @@ export const cloneTemplateBoardAsSubBoard = async (
 };
 
 /**
+ * Remove a sub-board from a card
+ * This unlinks the sub-board from the parent card and archives the sub-board
+ * @param parentBoardId - The parent board ID
+ * @param parentCardId - The parent card ID
+ * @param subBoardId - The sub-board ID to remove
+ */
+export const removeSubBoard = async (
+  parentBoardId: string,
+  parentCardId: string,
+  subBoardId: string
+): Promise<void> => {
+  // Clear the subBoardId from the parent card
+  const cardRef = doc(db, 'boards', parentBoardId, 'cards', parentCardId);
+  await updateDoc(cardRef, {
+    subBoardId: null,
+    subBoardApprovedCount: null,
+    updatedAt: Timestamp.now(),
+  });
+
+  // Archive the sub-board (don't delete it in case user wants to recover)
+  const subBoardRef = doc(db, 'boards', subBoardId);
+  await updateDoc(subBoardRef, {
+    isArchived: true,
+    parentCardId: null, // Unlink from parent card
+    updatedAt: Timestamp.now(),
+  });
+};
+
+/**
  * Delete a template board
  */
 export const deleteTemplateBoard = async (templateBoardId: string): Promise<void> => {
