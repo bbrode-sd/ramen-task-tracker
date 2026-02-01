@@ -184,8 +184,12 @@ service cloud.firestore {
         isBool(request.resource.data.isArchived) &&
         // Field length limits
         isValidLength(request.resource.data.name, 200) &&
+        // Sub-board fields validation (optional)
+        (!('parentCardId' in request.resource.data) || isString(request.resource.data.parentCardId)) &&
+        (!('parentBoardId' in request.resource.data) || isString(request.resource.data.parentBoardId)) &&
+        (!('approvalColumnName' in request.resource.data) || isString(request.resource.data.approvalColumnName)) &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background']);
+        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName']);
       
       // Update: different rules for owner vs member
       allow update: if isAuthenticated() && 
@@ -198,8 +202,13 @@ service cloud.firestore {
         isTimestamp(request.resource.data.updatedAt) &&
         // Field length limits
         isValidLength(request.resource.data.name, 200) &&
+        // Sub-board fields cannot be changed after creation
+        ((!('parentCardId' in resource.data) && !('parentCardId' in request.resource.data)) ||
+          request.resource.data.parentCardId == resource.data.parentCardId) &&
+        ((!('parentBoardId' in resource.data) && !('parentBoardId' in request.resource.data)) ||
+          request.resource.data.parentBoardId == resource.data.parentBoardId) &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background']) &&
+        request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName']) &&
         // PRIVILEGE ESCALATION PREVENTION:
         // Only owner can modify memberIds
         (request.resource.data.memberIds == resource.data.memberIds || 
@@ -330,7 +339,7 @@ service cloud.firestore {
           // Labels limit
           request.resource.data.labels.size() <= 20 &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount', 'subBoardId', 'subBoardApprovedCount']);
         
         // Update: must be board member
         allow update: if isBoardMember(boardId) &&
@@ -356,8 +365,11 @@ service cloud.firestore {
           // Priority must be a valid value (if present)
           (!('priority' in request.resource.data) || request.resource.data.priority == null ||
             isOneOf(request.resource.data.priority, ['low', 'medium', 'high', 'urgent'])) &&
+          // Sub-board fields validation (optional)
+          (!('subBoardId' in request.resource.data) || request.resource.data.subBoardId == null || isString(request.resource.data.subBoardId)) &&
+          (!('subBoardApprovedCount' in request.resource.data) || request.resource.data.subBoardApprovedCount == null || isNumber(request.resource.data.subBoardApprovedCount)) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount', 'subBoardId', 'subBoardApprovedCount']);
         
         // Delete: must be board member
         // RATE LIMITING NOTE: Cascade delete of comments should be handled
@@ -644,6 +656,65 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && 
         resource.data.isBuiltIn == false && 
         isResourceOwner(resource);
+    }
+    
+    // ============================================================================
+    // SUB-BOARD TEMPLATES
+    // ============================================================================
+    // User can read/write their own sub-board templates
+    // Sub-board templates include columns with pre-created cards
+    //
+    // Test cases:
+    //   - User can read their own sub-board templates
+    //   - User cannot read other users' templates
+    //   - User can create sub-board template
+    //   - User can update their own template
+    //   - User can delete their own template
+    
+    match /subBoardTemplates/{templateId} {
+      // Read: only creator can read their templates
+      allow read: if isAuthenticated() && 
+        resource.data.createdBy == currentUserId();
+      
+      // Create: authenticated user with valid fields
+      allow create: if isAuthenticated() &&
+        // createdBy must be current user
+        request.resource.data.createdBy == currentUserId() &&
+        // Required fields
+        request.resource.data.keys().hasAll(['name', 'columns', 'createdBy', 'createdAt']) &&
+        // Field type validation
+        isString(request.resource.data.name) &&
+        isList(request.resource.data.columns) &&
+        isTimestamp(request.resource.data.createdAt) &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        (!('description' in request.resource.data) || isValidLength(request.resource.data.description, 1000)) &&
+        (!('approvalColumnName' in request.resource.data) || isValidLength(request.resource.data.approvalColumnName, 200)) &&
+        // Columns limit
+        request.resource.data.columns.size() <= 20 &&
+        request.resource.data.columns.size() >= 1 &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'description', 'columns', 'approvalColumnName', 'createdBy', 'createdAt']);
+      
+      // Update: only creator can update
+      allow update: if isAuthenticated() &&
+        isResourceOwner(resource) &&
+        // createdBy cannot be changed
+        request.resource.data.createdBy == resource.data.createdBy &&
+        // createdAt cannot be changed
+        request.resource.data.createdAt == resource.data.createdAt &&
+        // Field length limits
+        isValidLength(request.resource.data.name, 200) &&
+        (!('description' in request.resource.data) || isValidLength(request.resource.data.description, 1000)) &&
+        (!('approvalColumnName' in request.resource.data) || isValidLength(request.resource.data.approvalColumnName, 200)) &&
+        // Columns limit
+        request.resource.data.columns.size() <= 20 &&
+        request.resource.data.columns.size() >= 1 &&
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['name', 'description', 'columns', 'approvalColumnName', 'createdBy', 'createdAt']);
+      
+      // Delete: only creator can delete
+      allow delete: if isAuthenticated() && isResourceOwner(resource);
     }
     
     // ============================================================================
