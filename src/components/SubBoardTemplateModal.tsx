@@ -289,6 +289,7 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
       role="dialog"
       aria-modal="true"
       aria-labelledby="sub-board-template-title"
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         ref={modalRef}
