@@ -306,6 +306,7 @@ export const createSubBoard = async (
   await updateDoc(cardRef, {
     subBoardId: boardRef.id,
     subBoardApprovedCount: 0,
+    subBoardTotalCount: 0,
     updatedAt: Timestamp.now(),
   });
 
@@ -396,11 +397,17 @@ export const createSubBoardFromTemplate = async (
     }
   }
 
-  // Update the parent card with the subBoardId
+  // Update the parent card with the subBoardId and initial counts
+  // Count the pre-created cards from template
+  const initialTotalCount = template.columns.reduce(
+    (count, col) => count + (col.cards?.length || 0),
+    0
+  );
   const cardRef = doc(db, 'boards', parentBoardId, 'cards', parentCardId);
   await updateDoc(cardRef, {
     subBoardId,
     subBoardApprovedCount: 0,
+    subBoardTotalCount: initialTotalCount,
     updatedAt: Timestamp.now(),
   });
 
@@ -676,6 +683,7 @@ export const cloneTemplateBoardAsSubBoard = async (
   await updateDoc(cardRef, {
     subBoardId,
     subBoardApprovedCount: 0,
+    subBoardTotalCount: cardsSnapshot.size,
     updatedAt: Timestamp.now(),
   });
 
@@ -699,6 +707,7 @@ export const removeSubBoard = async (
   await updateDoc(cardRef, {
     subBoardId: null,
     subBoardApprovedCount: null,
+    subBoardTotalCount: null,
     updatedAt: Timestamp.now(),
   });
 

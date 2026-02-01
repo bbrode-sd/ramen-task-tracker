@@ -347,7 +347,7 @@ service cloud.firestore {
           // Labels limit
           request.resource.data.labels.size() <= 20 &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount', 'subBoardId', 'subBoardApprovedCount']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount', 'subBoardId', 'subBoardApprovedCount', 'subBoardTotalCount']);
         
         // Update: must be board member
         allow update: if isBoardMember(boardId) &&
@@ -376,8 +376,9 @@ service cloud.firestore {
           // Sub-board fields validation (optional)
           (!('subBoardId' in request.resource.data) || request.resource.data.subBoardId == null || isString(request.resource.data.subBoardId)) &&
           (!('subBoardApprovedCount' in request.resource.data) || request.resource.data.subBoardApprovedCount == null || isNumber(request.resource.data.subBoardApprovedCount)) &&
+          (!('subBoardTotalCount' in request.resource.data) || request.resource.data.subBoardTotalCount == null || isNumber(request.resource.data.subBoardTotalCount)) &&
           // Prevent extra fields
-          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount', 'subBoardId', 'subBoardApprovedCount']);
+          request.resource.data.keys().hasOnly(['boardId', 'columnId', 'titleEn', 'titleJa', 'titleDetectedLanguage', 'titleTranslatorEn', 'titleTranslatorJa', 'descriptionEn', 'descriptionJa', 'descriptionDetectedLanguage', 'descriptionTranslatorEn', 'descriptionTranslatorJa', 'order', 'createdAt', 'updatedAt', 'createdBy', 'isArchived', 'attachments', 'labels', 'dueDate', 'assigneeIds', 'checklists', 'coverImage', 'priority', 'watcherIds', 'commentCount', 'subBoardId', 'subBoardApprovedCount', 'subBoardTotalCount']);
         
         // Delete: must be board member
         // RATE LIMITING NOTE: Cascade delete of comments should be handled

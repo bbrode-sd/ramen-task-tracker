@@ -99,6 +99,7 @@ export interface Card {
   // Sub-board support
   subBoardId?: string;              // ID of linked sub-board
   subBoardApprovedCount?: number;   // Cached count of cards in approval column
+  subBoardTotalCount?: number;      // Cached total count of cards in sub-board
 }
 
 export interface Attachment {

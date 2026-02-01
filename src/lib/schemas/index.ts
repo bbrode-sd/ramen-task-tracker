@@ -143,6 +143,7 @@ export const CardSchema = z.object({
   // Sub-board support
   subBoardId: z.string().optional(),
   subBoardApprovedCount: z.number().int().min(0).optional(),
+  subBoardTotalCount: z.number().int().min(0).optional(),
 });
 
 // ============================================================================

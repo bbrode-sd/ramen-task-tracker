@@ -3033,9 +3033,13 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     </svg>
                   </div>
                   {t('cardModal.subBoard.title')}
-                  {typeof card.subBoardApprovedCount === 'number' && card.subBoardApprovedCount > 0 && (
-                    <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full">
-                      {card.subBoardApprovedCount} {t('cardModal.sidebar.approved')}
+                  {typeof card.subBoardTotalCount === 'number' && card.subBoardTotalCount > 0 && (
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      card.subBoardApprovedCount === card.subBoardTotalCount
+                        ? 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40'
+                        : 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40'
+                    }`}>
+                      {card.subBoardApprovedCount || 0}/{card.subBoardTotalCount} {t('cardModal.sidebar.approved')}
                     </span>
                   )}
                 </h4>

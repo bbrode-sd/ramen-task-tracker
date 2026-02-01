@@ -778,7 +778,25 @@ export const permanentlyDeleteCard = async (
 // ============================================================================
 
 /**
+ * Update the sub-board counts on a parent card
+ */
+export const updateSubBoardCounts = async (
+  boardId: string,
+  cardId: string,
+  approvedCount: number,
+  totalCount: number
+): Promise<void> => {
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  await updateDoc(cardRef, {
+    subBoardApprovedCount: approvedCount,
+    subBoardTotalCount: totalCount,
+    updatedAt: Timestamp.now(),
+  });
+};
+
+/**
  * Update the sub-board approved count on a parent card
+ * @deprecated Use updateSubBoardCounts instead
  */
 export const updateSubBoardApprovedCount = async (
   boardId: string,
@@ -793,13 +811,13 @@ export const updateSubBoardApprovedCount = async (
 };
 
 /**
- * Calculate the approved count for a sub-board
- * Counts cards in the column matching the approvalColumnName
+ * Calculate the approved count and total count for a sub-board
+ * Counts cards in the column matching the approvalColumnName and total non-archived cards
  */
-export const calculateSubBoardApprovedCount = async (
+export const calculateSubBoardCounts = async (
   subBoardId: string,
   approvalColumnName: string = 'Approved'
-): Promise<number> => {
+): Promise<{ approvedCount: number; totalCount: number }> => {
   // First, find the approval column
   const columnsQuery = query(
     collection(db, 'boards', subBoardId, 'columns'),
@@ -812,19 +830,39 @@ export const calculateSubBoardApprovedCount = async (
     (doc) => doc.data().name.toLowerCase() === approvalColumnName.toLowerCase()
   );
   
+  // Count all non-archived cards in the sub-board
+  const allCardsQuery = query(
+    collection(db, 'boards', subBoardId, 'cards'),
+    where('isArchived', '==', false)
+  );
+  const allCardsSnapshot = await getDocs(allCardsQuery);
+  const totalCount = allCardsSnapshot.size;
+  
   if (!approvalColumn) {
-    return 0;
+    return { approvedCount: 0, totalCount };
   }
   
   // Count cards in the approval column
-  const cardsQuery = query(
+  const approvedCardsQuery = query(
     collection(db, 'boards', subBoardId, 'cards'),
     where('columnId', '==', approvalColumn.id),
     where('isArchived', '==', false)
   );
-  const cardsSnapshot = await getDocs(cardsQuery);
+  const approvedCardsSnapshot = await getDocs(approvedCardsQuery);
   
-  return cardsSnapshot.size;
+  return { approvedCount: approvedCardsSnapshot.size, totalCount };
+};
+
+/**
+ * Calculate the approved count for a sub-board
+ * @deprecated Use calculateSubBoardCounts instead
+ */
+export const calculateSubBoardApprovedCount = async (
+  subBoardId: string,
+  approvalColumnName: string = 'Approved'
+): Promise<number> => {
+  const { approvedCount } = await calculateSubBoardCounts(subBoardId, approvalColumnName);
+  return approvedCount;
 };
 
 /**
@@ -837,6 +875,6 @@ export const recalculateAndUpdateApprovedCount = async (
   subBoardId: string,
   approvalColumnName: string = 'Approved'
 ): Promise<void> => {
-  const count = await calculateSubBoardApprovedCount(subBoardId, approvalColumnName);
-  await updateSubBoardApprovedCount(parentBoardId, parentCardId, count);
+  const { approvedCount, totalCount } = await calculateSubBoardCounts(subBoardId, approvalColumnName);
+  await updateSubBoardCounts(parentBoardId, parentCardId, approvedCount, totalCount);
 };

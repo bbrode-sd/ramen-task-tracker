@@ -82,6 +82,8 @@ export {
   addCardWatcher,
   removeCardWatcher,
   // Sub-board support
+  updateSubBoardCounts,
+  calculateSubBoardCounts,
   updateSubBoardApprovedCount,
   calculateSubBoardApprovedCount,
   recalculateAndUpdateApprovedCount,
