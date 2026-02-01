@@ -113,6 +113,12 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
     });
   }, [editingTemplate]);
 
+  // Total card count for header display (must be before early return to follow Rules of Hooks)
+  const totalCardCount = useMemo(() => {
+    if (!editingTemplate) return 0;
+    return editingTemplate.columns.reduce((acc, col) => acc + col.cards.length, 0);
+  }, [editingTemplate]);
+
   if (!isOpen) return null;
 
   const handleCreateNew = () => {
@@ -212,12 +218,6 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
 
   // Get display name based on locale
   const getTemplateColumnName = (col: SubBoardTemplateColumn) => locale === 'ja' ? col.nameJa || col.nameEn : col.nameEn;
-
-  // Total card count for header display
-  const totalCardCount = useMemo(() => {
-    if (!editingTemplate) return 0;
-    return editingTemplate.columns.reduce((acc, col) => acc + col.cards.length, 0);
-  }, [editingTemplate]);
 
   // When editing, show a full-screen board view using SubKanbanBoard
   if (editingTemplate) {
