@@ -32,6 +32,7 @@ import {
   toggleCardWatch,
   subscribeToColumns,
   subscribeToCards,
+  subscribeToCard,
   moveCard,
   subscribeToSubBoard,
   createSubBoard,
@@ -203,34 +204,51 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [lastSavedDescriptionEn, setLastSavedDescriptionEn] = useState('');
   const [lastSavedDescriptionJa, setLastSavedDescriptionJa] = useState('');
 
-  // Fetch card data
+  // Track if initial data has been loaded (to avoid overwriting user edits)
+  const initialLoadDoneRef = useRef(false);
+
+  // Subscribe to card data for real-time updates
   useEffect(() => {
-    const fetchCard = async () => {
-      const cardData = await getCard(boardId, cardId);
-      if (cardData) {
-        setCard(cardData);
-        setTitleEn(cardData.titleEn);
-        setTitleJa(cardData.titleJa);
-        setDescriptionEn(cardData.descriptionEn);
-        setDescriptionJa(cardData.descriptionJa);
-        // Initialize last saved values
-        setLastSavedTitleEn(cardData.titleEn);
-        setLastSavedTitleJa(cardData.titleJa);
-        setLastSavedDescriptionEn(cardData.descriptionEn);
-        setLastSavedDescriptionJa(cardData.descriptionJa);
-        // Initialize due date
-        if (cardData.dueDate) {
-          const date = cardData.dueDate.toDate();
-          setDueDate(date.toISOString().split('T')[0]);
+    const unsubscribe = subscribeToCard(
+      boardId,
+      cardId,
+      (cardData) => {
+        if (cardData) {
+          // Always update the card state for non-editable fields (like sub-board counts)
+          setCard(cardData);
+          
+          // Only initialize editable fields on first load
+          if (!initialLoadDoneRef.current) {
+            initialLoadDoneRef.current = true;
+            setTitleEn(cardData.titleEn);
+            setTitleJa(cardData.titleJa);
+            setDescriptionEn(cardData.descriptionEn);
+            setDescriptionJa(cardData.descriptionJa);
+            // Initialize last saved values
+            setLastSavedTitleEn(cardData.titleEn);
+            setLastSavedTitleJa(cardData.titleJa);
+            setLastSavedDescriptionEn(cardData.descriptionEn);
+            setLastSavedDescriptionJa(cardData.descriptionJa);
+            // Initialize due date
+            if (cardData.dueDate) {
+              const date = cardData.dueDate.toDate();
+              setDueDate(date.toISOString().split('T')[0]);
+            }
+            // Initialize priority
+            setPriority(cardData.priority ?? null);
+            // Initialize checklists
+            setChecklists(cardData.checklists || []);
+          }
         }
-        // Initialize priority
-        setPriority(cardData.priority ?? null);
-        // Initialize checklists
-        setChecklists(cardData.checklists || []);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error subscribing to card:', error);
+        setLoading(false);
       }
-      setLoading(false);
-    };
-    fetchCard();
+    );
+    
+    return () => unsubscribe();
   }, [boardId, cardId]);
 
   // Subscribe to columns for the list selector

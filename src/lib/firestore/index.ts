@@ -62,6 +62,7 @@ export {
   reorderCards,
   archiveAllCardsInColumn,
   restoreCards,
+  subscribeToCard,
   subscribeToCards,
   subscribeToCardsPaginated,
   loadMoreCards,

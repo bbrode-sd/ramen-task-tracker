@@ -176,6 +176,36 @@ export const restoreCards = async (boardId: string, cardIds: string[]) => {
 // ============================================================================
 
 /**
+ * Subscribe to a single card for real-time updates
+ */
+export const subscribeToCard = (
+  boardId: string,
+  cardId: string,
+  callback: (card: Card | null) => void,
+  onError?: (error: Error) => void
+) => {
+  const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
+  
+  return onSnapshot(
+    cardRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        callback({
+          id: snapshot.id,
+          ...snapshot.data(),
+        } as Card);
+      } else {
+        callback(null);
+      }
+    },
+    (error) => {
+      console.error('Error subscribing to card:', error);
+      onError?.(error);
+    }
+  );
+};
+
+/**
  * Subscribe to cards in a board (real-time updates)
  */
 export const subscribeToCards = (
