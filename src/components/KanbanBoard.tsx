@@ -342,6 +342,24 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     return () => unsubscribe();
   }, [boardId, board, accessError]);
 
+  // Recalculate sub-board counts whenever cards change
+  // This ensures the parent card's progress indicator stays up to date
+  useEffect(() => {
+    if (!board?.parentBoardId || !board?.parentCardId) return;
+    
+    // Debounce the recalculation to avoid excessive updates
+    const timeoutId = setTimeout(() => {
+      recalculateAndUpdateApprovedCount(
+        board.parentBoardId!,
+        board.parentCardId!,
+        boardId,
+        board.approvalColumnName || 'Approved'
+      ).catch(console.error);
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [board?.parentBoardId, board?.parentCardId, board?.approvalColumnName, boardId, cards]);
+
   // Register columns count for keyboard navigation
   useEffect(() => {
     registerColumns(columns.length);
