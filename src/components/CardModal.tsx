@@ -114,6 +114,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   } | null>(null);
   const uploadNoticeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Drag and drop file upload
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const dragCounterRef = useRef(0);
+  
   // Accessibility: Modal focus management
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -1180,7 +1184,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     await deleteComment(boardId, cardId, commentId);
   };
 
-  const handleFileUpload = async (files: FileList | null) => {
+  const handleFileUpload = useCallback(async (files: FileList | null) => {
     if (!files || !user) return;
 
     setIsUploading(true);
@@ -1245,7 +1249,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [user, card, boardId, cardId, t, showUploadNotice]);
 
   const handlePaste = async (e: React.ClipboardEvent) => {
     if (!user) return;
@@ -1319,6 +1323,49 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       }
     }
   };
+
+  // Drag and drop file upload handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    
+    // Check if the drag contains files
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDraggingFile(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    
+    // Only hide the drop zone when we've left all nested elements
+    if (dragCounterRef.current === 0) {
+      setIsDraggingFile(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Reset drag state
+    dragCounterRef.current = 0;
+    setIsDraggingFile(false);
+    
+    // Get the dropped files
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await handleFileUpload(files);
+    }
+  }, [handleFileUpload]);
 
   const handleAddLink = async () => {
     if (!linkUrl.trim() || !user) return;
@@ -1516,10 +1563,44 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
         aria-modal="true"
         aria-labelledby="card-modal-title"
         aria-describedby="card-modal-description"
-        className="bg-white dark:bg-slate-950/95 rounded-none sm:rounded-2xl shadow-2xl dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.85)] w-full min-h-screen sm:min-h-0 sm:max-w-[1230px] sm:my-0 animate-in fade-in sm:zoom-in-95 duration-200 border border-slate-200/70 dark:border-slate-800/80 ring-1 ring-black/5 dark:ring-white/5"
+        className="relative bg-white dark:bg-slate-950/95 rounded-none sm:rounded-2xl shadow-2xl dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.85)] w-full min-h-screen sm:min-h-0 sm:max-w-[1230px] sm:my-0 animate-in fade-in sm:zoom-in-95 duration-200 border border-slate-200/70 dark:border-slate-800/80 ring-1 ring-black/5 dark:ring-white/5"
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
+        {/* Drag and drop file overlay */}
+        {isDraggingFile && (
+          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[var(--primary)]/10 backdrop-blur-sm rounded-none sm:rounded-2xl border-2 border-dashed border-[var(--primary)] pointer-events-none">
+            <div className="flex flex-col items-center gap-3 p-6 bg-white/90 dark:bg-slate-900/90 rounded-xl shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-[var(--primary-light)] flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-[var(--primary)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-[var(--text-primary)]">
+                  {t('cardModal.dropToUpload')}
+                </p>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {t('cardModal.dropToUploadHint')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Header with Editable Bilingual Titles */}
         <header className="px-4 sm:px-5 py-3 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-center justify-between gap-2 mb-2">

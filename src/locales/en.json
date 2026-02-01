@@ -175,6 +175,8 @@
     "enterTitleJa": "日本語でタイトルを入力...",
     "enterDescriptionEn": "Add a description in English...",
     "enterDescriptionJa": "日本語で説明を追加...",
+    "dropToUpload": "Drop files to attach",
+    "dropToUploadHint": "Release to upload images or files",
     "inList": "in",
     "changeList": "Change list",
     "selectList": "Select list",
