@@ -294,15 +294,18 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Subscribe to sub-board (if card has one)
   useEffect(() => {
+    if (!user) return;
+    
     const unsubscribe = subscribeToSubBoard(
       cardId,
+      user.uid,
       setSubBoard,
       (error) => {
         console.error('Error subscribing to sub-board:', error);
       }
     );
     return () => unsubscribe();
-  }, [cardId]);
+  }, [cardId, user]);
 
   // Fetch sub-board templates when template picker is shown
   useEffect(() => {

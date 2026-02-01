@@ -406,11 +406,16 @@ export const createSubBoardFromTemplate = async (
 
 /**
  * Get the sub-board for a card (if one exists)
+ * @param cardId - The parent card ID
+ * @param userId - The current user's ID (required for security rules)
  */
-export const getSubBoardForCard = async (cardId: string): Promise<Board | null> => {
+export const getSubBoardForCard = async (cardId: string, userId: string): Promise<Board | null> => {
+  // Query must include memberIds filter to satisfy security rules
+  // Security rules require: currentUserId() in resource.data.memberIds
   const q = query(
     collection(db, 'boards'),
     where('parentCardId', '==', cardId),
+    where('memberIds', 'array-contains', userId),
     where('isArchived', '==', false)
   );
   
@@ -425,15 +430,23 @@ export const getSubBoardForCard = async (cardId: string): Promise<Board | null> 
 
 /**
  * Subscribe to a sub-board (real-time updates)
+ * @param cardId - The parent card ID
+ * @param userId - The current user's ID (required for security rules)
+ * @param callback - Called with the sub-board or null
+ * @param onError - Called on error
  */
 export const subscribeToSubBoard = (
   cardId: string,
+  userId: string,
   callback: (board: Board | null) => void,
   onError?: (error: Error) => void
 ) => {
+  // Query must include memberIds filter to satisfy security rules
+  // Security rules require: currentUserId() in resource.data.memberIds
   const q = query(
     collection(db, 'boards'),
     where('parentCardId', '==', cardId),
+    where('memberIds', 'array-contains', userId),
     where('isArchived', '==', false)
   );
   
