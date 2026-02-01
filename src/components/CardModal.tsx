@@ -149,7 +149,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [editingChecklistTitleEn, setEditingChecklistTitleEn] = useState('');
   const [editingChecklistTitleJa, setEditingChecklistTitleJa] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [editingItemText, setEditingItemText] = useState('');
+  const [editingItemField, setEditingItemField] = useState<'en' | 'ja' | null>(null);
+  const [editingItemTextEn, setEditingItemTextEn] = useState('');
+  const [editingItemTextJa, setEditingItemTextJa] = useState('');
   // Checklist item assignee and due date pickers
   const [activeItemAssigneePickerId, setActiveItemAssigneePickerId] = useState<string | null>(null);
   const [activeItemDueDatePickerId, setActiveItemDueDatePickerId] = useState<string | null>(null);
@@ -1002,17 +1004,33 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const handleAddChecklistItem = async (checklistId: string) => {
     const text = newItemTexts[checklistId]?.trim();
     if (!text) return;
-    const itemId = await addChecklistItem(boardId, cardId, checklistId, text);
+    
+    // Clear input immediately for better UX
+    setNewItemTexts({ ...newItemTexts, [checklistId]: '' });
+    
+    // Generate a temporary key for translation tracking
+    const tempItemKey = `new-item-${Date.now()}`;
+    
+    // Detect language and translate
+    const detectionResult = await translateWithAutoDetect(text, tempItemKey);
+    const detectedLang = detectionResult.detectedLanguage || 'en';
+    
+    const textEn = detectedLang === 'en' ? text : (detectionResult.translation || '');
+    const textJa = detectedLang === 'ja' ? text : (detectionResult.translation || '');
+    
+    const itemId = await addChecklistItem(boardId, cardId, checklistId, textEn, textJa, detectedLang);
     const newItem: ChecklistItem = {
       id: itemId,
-      text,
+      text: textEn,
+      textEn,
+      textJa,
+      textOriginalLanguage: detectedLang,
       isCompleted: false,
       order: checklists.find(cl => cl.id === checklistId)?.items.length || 0,
     };
     setChecklists(checklists.map(cl => 
       cl.id === checklistId ? { ...cl, items: [...cl.items, newItem] } : cl
     ));
-    setNewItemTexts({ ...newItemTexts, [checklistId]: '' });
   };
 
   const handleToggleChecklistItem = async (checklistId: string, itemId: string, isCompleted: boolean) => {
@@ -1030,22 +1048,115 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
     }));
   };
 
-  const handleUpdateChecklistItemText = async (checklistId: string, itemId: string) => {
-    if (!editingItemText.trim()) return;
-    await updateChecklistItem(boardId, cardId, checklistId, itemId, { text: editingItemText.trim() });
+  const handleUpdateChecklistItemTextEn = async (checklistId: string, itemId: string) => {
+    const value = editingItemTextEn.trim();
+    if (!value) {
+      setEditingItemId(null);
+      setEditingItemField(null);
+      return;
+    }
+    
+    const checklist = checklists.find(cl => cl.id === checklistId);
+    const item = checklist?.items.find(i => i.id === itemId);
+    const isOriginal = !item?.textOriginalLanguage || item.textOriginalLanguage === 'en';
+    
+    // Update local state immediately
     setChecklists(checklists.map(cl => {
       if (cl.id === checklistId) {
         return {
           ...cl,
-          items: cl.items.map(item => 
-            item.id === itemId ? { ...item, text: editingItemText.trim() } : item
+          items: cl.items.map(i => 
+            i.id === itemId ? { ...i, textEn: value, text: value } : i
           ),
         };
       }
       return cl;
     }));
     setEditingItemId(null);
-    setEditingItemText('');
+    setEditingItemField(null);
+    
+    if (isOriginal) {
+      // English is the original - update and translate to Japanese
+      await updateChecklistItem(boardId, cardId, checklistId, itemId, { 
+        textEn: value, 
+        textOriginalLanguage: 'en' 
+      });
+      
+      const itemTextJaKey = `item-${itemId}-text-ja`;
+      debouncedTranslate(value, 'ja', itemTextJaKey, async (result) => {
+        if (!result.error) {
+          await updateChecklistItem(boardId, cardId, checklistId, itemId, { textJa: result.translation });
+          setChecklists(prev => prev.map(cl => {
+            if (cl.id === checklistId) {
+              return {
+                ...cl,
+                items: cl.items.map(i =>
+                  i.id === itemId ? { ...i, textJa: result.translation } : i
+                ),
+              };
+            }
+            return cl;
+          }));
+        }
+      });
+    } else {
+      // English is the translation - just save without translating back
+      await updateChecklistItem(boardId, cardId, checklistId, itemId, { textEn: value });
+    }
+  };
+
+  const handleUpdateChecklistItemTextJa = async (checklistId: string, itemId: string) => {
+    const value = editingItemTextJa.trim();
+    if (!value) {
+      setEditingItemId(null);
+      setEditingItemField(null);
+      return;
+    }
+    
+    const checklist = checklists.find(cl => cl.id === checklistId);
+    const item = checklist?.items.find(i => i.id === itemId);
+    const isOriginal = item?.textOriginalLanguage === 'ja';
+    
+    // Update local state immediately
+    setChecklists(checklists.map(cl => {
+      if (cl.id === checklistId) {
+        return {
+          ...cl,
+          items: cl.items.map(i => 
+            i.id === itemId ? { ...i, textJa: value } : i
+          ),
+        };
+      }
+      return cl;
+    }));
+    setEditingItemId(null);
+    setEditingItemField(null);
+    
+    if (isOriginal) {
+      // Japanese is the original - update and translate to English
+      await updateChecklistItem(boardId, cardId, checklistId, itemId, { textJa: value });
+      
+      const itemTextEnKey = `item-${itemId}-text-en`;
+      debouncedTranslate(value, 'en', itemTextEnKey, async (result) => {
+        if (!result.error) {
+          await updateChecklistItem(boardId, cardId, checklistId, itemId, { textEn: result.translation });
+          setChecklists(prev => prev.map(cl => {
+            if (cl.id === checklistId) {
+              return {
+                ...cl,
+                items: cl.items.map(i =>
+                  i.id === itemId ? { ...i, textEn: result.translation, text: result.translation } : i
+                ),
+              };
+            }
+            return cl;
+          }));
+        }
+      });
+    } else {
+      // Japanese is the translation - just save without translating back
+      await updateChecklistItem(boardId, cardId, checklistId, itemId, { textJa: value });
+    }
   };
 
   const handleDeleteChecklistItem = async (checklistId: string, itemId: string) => {
@@ -2394,55 +2505,166 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                                 )}
                               </button>
                               
-                              {/* Item text */}
-                              <div className="flex-1 min-w-0">
-                                {editingItemId === item.id ? (
-                                  <input
-                                    type="text"
-                                    value={editingItemText}
-                                    onChange={(e) => setEditingItemText(e.target.value)}
-                                    onBlur={() => handleUpdateChecklistItemText(checklist.id, item.id)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleUpdateChecklistItemText(checklist.id, item.id);
-                                      if (e.key === 'Escape') {
-                                        setEditingItemId(null);
-                                        setEditingItemText('');
-                                      }
-                                    }}
-                                    className="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-700/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-900/70 text-slate-900 dark:text-white shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <div className="flex flex-wrap items-center gap-1.5">
-                                    <span
-                                      onClick={() => {
-                                        setEditingItemId(item.id);
-                                        setEditingItemText(item.text);
+                              {/* Item text - bilingual */}
+                              <div className="flex-1 min-w-0 space-y-0.5">
+                                {/* English text */}
+                                <div className="flex items-center gap-1">
+                                  <span className="flex-shrink-0 inline-flex items-center justify-center w-4 h-3 text-[7px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
+                                    EN
+                                  </span>
+                                  {editingItemId === item.id && editingItemField === 'en' ? (
+                                    <input
+                                      type="text"
+                                      value={editingItemTextEn}
+                                      onChange={(e) => setEditingItemTextEn(e.target.value)}
+                                      onBlur={() => handleUpdateChecklistItemTextEn(checklist.id, item.id)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleUpdateChecklistItemTextEn(checklist.id, item.id);
+                                        if (e.key === 'Escape') {
+                                          setEditingItemId(null);
+                                          setEditingItemField(null);
+                                        }
                                       }}
-                                      className={`text-sm cursor-pointer transition-all ${
-                                        item.isCompleted
-                                          ? 'text-slate-400 dark:text-slate-500 line-through'
-                                          : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white'
-                                      }`}
-                                    >
-                                      {item.text}
-                                    </span>
-                                    
-                                    {/* Due date badge */}
-                                    {item.dueDate && dueDateStatus.label && (
-                                      <span 
-                                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded ${
-                                          item.isCompleted ? 'opacity-50 line-through' : ''
-                                        } ${dueDateStatus.className}`}
+                                      className="flex-1 px-2 py-0.5 text-sm border-2 border-sky-400 rounded focus:outline-none focus:ring-2 focus:ring-sky-500/30 bg-white dark:bg-slate-900/70 text-slate-900 dark:text-white"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                                      <span
+                                        onClick={() => {
+                                          setEditingItemId(item.id);
+                                          setEditingItemField('en');
+                                          setEditingItemTextEn(item.textEn || item.text || '');
+                                        }}
+                                        className={`text-sm cursor-pointer transition-all truncate ${
+                                          item.isCompleted
+                                            ? 'text-slate-400 dark:text-slate-500 line-through'
+                                            : 'text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400'
+                                        }`}
                                       >
-                                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        {dueDateStatus.label}
+                                        {item.textEn || item.text || '—'}
                                       </span>
-                                    )}
-                                  </div>
-                                )}
+                                      <TranslationIndicator
+                                        isTranslating={translationState.isTranslating[`item-${item.id}-text-en`] || false}
+                                        hasError={translationState.errors[`item-${item.id}-text-en`]}
+                                        onRetry={async () => {
+                                          const jaText = item.textJa;
+                                          if (jaText) {
+                                            clearError(`item-${item.id}-text-en`);
+                                            const result = await retryTranslation(jaText, 'en', `item-${item.id}-text-en`);
+                                            if (!result.error) {
+                                              await updateChecklistItem(boardId, cardId, checklist.id, item.id, { textEn: result.translation });
+                                              setChecklists(prev => prev.map(cl => {
+                                                if (cl.id === checklist.id) {
+                                                  return {
+                                                    ...cl,
+                                                    items: cl.items.map(i =>
+                                                      i.id === item.id ? { ...i, textEn: result.translation, text: result.translation } : i
+                                                    ),
+                                                  };
+                                                }
+                                                return cl;
+                                              }));
+                                            }
+                                          }
+                                        }}
+                                        language="en"
+                                      />
+                                      {/* Due date badge - only show on EN row */}
+                                      {item.dueDate && dueDateStatus.label && (
+                                        <span 
+                                          className={`inline-flex items-center gap-0.5 px-1 py-0.5 text-[9px] font-medium rounded flex-shrink-0 ${
+                                            item.isCompleted ? 'opacity-50 line-through' : ''
+                                          } ${dueDateStatus.className}`}
+                                        >
+                                          <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                          </svg>
+                                          {dueDateStatus.label}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Japanese text */}
+                                <div className="flex items-center gap-1">
+                                  <span className="flex-shrink-0 inline-flex items-center justify-center w-4 h-3 text-[7px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
+                                    JP
+                                  </span>
+                                  {editingItemId === item.id && editingItemField === 'ja' ? (
+                                    <input
+                                      type="text"
+                                      value={editingItemTextJa}
+                                      onChange={(e) => setEditingItemTextJa(e.target.value)}
+                                      onBlur={() => handleUpdateChecklistItemTextJa(checklist.id, item.id)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleUpdateChecklistItemTextJa(checklist.id, item.id);
+                                        if (e.key === 'Escape') {
+                                          setEditingItemId(null);
+                                          setEditingItemField(null);
+                                        }
+                                      }}
+                                      className="flex-1 px-2 py-0.5 text-xs border-2 border-rose-400 rounded focus:outline-none focus:ring-2 focus:ring-rose-500/30 bg-white dark:bg-slate-900/70 text-slate-900 dark:text-white"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                                      {translationState.isTranslating[`item-${item.id}-text-ja`] && !item.textJa ? (
+                                        <span className="text-[11px] text-slate-400 dark:text-slate-500 italic flex items-center gap-1">
+                                          <svg className="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                          </svg>
+                                          翻訳中...
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <span
+                                            onClick={() => {
+                                              setEditingItemId(item.id);
+                                              setEditingItemField('ja');
+                                              setEditingItemTextJa(item.textJa || '');
+                                            }}
+                                            className={`text-[11px] cursor-pointer transition-all truncate ${
+                                              item.isCompleted
+                                                ? 'text-slate-400 dark:text-slate-500 line-through'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400'
+                                            }`}
+                                          >
+                                            {item.textJa || '—'}
+                                          </span>
+                                          <TranslationIndicator
+                                            isTranslating={translationState.isTranslating[`item-${item.id}-text-ja`] || false}
+                                            hasError={translationState.errors[`item-${item.id}-text-ja`]}
+                                            onRetry={async () => {
+                                              const enText = item.textEn || item.text;
+                                              if (enText) {
+                                                clearError(`item-${item.id}-text-ja`);
+                                                const result = await retryTranslation(enText, 'ja', `item-${item.id}-text-ja`);
+                                                if (!result.error) {
+                                                  await updateChecklistItem(boardId, cardId, checklist.id, item.id, { textJa: result.translation });
+                                                  setChecklists(prev => prev.map(cl => {
+                                                    if (cl.id === checklist.id) {
+                                                      return {
+                                                        ...cl,
+                                                        items: cl.items.map(i =>
+                                                          i.id === item.id ? { ...i, textJa: result.translation } : i
+                                                        ),
+                                                      };
+                                                    }
+                                                    return cl;
+                                                  }));
+                                                }
+                                              }
+                                            }}
+                                            language="ja"
+                                          />
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               
                               {/* Action buttons container */}

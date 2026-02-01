@@ -509,12 +509,17 @@ export const deleteChecklist = async (
 
 /**
  * Add an item to a checklist
+ * @param textEn - English text (required)
+ * @param textJa - Japanese text (optional, can be auto-translated later)
+ * @param textOriginalLanguage - Which language was originally typed
  */
 export const addChecklistItem = async (
   boardId: string,
   cardId: string,
   checklistId: string,
-  text: string
+  textEn: string,
+  textJa?: string,
+  textOriginalLanguage: 'en' | 'ja' = 'en'
 ): Promise<string> => {
   const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
   const cardDoc = await getDoc(cardRef);
@@ -530,7 +535,10 @@ export const addChecklistItem = async (
           : -1;
         const newItem: ChecklistItem = {
           id: itemId,
-          text,
+          text: textEn, // Keep for backwards compatibility
+          textEn,
+          textJa: textJa || '',
+          textOriginalLanguage,
           isCompleted: false,
           order: maxOrder + 1,
         };
@@ -556,7 +564,7 @@ export const updateChecklistItem = async (
   cardId: string,
   checklistId: string,
   itemId: string,
-  updates: Partial<Pick<ChecklistItem, 'text' | 'isCompleted' | 'assigneeId' | 'dueDate'>>
+  updates: Partial<Pick<ChecklistItem, 'text' | 'textEn' | 'textJa' | 'textOriginalLanguage' | 'isCompleted' | 'assigneeId' | 'dueDate'>>
 ): Promise<void> => {
   const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
   const cardDoc = await getDoc(cardRef);
@@ -565,8 +573,17 @@ export const updateChecklistItem = async (
     const currentChecklists: Checklist[] = cardDoc.data().checklists || [];
     const updatedChecklists = currentChecklists.map((checklist) => {
       if (checklist.id === checklistId) {
-        const updatedItems = checklist.items.map((item) =>
-          item.id === itemId ? { ...item, ...updates } : item
+        const updatedItems = checklist.items.map((item) => {
+          if (item.id === itemId) {
+            const merged = { ...item, ...updates };
+            // Keep 'text' field in sync with textEn for backwards compatibility
+            if (updates.textEn !== undefined) {
+              merged.text = updates.textEn;
+            }
+            return merged;
+          }
+          return item;
+        }
         );
         return { ...checklist, items: updatedItems };
       }

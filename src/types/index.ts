@@ -103,7 +103,10 @@ export interface Attachment {
 
 export interface ChecklistItem {
   id: string;
-  text: string;
+  text: string; // Keep for backwards compatibility - will be migrated to textEn
+  textEn?: string;
+  textJa?: string;
+  textOriginalLanguage?: 'en' | 'ja'; // Which language was originally typed (undefined = 'en' for backwards compatibility)
   isCompleted: boolean;
   order: number;
   assigneeId?: string;  // User ID of assigned member
