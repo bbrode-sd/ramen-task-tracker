@@ -356,10 +356,10 @@ service cloud.firestore {
           isValidLength(request.resource.data.titleJa, 500) &&
           isValidLength(request.resource.data.descriptionEn, 10000) &&
           isValidLength(request.resource.data.descriptionJa, 10000) &&
-          // Attachments limit
-          request.resource.data.attachments.size() <= 50 &&
-          // Labels limit
-          request.resource.data.labels.size() <= 20 &&
+          // Attachments limit (if present)
+          (!('attachments' in request.resource.data) || request.resource.data.attachments.size() <= 50) &&
+          // Labels limit (if present)
+          (!('labels' in request.resource.data) || request.resource.data.labels.size() <= 20) &&
           // Checklists limit (if present)
           (!('checklists' in request.resource.data) || request.resource.data.checklists.size() <= 20) &&
           // Priority must be a valid value (if present)
