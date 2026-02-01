@@ -24,12 +24,12 @@ export function AttachmentItem({ attachment, onRemove }: AttachmentItemProps) {
           rel="noopener noreferrer"
           className="block"
         >
-          <div className="relative h-28">
+          <div className="relative h-28 bg-slate-900">
             <Image
               src={attachment.url}
               alt={attachment.name}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
