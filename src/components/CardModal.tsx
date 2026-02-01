@@ -142,7 +142,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   // Checklists
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [showChecklistInput, setShowChecklistInput] = useState(false);
-  const [newChecklistTitleEn, setNewChecklistTitleEn] = useState('');
+  const [newChecklistTitle, setNewChecklistTitle] = useState('');
   const [newItemTexts, setNewItemTexts] = useState<Record<string, string>>({});
   const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
   const [editingChecklistField, setEditingChecklistField] = useState<'en' | 'ja' | null>(null);
@@ -890,32 +890,31 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Checklist handlers
   const handleAddChecklist = async () => {
-    const titleEn = newChecklistTitleEn.trim();
-    if (!titleEn) return;
+    const title = newChecklistTitle.trim();
+    if (!title) return;
     
-    const checklistId = await addChecklist(boardId, cardId, titleEn, '', 'en');
+    // Generate a temporary key for translation tracking
+    const tempChecklistKey = `new-checklist-${Date.now()}`;
+    
+    // Detect language and translate
+    const detectionResult = await translateWithAutoDetect(title, tempChecklistKey);
+    const detectedLang = detectionResult.detectedLanguage || 'en';
+    
+    const titleEn = detectedLang === 'en' ? title : (detectionResult.translation || '');
+    const titleJa = detectedLang === 'ja' ? title : (detectionResult.translation || '');
+    
+    const checklistId = await addChecklist(boardId, cardId, titleEn, titleJa, detectedLang);
     const newChecklist: Checklist = { 
       id: checklistId, 
       title: titleEn, 
       titleEn, 
-      titleJa: '', 
-      titleOriginalLanguage: 'en',
+      titleJa, 
+      titleOriginalLanguage: detectedLang,
       items: [] 
     };
     setChecklists([...checklists, newChecklist]);
-    setNewChecklistTitleEn('');
+    setNewChecklistTitle('');
     setShowChecklistInput(false);
-    
-    // Auto-translate to Japanese
-    const checklistTitleJaKey = `checklist-${checklistId}-title-ja`;
-    debouncedTranslate(titleEn, 'ja', checklistTitleJaKey, async (result) => {
-      if (!result.error) {
-        await updateChecklist(boardId, cardId, checklistId, { titleJa: result.translation });
-        setChecklists(prev => prev.map(cl =>
-          cl.id === checklistId ? { ...cl, titleJa: result.translation } : cl
-        ));
-      }
-    });
   };
 
   const handleUpdateChecklistTitleEn = async (checklistId: string) => {
@@ -2909,33 +2908,25 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             {/* Add checklist */}
             {showChecklistInput ? (
               <div className="space-y-2.5 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                <div className="flex items-center gap-1.5">
-                  <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
-                    EN
-                  </span>
-                  <input
-                    type="text"
-                    value={newChecklistTitleEn}
-                    onChange={(e) => setNewChecklistTitleEn(e.target.value)}
-                    placeholder={t('cardModal.sidebar.checklistTitlePlaceholder')}
-                    className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddChecklist();
-                      if (e.key === 'Escape') {
-                        setShowChecklistInput(false);
-                        setNewChecklistTitleEn('');
-                      }
-                    }}
-                  />
-                </div>
-                <p className="text-xs text-slate-400 dark:text-slate-500 pl-6">
-                  Japanese will be auto-translated
-                </p>
+                <input
+                  type="text"
+                  value={newChecklistTitle}
+                  onChange={(e) => setNewChecklistTitle(e.target.value)}
+                  placeholder={t('cardModal.sidebar.checklistTitlePlaceholder')}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddChecklist();
+                    if (e.key === 'Escape') {
+                      setShowChecklistInput(false);
+                      setNewChecklistTitle('');
+                    }
+                  }}
+                />
                 <div className="flex gap-2">
                   <button
                     onClick={handleAddChecklist}
-                    disabled={!newChecklistTitleEn.trim()}
+                    disabled={!newChecklistTitle.trim()}
                     className="flex-1 px-3 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 disabled:opacity-50 transition-all"
                   >
                     Add
@@ -2943,7 +2934,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <button
                     onClick={() => {
                       setShowChecklistInput(false);
-                      setNewChecklistTitleEn('');
+                      setNewChecklistTitle('');
                     }}
                     className="px-3 py-2 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
                   >
