@@ -1815,6 +1815,8 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       showToast('success', t('cardModal.toast.subBoardRemoved'));
       setShowRemoveSubBoardConfirm(false);
       setSubBoard(null);
+      // Also update the local card state to clear the subBoardId
+      setCard(prev => prev ? { ...prev, subBoardId: undefined, subBoardApprovedCount: undefined, subBoardTotalCount: undefined } : null);
     } catch (error) {
       console.error('Failed to remove sub-board:', error);
       showToast('error', t('cardModal.toast.subBoardRemoveFailed'));
