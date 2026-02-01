@@ -1549,6 +1549,10 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
       className="fixed inset-0 bg-slate-950/70 backdrop-blur-md backdrop-saturate-150 flex items-start justify-center z-50 overflow-y-auto py-0 sm:py-6 md:py-10 px-0 sm:px-4"
       onClick={onClose}
       role="presentation"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       {/* 
         Accessibility: Modal dialog with proper ARIA attributes
