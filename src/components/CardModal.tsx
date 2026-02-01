@@ -142,10 +142,12 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   // Checklists
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [showChecklistInput, setShowChecklistInput] = useState(false);
-  const [newChecklistTitle, setNewChecklistTitle] = useState('');
+  const [newChecklistTitleEn, setNewChecklistTitleEn] = useState('');
   const [newItemTexts, setNewItemTexts] = useState<Record<string, string>>({});
   const [editingChecklistId, setEditingChecklistId] = useState<string | null>(null);
-  const [editingChecklistTitle, setEditingChecklistTitle] = useState('');
+  const [editingChecklistField, setEditingChecklistField] = useState<'en' | 'ja' | null>(null);
+  const [editingChecklistTitleEn, setEditingChecklistTitleEn] = useState('');
+  const [editingChecklistTitleJa, setEditingChecklistTitleJa] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemText, setEditingItemText] = useState('');
   // Checklist item assignee and due date pickers
@@ -888,21 +890,109 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
 
   // Checklist handlers
   const handleAddChecklist = async () => {
-    if (!newChecklistTitle.trim()) return;
-    const checklistId = await addChecklist(boardId, cardId, newChecklistTitle.trim());
-    setChecklists([...checklists, { id: checklistId, title: newChecklistTitle.trim(), items: [] }]);
-    setNewChecklistTitle('');
+    const titleEn = newChecklistTitleEn.trim();
+    if (!titleEn) return;
+    
+    const checklistId = await addChecklist(boardId, cardId, titleEn, '', 'en');
+    const newChecklist: Checklist = { 
+      id: checklistId, 
+      title: titleEn, 
+      titleEn, 
+      titleJa: '', 
+      titleOriginalLanguage: 'en',
+      items: [] 
+    };
+    setChecklists([...checklists, newChecklist]);
+    setNewChecklistTitleEn('');
     setShowChecklistInput(false);
+    
+    // Auto-translate to Japanese
+    const checklistTitleJaKey = `checklist-${checklistId}-title-ja`;
+    debouncedTranslate(titleEn, 'ja', checklistTitleJaKey, async (result) => {
+      if (!result.error) {
+        await updateChecklist(boardId, cardId, checklistId, { titleJa: result.translation });
+        setChecklists(prev => prev.map(cl =>
+          cl.id === checklistId ? { ...cl, titleJa: result.translation } : cl
+        ));
+      }
+    });
   };
 
-  const handleUpdateChecklistTitle = async (checklistId: string) => {
-    if (!editingChecklistTitle.trim()) return;
-    await updateChecklist(boardId, cardId, checklistId, { title: editingChecklistTitle.trim() });
+  const handleUpdateChecklistTitleEn = async (checklistId: string) => {
+    const value = editingChecklistTitleEn.trim();
+    if (!value) {
+      setEditingChecklistId(null);
+      setEditingChecklistField(null);
+      return;
+    }
+    
+    const checklist = checklists.find(cl => cl.id === checklistId);
+    const isOriginal = !checklist?.titleOriginalLanguage || checklist.titleOriginalLanguage === 'en';
+    
+    // Update local state immediately
     setChecklists(checklists.map(cl => 
-      cl.id === checklistId ? { ...cl, title: editingChecklistTitle.trim() } : cl
+      cl.id === checklistId ? { ...cl, titleEn: value, title: value } : cl
     ));
     setEditingChecklistId(null);
-    setEditingChecklistTitle('');
+    setEditingChecklistField(null);
+    
+    if (isOriginal) {
+      // English is the original - update and translate to Japanese
+      await updateChecklist(boardId, cardId, checklistId, { 
+        titleEn: value, 
+        titleOriginalLanguage: 'en' 
+      });
+      
+      const checklistTitleJaKey = `checklist-${checklistId}-title-ja`;
+      debouncedTranslate(value, 'ja', checklistTitleJaKey, async (result) => {
+        if (!result.error) {
+          await updateChecklist(boardId, cardId, checklistId, { titleJa: result.translation });
+          setChecklists(prev => prev.map(cl =>
+            cl.id === checklistId ? { ...cl, titleJa: result.translation } : cl
+          ));
+        }
+      });
+    } else {
+      // English is the translation - just save without translating back
+      await updateChecklist(boardId, cardId, checklistId, { titleEn: value });
+    }
+  };
+
+  const handleUpdateChecklistTitleJa = async (checklistId: string) => {
+    const value = editingChecklistTitleJa.trim();
+    if (!value) {
+      setEditingChecklistId(null);
+      setEditingChecklistField(null);
+      return;
+    }
+    
+    const checklist = checklists.find(cl => cl.id === checklistId);
+    const isOriginal = checklist?.titleOriginalLanguage === 'ja';
+    
+    // Update local state immediately
+    setChecklists(checklists.map(cl => 
+      cl.id === checklistId ? { ...cl, titleJa: value } : cl
+    ));
+    setEditingChecklistId(null);
+    setEditingChecklistField(null);
+    
+    if (isOriginal) {
+      // Japanese is the original - update and translate to English
+      await updateChecklist(boardId, cardId, checklistId, { titleJa: value });
+      
+      const checklistTitleEnKey = `checklist-${checklistId}-title-en`;
+      debouncedTranslate(value, 'en', checklistTitleEnKey, async (result) => {
+        if (!result.error) {
+          await updateChecklist(boardId, cardId, checklistId, { titleEn: result.translation });
+          setChecklists(prev => prev.map(cl =>
+            cl.id === checklistId ? { ...cl, titleEn: result.translation, title: result.translation } : cl
+          ));
+        }
+      });
+    } else {
+      // Japanese is the translation - just save without translating back
+      await updateChecklist(boardId, cardId, checklistId, { titleJa: value });
+    }
   };
 
   const handleDeleteChecklist = async (checklistId: string) => {
@@ -2104,40 +2194,144 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   return (
                     <div key={checklist.id} className="bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
                       {/* Checklist header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2.5 flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start gap-2.5 flex-1">
                           <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                             <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                           </div>
-                          {editingChecklistId === checklist.id ? (
-                            <input
-                              type="text"
-                              value={editingChecklistTitle}
-                              onChange={(e) => setEditingChecklistTitle(e.target.value)}
-                              onBlur={() => handleUpdateChecklistTitle(checklist.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleUpdateChecklistTitle(checklist.id);
-                                if (e.key === 'Escape') {
-                                  setEditingChecklistId(null);
-                                  setEditingChecklistTitle('');
-                                }
-                              }}
-                              className="flex-1 px-3 py-1.5 text-sm font-semibold text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-900/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                              autoFocus
-                            />
-                          ) : (
-                            <h4
-                              onClick={() => {
-                                setEditingChecklistId(checklist.id);
-                                setEditingChecklistTitle(checklist.title);
-                              }}
-                              className="text-sm font-semibold text-slate-800 dark:text-slate-100 cursor-pointer hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                            >
-                              {checklist.title}
-                            </h4>
-                          )}
+                          <div className="flex-1 min-w-0 space-y-1">
+                            {/* English title */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
+                                EN
+                              </span>
+                              {editingChecklistId === checklist.id && editingChecklistField === 'en' ? (
+                                <input
+                                  type="text"
+                                  value={editingChecklistTitleEn}
+                                  onChange={(e) => setEditingChecklistTitleEn(e.target.value)}
+                                  onBlur={() => handleUpdateChecklistTitleEn(checklist.id)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleUpdateChecklistTitleEn(checklist.id);
+                                    if (e.key === 'Escape') {
+                                      setEditingChecklistId(null);
+                                      setEditingChecklistField(null);
+                                    }
+                                  }}
+                                  className="flex-1 px-2 py-1 text-sm font-semibold text-slate-800 dark:text-white border-2 border-sky-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30 bg-white dark:bg-slate-900/70"
+                                  autoFocus
+                                  placeholder="Checklist name (English)"
+                                />
+                              ) : (
+                                <div 
+                                  onClick={() => {
+                                    setEditingChecklistId(checklist.id);
+                                    setEditingChecklistField('en');
+                                    setEditingChecklistTitleEn(checklist.titleEn || checklist.title || '');
+                                  }}
+                                  className="flex-1 flex items-center gap-1.5 cursor-pointer group"
+                                >
+                                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                                    {checklist.titleEn || checklist.title || '—'}
+                                  </span>
+                                  <TranslationIndicator
+                                    isTranslating={translationState.isTranslating[`checklist-${checklist.id}-title-en`] || false}
+                                    hasError={translationState.errors[`checklist-${checklist.id}-title-en`]}
+                                    onRetry={async () => {
+                                      const jaTitle = checklist.titleJa;
+                                      if (jaTitle) {
+                                        clearError(`checklist-${checklist.id}-title-en`);
+                                        const result = await retryTranslation(jaTitle, 'en', `checklist-${checklist.id}-title-en`);
+                                        if (!result.error) {
+                                          await updateChecklist(boardId, cardId, checklist.id, { titleEn: result.translation });
+                                          setChecklists(prev => prev.map(cl =>
+                                            cl.id === checklist.id ? { ...cl, titleEn: result.translation, title: result.translation } : cl
+                                          ));
+                                        }
+                                      }
+                                    }}
+                                    language="en"
+                                  />
+                                  <svg className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Japanese title */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
+                                JP
+                              </span>
+                              {editingChecklistId === checklist.id && editingChecklistField === 'ja' ? (
+                                <input
+                                  type="text"
+                                  value={editingChecklistTitleJa}
+                                  onChange={(e) => setEditingChecklistTitleJa(e.target.value)}
+                                  onBlur={() => handleUpdateChecklistTitleJa(checklist.id)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleUpdateChecklistTitleJa(checklist.id);
+                                    if (e.key === 'Escape') {
+                                      setEditingChecklistId(null);
+                                      setEditingChecklistField(null);
+                                    }
+                                  }}
+                                  className="flex-1 px-2 py-1 text-xs text-slate-800 dark:text-white border-2 border-rose-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500/30 bg-white dark:bg-slate-900/70"
+                                  autoFocus
+                                  placeholder="チェックリスト名（日本語）"
+                                />
+                              ) : (
+                                <div 
+                                  onClick={() => {
+                                    setEditingChecklistId(checklist.id);
+                                    setEditingChecklistField('ja');
+                                    setEditingChecklistTitleJa(checklist.titleJa || '');
+                                  }}
+                                  className="flex-1 flex items-center gap-1.5 cursor-pointer group"
+                                >
+                                  {translationState.isTranslating[`checklist-${checklist.id}-title-ja`] && !checklist.titleJa ? (
+                                    <span className="text-xs text-slate-400 dark:text-slate-500 italic flex items-center gap-1">
+                                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      翻訳中...
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span className="text-xs text-slate-600 dark:text-slate-300 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                                        {checklist.titleJa || '—'}
+                                      </span>
+                                      <TranslationIndicator
+                                        isTranslating={translationState.isTranslating[`checklist-${checklist.id}-title-ja`] || false}
+                                        hasError={translationState.errors[`checklist-${checklist.id}-title-ja`]}
+                                        onRetry={async () => {
+                                          const enTitle = checklist.titleEn || checklist.title;
+                                          if (enTitle) {
+                                            clearError(`checklist-${checklist.id}-title-ja`);
+                                            const result = await retryTranslation(enTitle, 'ja', `checklist-${checklist.id}-title-ja`);
+                                            if (!result.error) {
+                                              await updateChecklist(boardId, cardId, checklist.id, { titleJa: result.translation });
+                                              setChecklists(prev => prev.map(cl =>
+                                                cl.id === checklist.id ? { ...cl, titleJa: result.translation } : cl
+                                              ));
+                                            }
+                                          }
+                                        }}
+                                        language="ja"
+                                      />
+                                      <svg className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                      </svg>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         <button
                           onClick={() => handleDeleteChecklist(checklist.id)}
@@ -2715,25 +2909,33 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             {/* Add checklist */}
             {showChecklistInput ? (
               <div className="space-y-2.5 p-3 bg-white dark:bg-slate-900/70 rounded-xl border border-slate-200 dark:border-slate-700/70 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                <input
-                  type="text"
-                  value={newChecklistTitle}
-                  onChange={(e) => setNewChecklistTitle(e.target.value)}
-                  placeholder={t('cardModal.sidebar.checklistTitlePlaceholder')}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddChecklist();
-                    if (e.key === 'Escape') {
-                      setShowChecklistInput(false);
-                      setNewChecklistTitle('');
-                    }
-                  }}
-                />
+                <div className="flex items-center gap-1.5">
+                  <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
+                    EN
+                  </span>
+                  <input
+                    type="text"
+                    value={newChecklistTitleEn}
+                    onChange={(e) => setNewChecklistTitleEn(e.target.value)}
+                    placeholder={t('cardModal.sidebar.checklistTitlePlaceholder')}
+                    className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 bg-white dark:bg-slate-600 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddChecklist();
+                      if (e.key === 'Escape') {
+                        setShowChecklistInput(false);
+                        setNewChecklistTitleEn('');
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-400 dark:text-slate-500 pl-6">
+                  Japanese will be auto-translated
+                </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleAddChecklist}
-                    disabled={!newChecklistTitle.trim()}
+                    disabled={!newChecklistTitleEn.trim()}
                     className="flex-1 px-3 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 disabled:opacity-50 transition-all"
                   >
                     Add
@@ -2741,7 +2943,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   <button
                     onClick={() => {
                       setShowChecklistInput(false);
-                      setNewChecklistTitle('');
+                      setNewChecklistTitleEn('');
                     }}
                     className="px-3 py-2 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
                   >

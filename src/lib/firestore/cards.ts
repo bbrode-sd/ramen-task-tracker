@@ -415,11 +415,16 @@ export const removeCardCover = async (
 
 /**
  * Add a checklist to a card
+ * @param titleEn - English title (required)
+ * @param titleJa - Japanese title (optional, can be auto-translated later)
+ * @param titleOriginalLanguage - Which language was originally typed
  */
 export const addChecklist = async (
   boardId: string,
   cardId: string,
-  title: string
+  titleEn: string,
+  titleJa?: string,
+  titleOriginalLanguage: 'en' | 'ja' = 'en'
 ): Promise<string> => {
   const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
   const cardDoc = await getDoc(cardRef);
@@ -427,7 +432,10 @@ export const addChecklist = async (
   const checklistId = uuidv4();
   const newChecklist: Checklist = {
     id: checklistId,
-    title,
+    title: titleEn, // Keep for backwards compatibility
+    titleEn,
+    titleJa: titleJa || '',
+    titleOriginalLanguage,
     items: [],
   };
   
@@ -449,16 +457,24 @@ export const updateChecklist = async (
   boardId: string,
   cardId: string,
   checklistId: string,
-  updates: Partial<Pick<Checklist, 'title'>>
+  updates: Partial<Pick<Checklist, 'title' | 'titleEn' | 'titleJa' | 'titleOriginalLanguage'>>
 ): Promise<void> => {
   const cardRef = doc(db, 'boards', boardId, 'cards', cardId);
   const cardDoc = await getDoc(cardRef);
   
   if (cardDoc.exists()) {
     const currentChecklists: Checklist[] = cardDoc.data().checklists || [];
-    const updatedChecklists = currentChecklists.map((checklist) =>
-      checklist.id === checklistId ? { ...checklist, ...updates } : checklist
-    );
+    const updatedChecklists = currentChecklists.map((checklist) => {
+      if (checklist.id === checklistId) {
+        const merged = { ...checklist, ...updates };
+        // Keep 'title' field in sync with titleEn for backwards compatibility
+        if (updates.titleEn !== undefined) {
+          merged.title = updates.titleEn;
+        }
+        return merged;
+      }
+      return checklist;
+    });
     
     await updateDoc(cardRef, {
       checklists: updatedChecklists,

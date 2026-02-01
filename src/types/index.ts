@@ -112,7 +112,10 @@ export interface ChecklistItem {
 
 export interface Checklist {
   id: string;
-  title: string;
+  title: string; // Keep for backwards compatibility - will be migrated to titleEn
+  titleEn?: string;
+  titleJa?: string;
+  titleOriginalLanguage?: 'en' | 'ja'; // Which language was originally typed (undefined = 'en' for backwards compatibility)
   items: ChecklistItem[];
 }
 
