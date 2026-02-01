@@ -70,6 +70,8 @@ interface KanbanBoardProps {
   embedded?: boolean;
   /** Max height for embedded mode */
   maxHeight?: string;
+  /** Custom card click handler for embedded mode - prevents navigation */
+  onEmbeddedCardClick?: (cardId: string) => void;
 }
 
 /**
@@ -80,7 +82,7 @@ interface KanbanBoardProps {
  * - Drag operations should announce to aria-live region
  * - Filter results should be announced
  */
-export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeight = '400px' }: KanbanBoardProps) {
+export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeight = '400px', onEmbeddedCardClick }: KanbanBoardProps) {
   const { user } = useAuth();
   const { filterCards, getMatchCount, hasActiveFilters, matchesFilter } = useFilter();
   const {
@@ -750,8 +752,13 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   };
 
   const handleCardClick = useCallback((cardId: string) => {
+    // In embedded mode with custom handler, don't navigate - let parent handle
+    if (embedded && onEmbeddedCardClick) {
+      onEmbeddedCardClick(cardId);
+      return;
+    }
     router.push(`/boards/${boardId}?card=${cardId}`);
-  }, [router, boardId]);
+  }, [router, boardId, embedded, onEmbeddedCardClick]);
 
   const handleCloseCard = useCallback(() => {
     router.push(`/boards/${boardId}`);

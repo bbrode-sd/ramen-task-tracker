@@ -170,6 +170,8 @@
   },
   "cardModal": {
     "title": "Card Details",
+    "subTicket": "Sub-Ticket",
+    "parentTicket": "Parent",
     "titleEn": "Title (English)",
     "titleJa": "Title (Japanese)",
     "descriptionEn": "Description",

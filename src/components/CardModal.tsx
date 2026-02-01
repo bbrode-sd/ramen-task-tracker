@@ -56,10 +56,20 @@ import { ActivityItem } from './CardModal/ActivityItem';
 import { COVER_COLORS, getAvatarColor, getInitials } from './CardModal/utils';
 import { KanbanBoard } from './KanbanBoard';
 
+/** Parent card info for sub-tickets */
+export interface ParentCardInfo {
+  id: string;
+  boardId: string;
+  titleEn: string;
+  titleJa: string;
+}
+
 interface CardModalProps {
   boardId: string;
   cardId: string;
   onClose: () => void;
+  /** Parent card info - when set, this modal is displaying a sub-ticket */
+  parentCardInfo?: ParentCardInfo;
 }
 
 /**
@@ -71,7 +81,7 @@ interface CardModalProps {
  * - Escape key should close modal
  * - Focus should return to trigger element on close
  */
-export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
+export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const { locale, t } = useLocale();
@@ -197,6 +207,9 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
   const [showSubBoardTemplateManager, setShowSubBoardTemplateManager] = useState(false);
   const [showRemoveSubBoardConfirm, setShowRemoveSubBoardConfirm] = useState(false);
   const [isRemovingSubBoard, setIsRemovingSubBoard] = useState(false);
+
+  // Nested sub-card modal state (for opening sub-board cards within this modal)
+  const [nestedCardId, setNestedCardId] = useState<string | null>(null);
 
   // Track last saved values to avoid re-translating unchanged content
   const [lastSavedTitleEn, setLastSavedTitleEn] = useState('');
@@ -1921,8 +1934,28 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             </div>
           </div>
         )}
+        {/* Sub-ticket banner - shows parent card info when this is a sub-ticket */}
+        {parentCardInfo && (
+          <div className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-purple-50 via-violet-50 to-purple-50 dark:from-purple-900/30 dark:via-violet-900/20 dark:to-purple-900/30 border-b border-purple-200/70 dark:border-purple-700/50 rounded-t-none sm:rounded-t-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-purple-100 dark:bg-purple-800/50 rounded-full">
+                <svg className="w-3 h-3 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                <span className="text-xs font-semibold text-purple-700 dark:text-purple-200">{t('cardModal.subTicket')}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm">
+                <span className="text-purple-600/70 dark:text-purple-300/70">{t('cardModal.parentTicket')}:</span>
+                <span className="font-medium text-purple-700 dark:text-purple-200 truncate max-w-[300px]">
+                  {locale === 'ja' && parentCardInfo.titleJa ? parentCardInfo.titleJa : parentCardInfo.titleEn}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header with Editable Bilingual Titles */}
-        <header className="px-4 sm:px-5 py-3 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 rounded-none sm:rounded-t-2xl shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]">
+        <header className={`px-4 sm:px-5 py-3 border-b border-slate-200/70 dark:border-slate-800/70 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 ${parentCardInfo ? '' : 'rounded-none sm:rounded-t-2xl'} shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]`}>
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-500/5 dark:ring-1 dark:ring-emerald-400/20 flex items-center justify-center flex-shrink-0" aria-hidden="true">
@@ -3093,6 +3126,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                     boardId={subBoard.id}
                     embedded={true}
                     maxHeight="320px"
+                    onEmbeddedCardClick={(subCardId) => setNestedCardId(subCardId)}
                   />
                 </div>
               </div>
@@ -4271,6 +4305,21 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Nested CardModal for sub-board cards - renders on top of current modal */}
+      {nestedCardId && subBoard && (
+        <CardModal
+          boardId={subBoard.id}
+          cardId={nestedCardId}
+          onClose={() => setNestedCardId(null)}
+          parentCardInfo={{
+            id: cardId,
+            boardId: boardId,
+            titleEn: card?.titleEn || '',
+            titleJa: card?.titleJa || '',
+          }}
+        />
       )}
     </div>
   );
