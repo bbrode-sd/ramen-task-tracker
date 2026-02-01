@@ -70,6 +70,13 @@ interface DueDateStats {
   thisWeek: number;
 }
 
+interface ParentCardInfo {
+  id: string;
+  titleEn: string;
+  titleJa: string;
+  boardId: string;
+}
+
 interface HeaderProps {
   boardName?: string;
   onBoardNameChange?: (name: string) => void;
@@ -81,6 +88,7 @@ interface HeaderProps {
   currentBackground?: BoardBackground;
   onBackgroundChange?: (background: BoardBackground) => void;
   dueDateStats?: DueDateStats;
+  parentCard?: ParentCardInfo | null;
 }
 
 export function Header({ 
@@ -94,11 +102,12 @@ export function Header({
   currentBackground,
   onBackgroundChange,
   dueDateStats,
+  parentCard,
 }: HeaderProps) {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // Use optional filter hook - returns null when not in a FilterProvider (e.g., on home page)
   const filterContext = useFilterOptional();
   const hasActiveFilters = filterContext?.hasActiveFilters ?? false;
@@ -341,9 +350,9 @@ export function Header({
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 min-w-0">
           {boardId && (
             <Link
-              href="/"
+              href={parentCard ? `/boards/${parentCard.boardId}?card=${parentCard.id}` : "/"}
               className="p-2.5 sm:p-2 -ml-1 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label={t('header.backToBoards')}
+              aria-label={parentCard ? t('header.backToCard') : t('header.backToBoards')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -358,37 +367,62 @@ export function Header({
               height={28} 
               className="flex-shrink-0"
             />
-            {boardName ? (
-              isEditingBoardName ? (
-                <input
-                  ref={boardNameInputRef}
-                  type="text"
-                  value={boardName}
-                  onChange={(e) => onBoardNameChange?.(e.target.value)}
-                  onBlur={() => setIsEditingBoardName(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === 'Escape') {
-                      (e.currentTarget as HTMLInputElement).blur();
-                    }
-                  }}
-                  className="text-base sm:text-lg md:text-xl font-bold text-white bg-white/20 border border-white/30 focus:bg-white/25 focus:border-white/50 focus:outline-none rounded-lg px-2 sm:px-3 py-1.5 min-w-0 w-full max-w-[140px] sm:max-w-[200px] md:max-w-none transition-all placeholder:text-white/50"
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingBoardName(true)}
-                  className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate px-2 sm:px-3 py-1.5 -mx-2 -my-1.5 rounded-lg hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors max-w-[140px] sm:max-w-[200px] md:max-w-none"
-                  aria-label="Edit board name"
+            <div className="min-w-0">
+              {/* Parent card name (for sub-boards) */}
+              {parentCard && (
+                <Link
+                  href={`/boards/${parentCard.boardId}?card=${parentCard.id}`}
+                  className="block text-xs text-white/70 hover:text-white/90 truncate max-w-[140px] sm:max-w-[200px] md:max-w-[300px] transition-colors"
+                  title={`${parentCard.titleEn}${parentCard.titleJa && parentCard.titleJa !== parentCard.titleEn ? ` / ${parentCard.titleJa}` : ''}`}
                 >
-                  {boardName}
-                </button>
-              )
-            ) : (
-              <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
-                <span className="hidden sm:inline">Tomobodo</span>
-                <span className="sm:hidden">Tomobodo</span>
-              </h1>
-            )}
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span className="truncate">
+                      {locale === 'ja' && parentCard.titleJa ? parentCard.titleJa : parentCard.titleEn}
+                      {parentCard.titleEn && parentCard.titleJa && parentCard.titleEn !== parentCard.titleJa && (
+                        <span className="text-white/50 ml-1">
+                          ({locale === 'ja' ? parentCard.titleEn : parentCard.titleJa})
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                </Link>
+              )}
+              {/* Board name */}
+              {boardName ? (
+                isEditingBoardName ? (
+                  <input
+                    ref={boardNameInputRef}
+                    type="text"
+                    value={boardName}
+                    onChange={(e) => onBoardNameChange?.(e.target.value)}
+                    onBlur={() => setIsEditingBoardName(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === 'Escape') {
+                        (e.currentTarget as HTMLInputElement).blur();
+                      }
+                    }}
+                    className="text-base sm:text-lg md:text-xl font-bold text-white bg-white/20 border border-white/30 focus:bg-white/25 focus:border-white/50 focus:outline-none rounded-lg px-2 sm:px-3 py-1.5 min-w-0 w-full max-w-[140px] sm:max-w-[200px] md:max-w-none transition-all placeholder:text-white/50"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingBoardName(true)}
+                    className={`text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate px-2 sm:px-3 py-1.5 -mx-2 rounded-lg hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors max-w-[140px] sm:max-w-[200px] md:max-w-none ${parentCard ? '-my-0.5' : '-my-1.5'}`}
+                    aria-label="Edit board name"
+                  >
+                    {boardName}
+                  </button>
+                )
+              ) : (
+                <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight truncate">
+                  <span className="hidden sm:inline">Tomobodo</span>
+                  <span className="sm:hidden">Tomobodo</span>
+                </h1>
+              )}
+            </div>
           </div>
         </div>
 

@@ -98,6 +98,14 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
+  
+  // Parent card info for sub-boards
+  const [parentCard, setParentCard] = useState<{ 
+    id: string; 
+    titleEn: string; 
+    titleJa: string; 
+    boardId: string;
+  } | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [showActivityPanel, setShowActivityPanel] = useState(false);
@@ -183,6 +191,27 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
             return;
           }
           setBoard(boardData);
+          
+          // If this is a sub-board, fetch parent card info
+          if (boardData.parentCardId && boardData.parentBoardId) {
+            try {
+              const parentCardDoc = await getDoc(
+                doc(db, 'boards', boardData.parentBoardId, 'cards', boardData.parentCardId)
+              );
+              if (parentCardDoc.exists()) {
+                const cardData = parentCardDoc.data();
+                setParentCard({
+                  id: boardData.parentCardId,
+                  titleEn: cardData.titleEn || '',
+                  titleJa: cardData.titleJa || '',
+                  boardId: boardData.parentBoardId,
+                });
+              }
+            } catch (parentError) {
+              console.error('Error fetching parent card:', parentError);
+              // Continue without parent info - not critical
+            }
+          }
         } else {
           setAccessError('Board not found.');
           setLoading(false);
@@ -866,6 +895,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
           currentBackground={board?.background}
           onBackgroundChange={handleBackgroundChange}
           dueDateStats={dueDateStats}
+          parentCard={parentCard}
         />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
@@ -892,6 +922,7 @@ export function KanbanBoard({ boardId, selectedCardId }: KanbanBoardProps) {
         currentBackground={board?.background}
         onBackgroundChange={handleBackgroundChange}
         dueDateStats={dueDateStats}
+        parentCard={parentCard}
       />
       
       {/* Accessibility: Live region for screen reader announcements */}
