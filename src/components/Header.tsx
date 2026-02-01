@@ -63,6 +63,12 @@ const LanguageSettingsModal = dynamic(() => import('./LanguageSettingsModal').th
   loading: () => null,
 });
 
+// SubBoardTemplateModal - loaded when user opens sub-board templates
+const SubBoardTemplateModal = dynamic(() => import('./SubBoardTemplateModal').then(mod => ({ default: mod.SubBoardTemplateModal })), {
+  ssr: false,
+  loading: () => null,
+});
+
 interface DueDateStats {
   overdue: number;
   today: number;
@@ -116,6 +122,7 @@ export function Header({
   const [showTranslationSettings, setShowTranslationSettings] = useState(false);
   const [showBatchTranslation, setShowBatchTranslation] = useState(false);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
+  const [showSubBoardTemplates, setShowSubBoardTemplates] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -502,6 +509,16 @@ export function Header({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
                     {t('header.exportImport')}
+                  </button>
+                  <button
+                    onClick={() => { setShowSubBoardTemplates(true); setShowMobileMenu(false); }}
+                    aria-label={t('header.subBoardTemplates')}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors rounded-lg min-h-[48px]"
+                  >
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                    {t('header.subBoardTemplates')}
                   </button>
                 </div>
               </div>
@@ -899,6 +916,23 @@ export function Header({
                         </span>
                       )}
                     </button>
+
+                    <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
+
+                    {/* Sub-Board Templates */}
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowSubBoardTemplates(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                      </svg>
+                      {t('header.subBoardTemplates')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -1105,6 +1139,12 @@ export function Header({
       <LanguageSettingsModal
         isOpen={showLanguageSettings}
         onClose={() => setShowLanguageSettings(false)}
+      />
+
+      {/* Sub-Board Templates Modal */}
+      <SubBoardTemplateModal
+        isOpen={showSubBoardTemplates}
+        onClose={() => setShowSubBoardTemplates(false)}
       />
 
       {/* Filter Panel */}
