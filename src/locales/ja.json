@@ -483,6 +483,9 @@
   "subBoardTemplate": {
     "title": "サブボードテンプレート",
     "description": "事前設定されたリストとカードを持つサブボードのテンプレートを管理",
+    "templateMode": "テンプレートモード",
+    "untitledTemplate": "無題のテンプレート",
+    "newTemplateName": "新しいテンプレート",
     "createTitle": "テンプレートを作成",
     "editTitle": "テンプレートを編集",
     "editDescription": "このテンプレートのリストとカードを設定",

@@ -483,6 +483,9 @@
   "subBoardTemplate": {
     "title": "Sub-Board Templates",
     "description": "Manage templates for sub-boards with pre-set lists and cards",
+    "templateMode": "Template Mode",
+    "untitledTemplate": "Untitled Template",
+    "newTemplateName": "New Template",
     "createTitle": "Create Template",
     "editTitle": "Edit Template",
     "editDescription": "Configure lists and cards for this template",
