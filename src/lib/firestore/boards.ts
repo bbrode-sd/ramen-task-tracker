@@ -11,7 +11,6 @@ import {
   onSnapshot,
   getDoc,
   getDocs,
-  writeBatch,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -281,8 +280,16 @@ export const createSubBoard = async (
     throw new Error('Parent board not found');
   }
 
+  // Verify current user is in memberIds (required by security rules)
+  if (!parentBoard.memberIds.includes(userId)) {
+    throw new Error('User is not a member of the parent board');
+  }
+
+  // Truncate name to 200 characters (security rule limit for board names)
+  const truncatedName = name.length > 200 ? name.substring(0, 197) + '...' : name;
+
   const boardRef = await addDoc(collection(db, 'boards'), {
-    name,
+    name: truncatedName,
     ownerId: userId,
     memberIds: parentBoard.memberIds, // Inherit members from parent board
     createdAt: Timestamp.now(),
@@ -320,9 +327,19 @@ export const createSubBoardFromTemplate = async (
     throw new Error('Parent board not found');
   }
 
+  // Verify current user is in memberIds (required by security rules)
+  if (!parentBoard.memberIds.includes(userId)) {
+    throw new Error('User is not a member of the parent board');
+  }
+
+  // Truncate template name to 200 characters (security rule limit for board names)
+  const truncatedName = template.name.length > 200 
+    ? template.name.substring(0, 197) + '...' 
+    : template.name;
+
   // Create the sub-board
   const boardRef = await addDoc(collection(db, 'boards'), {
-    name: template.name,
+    name: truncatedName,
     ownerId: userId,
     memberIds: parentBoard.memberIds,
     createdAt: Timestamp.now(),
@@ -335,15 +352,13 @@ export const createSubBoardFromTemplate = async (
 
   const subBoardId = boardRef.id;
 
-  // Create columns and cards in a batch
-  const batch = writeBatch(db);
+  // Create columns and cards sequentially to avoid race conditions with security rules
+  // The security rules use get() to check board membership, which requires the board to be fully propagated
   const columnIdMap: Map<number, string> = new Map();
 
-  // First, create all columns
+  // Create columns one by one
   for (const col of template.columns) {
-    const columnRef = doc(collection(db, 'boards', subBoardId, 'columns'));
-    columnIdMap.set(col.order, columnRef.id);
-    batch.set(columnRef, {
+    const columnRef = await addDoc(collection(db, 'boards', subBoardId, 'columns'), {
       boardId: subBoardId,
       name: col.name,
       order: col.order,
@@ -351,15 +366,15 @@ export const createSubBoardFromTemplate = async (
       updatedAt: Timestamp.now(),
       isArchived: false,
     });
+    columnIdMap.set(col.order, columnRef.id);
   }
 
-  // Then, create cards for each column
+  // Create cards for each column
   for (const col of template.columns) {
     const columnId = columnIdMap.get(col.order);
     if (columnId && col.cards) {
       for (const card of col.cards) {
-        const cardRef = doc(collection(db, 'boards', subBoardId, 'cards'));
-        batch.set(cardRef, {
+        await addDoc(collection(db, 'boards', subBoardId, 'cards'), {
           boardId: subBoardId,
           columnId,
           titleEn: card.title,
@@ -377,8 +392,6 @@ export const createSubBoardFromTemplate = async (
       }
     }
   }
-
-  await batch.commit();
 
   // Update the parent card with the subBoardId
   const cardRef = doc(db, 'boards', parentBoardId, 'cards', parentCardId);
