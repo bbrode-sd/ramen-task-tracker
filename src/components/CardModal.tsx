@@ -1631,7 +1631,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {editingField === 'titleEn' ? (
                 <div className="space-y-1.5">
                   <div className="flex items-start gap-2">
-                    <div className="flex flex-col items-center shrink-0">
+                    <div className="flex flex-col items-start shrink-0">
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                         EN
@@ -1691,7 +1691,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   className="group flex items-start gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
                   onClick={startEditingTitleEn}
                 >
-                  <div className="flex flex-col items-center shrink-0">
+                  <div className="flex flex-col items-start shrink-0">
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                       EN
@@ -1725,7 +1725,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {editingField === 'titleJa' ? (
                 <div className="space-y-1.5">
                   <div className="flex items-start gap-2">
-                    <div className="flex flex-col items-center shrink-0">
+                    <div className="flex flex-col items-start shrink-0">
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                         JP
@@ -1785,7 +1785,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
                   className="group flex items-start gap-2 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-lg transition-colors"
                   onClick={startEditingTitleJa}
                 >
-                  <div className="flex flex-col items-center shrink-0">
+                  <div className="flex flex-col items-start shrink-0">
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                       JP
@@ -1858,7 +1858,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* English Description */}
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <div className="flex flex-col items-center shrink-0">
+                  <div className="flex flex-col items-start shrink-0">
                     <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                       EN
@@ -1933,7 +1933,7 @@ export function CardModal({ boardId, cardId, onClose }: CardModalProps) {
               {/* Japanese Description */}
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <div className="flex flex-col items-center shrink-0">
+                  <div className="flex flex-col items-start shrink-0">
                     <span className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full" aria-hidden="true">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                       JP
