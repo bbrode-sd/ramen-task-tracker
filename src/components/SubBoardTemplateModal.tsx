@@ -73,6 +73,13 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
     }
   }, [isOpen, boardId]);
 
+  // Focus modal when it opens
+  useEffect(() => {
+    if (isOpen) {
+      modalRef.current?.focus();
+    }
+  }, [isOpen]);
+
   // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,7 +102,6 @@ export function SubBoardTemplateModal({ isOpen, onClose, boardId }: SubBoardTemp
 
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      modalRef.current?.focus();
     }
 
     return () => document.removeEventListener('keydown', handleKeyDown);
