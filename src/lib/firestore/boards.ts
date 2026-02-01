@@ -712,10 +712,10 @@ export const removeSubBoard = async (
   });
 
   // Archive the sub-board (don't delete it in case user wants to recover)
+  // Note: We don't clear parentCardId because security rules prevent changing it after creation
   const subBoardRef = doc(db, 'boards', subBoardId);
   await updateDoc(subBoardRef, {
     isArchived: true,
-    parentCardId: null, // Unlink from parent card
     updatedAt: Timestamp.now(),
   });
 };
