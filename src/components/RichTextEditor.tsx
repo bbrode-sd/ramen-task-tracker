@@ -29,9 +29,9 @@ function MenuBar({ editor, accentColor }: MenuBarProps) {
   }
 
   const activeColorClasses = {
-    blue: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
-    red: 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400',
-    emerald: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
+    blue: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
+    red: 'bg-red-500/20 text-red-600 dark:text-red-400',
+    emerald: 'bg-emerald-500/20 text-emerald-500 dark:text-emerald-400',
   };
 
   const activeClass = activeColorClasses[accentColor];
