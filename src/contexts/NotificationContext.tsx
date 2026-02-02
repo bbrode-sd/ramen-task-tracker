@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import {
@@ -31,6 +31,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [cards, setCards] = useState<Card[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [cardViews, setCardViews] = useState<Record<string, Timestamp>>({});
+  
+  // Track if subscriptions are active to ignore errors after unsubscribe (sign-out race condition)
+  const cardViewsSubscribedRef = useRef(false);
   
   // Subscribe to cards for the current board
   useEffect(() => {
@@ -78,18 +81,27 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       return;
     }
     
+    cardViewsSubscribedRef.current = true;
+    
     const unsubscribe = subscribeToCardViews(
       user.uid,
       (views) => {
+        // Ignore callbacks if we've already unsubscribed (user signed out)
+        if (!cardViewsSubscribedRef.current) return;
         console.log('[Notifications] Card views updated:', Object.keys(views).length, 'cards');
         setCardViews(views);
       },
       (error) => {
+        // Ignore permission errors after unsubscribe (happens during sign-out race condition)
+        if (!cardViewsSubscribedRef.current) return;
         console.error('Error subscribing to card views:', error);
       }
     );
     
-    return () => unsubscribe();
+    return () => {
+      cardViewsSubscribedRef.current = false;
+      unsubscribe();
+    };
   }, [user?.uid]);
   
   // Calculate which cards have unread activity

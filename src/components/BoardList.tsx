@@ -92,6 +92,8 @@ export function BoardList() {
   // Use refs to avoid re-running the subscription effect when these values change
   const hasCompletedOnboardingRef = useRef(hasCompletedOnboarding);
   const onboardingTriggeredRef = useRef(false);
+  // Track if subscription is active to ignore errors after unsubscribe
+  const isSubscribedRef = useRef(false);
   
   // Keep the ref in sync with the state
   useEffect(() => {
@@ -103,11 +105,15 @@ export function BoardList() {
 
     // Reset onboarding trigger flag when user changes
     onboardingTriggeredRef.current = false;
+    isSubscribedRef.current = true;
 
     // Use subscribeToBoardsExcludingSubBoards to filter out sub-boards from the list
     const unsubscribe = subscribeToBoardsExcludingSubBoards(
       user.uid,
       (fetchedBoards) => {
+        // Ignore callbacks if we've already unsubscribed (user signed out)
+        if (!isSubscribedRef.current) return;
+        
         setBoards(fetchedBoards);
         setLoading(false);
         setError(null);
@@ -125,13 +131,19 @@ export function BoardList() {
         }
       },
       (err) => {
+        // Ignore permission errors after unsubscribe (happens during sign-out race condition)
+        if (!isSubscribedRef.current) return;
+        
         console.error('Error subscribing to boards:', err);
         setError('Failed to load boards. Please try again.');
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      isSubscribedRef.current = false;
+      unsubscribe();
+    };
   }, [user, setIsNewUser, startOnboarding]);
 
   // Fetch templates when picker opens
