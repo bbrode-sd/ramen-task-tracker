@@ -3278,7 +3278,6 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
               onChange={(e) => handleFileUpload(e.target.files)}
               className="hidden"
               multiple
-              accept="image/*,.pdf,.doc,.docx,.txt"
               aria-label="Upload file attachment"
             />
             <button
