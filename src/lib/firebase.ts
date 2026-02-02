@@ -20,7 +20,29 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 
 // Get service instances
 const authInstance = getAuth(app);
-const dbInstance = getFirestore(app);
+
+// Initialize Firestore with persistent cache for offline support (multi-tab)
+// Skip persistence when using emulators or skip auth mode
+const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+const shouldUsePersistence = typeof window !== 'undefined' && !useEmulators && !skipAuth;
+
+let dbInstance;
+try {
+  if (shouldUsePersistence && getApps().length === 1) {
+    // Only initialize with persistence on first load (not HMR)
+    dbInstance = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    });
+  } else {
+    dbInstance = getFirestore(app);
+  }
+} catch {
+  // Firestore already initialized (HMR), just get the existing instance
+  dbInstance = getFirestore(app);
+}
+
 const storageInstance = getStorage(app);
 
 // Connect to emulators BEFORE exporting instances
@@ -52,14 +74,17 @@ export const db = dbInstance;
 export const storage = storageInstance;
 export const googleProvider = new GoogleAuthProvider();
 
-// Track persistence status
-let persistenceEnabled = false;
-let persistenceError: Error | null = null;
+// Track persistence status - now handled at initialization time via persistentLocalCache
+const persistenceEnabled = shouldUsePersistence;
+const persistenceError: Error | null = null;
 
 /**
  * Enable Firestore offline persistence with multi-tab support.
  * This allows the app to work offline and sync when back online.
- * Call this once after Firebase is initialized.
+ * 
+ * NOTE: As of Firebase v10+, persistence is now configured at initialization time
+ * using persistentLocalCache with persistentMultipleTabManager. This function
+ * is kept for backwards compatibility and simply returns the current status.
  * 
  * Test scenarios for offline support:
  * 1. Create card while offline - should save locally, sync when online
@@ -73,46 +98,20 @@ export async function enableOfflinePersistence(): Promise<{ success: boolean; er
     return { success: false };
   }
 
-  // Skip persistence when using emulators or skip auth mode - not needed and causes issues
-  const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
-  if (useEmulators || skipAuth) {
-    console.log('[Offline] Skipping persistence - using emulators or skip auth mode');
-    persistenceEnabled = true; // Mark as "ready" so UI doesn't wait
-    return { success: true };
-  }
-
-  // Already attempted
+  // Persistence is now configured at Firestore initialization time
+  // This function just returns the current status
   if (persistenceEnabled) {
-    return { success: true };
-  }
-
-  if (persistenceError) {
-    return { success: false, error: persistenceError };
-  }
-
-  try {
-    // Enable multi-tab persistence for better multi-window experience
-    await enableMultiTabIndexedDbPersistence(db);
-    persistenceEnabled = true;
     console.log('[Offline] Firestore offline persistence enabled (multi-tab)');
     return { success: true };
-  } catch (error) {
-    persistenceError = error as Error;
-    const err = error as { code?: string };
-    
-    if (err.code === 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time
-      // This is expected in multi-tab scenarios, the other tabs will still work
-      console.warn('[Offline] Persistence failed: Multiple tabs open. Only one tab can enable persistence at a time.');
-    } else if (err.code === 'unimplemented') {
-      // The current browser does not support all of the features required for persistence
-      console.warn('[Offline] Persistence not available: Browser does not support IndexedDB.');
-    } else {
-      console.error('[Offline] Error enabling persistence:', error);
-    }
-    
-    return { success: false, error: persistenceError };
   }
+
+  // When using emulators or skip auth mode, we didn't enable persistence
+  if (useEmulators || skipAuth) {
+    console.log('[Offline] Skipping persistence - using emulators or skip auth mode');
+    return { success: true };
+  }
+
+  return { success: true };
 }
 
 /**
