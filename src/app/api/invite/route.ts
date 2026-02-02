@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import sgMail from '@sendgrid/mail';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize SendGrid with API key
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 interface InviteRequest {
   email: string;
@@ -32,9 +35,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Resend API key is configured
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'your-resend-api-key-here') {
-      console.log('[Invite] No Resend API key configured, skipping email send');
+    // Check if SendGrid API key is configured
+    if (!process.env.SENDGRID_API_KEY) {
+      console.log('[Invite] No SendGrid API key configured, skipping email send');
       return NextResponse.json({
         success: true,
         emailSent: false,
@@ -47,11 +50,23 @@ export async function POST(request: NextRequest) {
     const boardUrl = `${baseUrl}/boards/${boardId}`;
 
     // Send the invitation email
-    const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Tomobodo <noreply@tomobodo.com>',
+    const msg = {
       to: email,
-      replyTo: inviterEmail,
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@tomobodo.com',
+      replyTo: inviterEmail || undefined,
       subject: `${inviterName} invited you to collaborate on "${boardName}"`,
+      text: `
+${inviterName} invited you to collaborate on "${boardName}"
+
+You've been invited to join a board on Tomobodo!
+
+View the board: ${boardUrl}
+
+Note: You'll need to sign in or create an account to access this board. Once you sign in with this email address (${email}), you'll automatically have access.
+
+This invitation was sent by ${inviterName}${inviterEmail ? ` (${inviterEmail})` : ''}.
+If you weren't expecting this email, you can safely ignore it.
+      `.trim(),
       html: `
         <!DOCTYPE html>
         <html>
@@ -96,35 +111,23 @@ export async function POST(request: NextRequest) {
           </body>
         </html>
       `,
-      text: `
-${inviterName} invited you to collaborate on "${boardName}"
+    };
 
-You've been invited to join a board on Tomobodo!
+    try {
+      await sgMail.send(msg);
+      console.log('[Invite] Email sent successfully to:', email);
 
-View the board: ${boardUrl}
-
-Note: You'll need to sign in or create an account to access this board. Once you sign in with this email address (${email}), you'll automatically have access.
-
-This invitation was sent by ${inviterName}${inviterEmail ? ` (${inviterEmail})` : ''}.
-If you weren't expecting this email, you can safely ignore it.
-      `.trim(),
-    });
-
-    if (error) {
-      console.error('[Invite] Failed to send email:', error);
+      return NextResponse.json({
+        success: true,
+        emailSent: true,
+      });
+    } catch (sendError) {
+      console.error('[Invite] Failed to send email:', sendError);
       return NextResponse.json(
-        { error: 'Failed to send invitation email', details: error.message },
+        { error: 'Failed to send invitation email' },
         { status: 500 }
       );
     }
-
-    console.log('[Invite] Email sent successfully:', data?.id);
-
-    return NextResponse.json({
-      success: true,
-      emailSent: true,
-      messageId: data?.id,
-    });
   } catch (error) {
     console.error('[Invite] Error:', error);
     return NextResponse.json(
