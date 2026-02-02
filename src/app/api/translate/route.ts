@@ -210,7 +210,7 @@ For very short phrases or single words, provide the most natural translation.${p
           },
         ],
         temperature: 0.2,
-        max_tokens: 1000,
+        max_tokens: 4096,
       });
 
       const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
@@ -268,7 +268,7 @@ For very short phrases or single words, provide the most natural translation.${p
         },
       ],
       temperature: 0.2,
-      max_tokens: 1000,
+      max_tokens: 4096,
     });
 
     const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
