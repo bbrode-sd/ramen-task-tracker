@@ -117,7 +117,8 @@ service cloud.firestore {
         (request.resource.data.displayName == null || 
           (isString(request.resource.data.displayName) && isValidLength(request.resource.data.displayName, 100))) &&
         // Prevent extra fields (allowlist approach)
-        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
+        // cardViews is a map of cardId -> timestamp for notification badge tracking
+        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt', 'cardViews']);
       
       // Only the user can update their own profile
       allow update: if isAuthenticated() && 
@@ -126,13 +127,12 @@ service cloud.firestore {
         request.resource.data.uid == resource.data.uid &&
         // Cannot change createdAt
         request.resource.data.createdAt == resource.data.createdAt &&
-        // Must update updatedAt
-        isTimestamp(request.resource.data.updatedAt) &&
         // Field length limits
         (request.resource.data.displayName == null || 
           (isString(request.resource.data.displayName) && isValidLength(request.resource.data.displayName, 100))) &&
         // Prevent extra fields
-        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt']);
+        // cardViews is a map of cardId -> timestamp for notification badge tracking
+        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt', 'cardViews']);
       
       // Users cannot delete their profile (would orphan data)
       allow delete: if false;
