@@ -269,8 +269,10 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
   // Mark card as viewed when modal opens (clears notification badge)
   useEffect(() => {
-    markCardAsViewed(cardId);
-  }, [cardId, markCardAsViewed]);
+    if (user) {
+      markCardAsViewed(cardId);
+    }
+  }, [cardId, markCardAsViewed, user]);
 
   // Subscribe to columns for the list selector
   useEffect(() => {

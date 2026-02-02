@@ -158,8 +158,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   
   const markCardAsViewed = useCallback(
     async (cardId: string) => {
-      if (!user) return;
-      await markCardAsViewedFirestore(user.uid, cardId);
+      if (!user) {
+        console.warn('markCardAsViewed called without user');
+        return;
+      }
+      try {
+        await markCardAsViewedFirestore(user.uid, cardId);
+      } catch (error) {
+        console.error('Error marking card as viewed:', error);
+      }
     },
     [user]
   );
