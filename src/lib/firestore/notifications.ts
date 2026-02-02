@@ -30,20 +30,29 @@ export const markCardAsViewed = async (
   const userRef = doc(db, 'users', userId);
   const userDoc = await getDoc(userRef);
   
-  const currentViews = userDoc.exists() 
-    ? (userDoc.data()?.cardViews || {}) 
-    : {};
+  // Only update if user document exists (to avoid triggering create rules)
+  if (!userDoc.exists()) {
+    console.warn('[Notifications] User document does not exist, skipping markCardAsViewed');
+    return;
+  }
+  
+  const currentViews = userDoc.data()?.cardViews || {};
+  const newTimestamp = Timestamp.now();
+  
+  console.log('[Notifications] Marking card as viewed:', { cardId, userId, timestamp: newTimestamp.toMillis() });
   
   await setDoc(
     userRef,
     {
       cardViews: {
         ...currentViews,
-        [cardId]: Timestamp.now(),
+        [cardId]: newTimestamp,
       },
     },
     { merge: true }
   );
+  
+  console.log('[Notifications] Card marked as viewed successfully');
 };
 
 /**

@@ -80,7 +80,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     
     const unsubscribe = subscribeToCardViews(
       user.uid,
-      setCardViews,
+      (views) => {
+        console.log('[Notifications] Card views updated:', Object.keys(views).length, 'cards');
+        setCardViews(views);
+      },
       (error) => {
         console.error('Error subscribing to card views:', error);
       }
