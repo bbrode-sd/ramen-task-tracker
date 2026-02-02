@@ -13,6 +13,59 @@ import { Header } from './Header';
 import { EmptyState } from './EmptyState';
 import { ReplayTourButton } from './OnboardingTour';
 import { ShortcutHint } from './Tooltip';
+import { GRADIENT_PRESETS } from './BackgroundPicker';
+import type { BoardBackground } from '@/types';
+
+// Default gradient for board cards (Ember - orange/red theme)
+const DEFAULT_BOARD_GRADIENT = GRADIENT_PRESETS[0]; // Ember
+
+// Helper to get board card background style with HSL interpolation
+function getBoardCardBackground(background?: BoardBackground): React.CSSProperties {
+  if (!background || !background.value) {
+    // Use default gradient with HSL interpolation
+    return {
+      background: `linear-gradient(135deg in hsl, ${DEFAULT_BOARD_GRADIENT.colors.join(', ')})`,
+    };
+  }
+
+  if (background.type === 'gradient') {
+    const preset = GRADIENT_PRESETS.find(p => p.value === background.value);
+    if (preset) {
+      return {
+        background: `linear-gradient(135deg in hsl, ${preset.colors.join(', ')})`,
+      };
+    }
+  }
+
+  if (background.type === 'color') {
+    // For solid colors, just use the hex value from COLOR_PRESETS lookup
+    // The value is a Tailwind class like 'bg-red-600', we need to convert to actual color
+    // For now, use a simple mapping or fallback
+    const colorMap: Record<string, string> = {
+      'bg-slate-600': '#475569',
+      'bg-gray-600': '#4b5563',
+      'bg-red-600': '#dc2626',
+      'bg-orange-600': '#ea580c',
+      'bg-amber-600': '#d97706',
+      'bg-green-600': '#16a34a',
+      'bg-teal-600': '#0d9488',
+      'bg-blue-600': '#2563eb',
+      'bg-indigo-600': '#4f46e5',
+      'bg-purple-600': '#9333ea',
+      'bg-pink-600': '#db2777',
+      'bg-rose-600': '#e11d48',
+    };
+    const hex = colorMap[background.value];
+    if (hex) {
+      return { background: hex };
+    }
+  }
+
+  // Fallback to default gradient
+  return {
+    background: `linear-gradient(135deg in hsl, ${DEFAULT_BOARD_GRADIENT.colors.join(', ')})`,
+  };
+}
 
 export function BoardList() {
   const { user } = useAuth();
@@ -376,7 +429,7 @@ export function BoardList() {
                 className="group relative rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 min-h-[160px] overflow-hidden shadow-lg hover:shadow-xl"
                 style={{ 
                   animationDelay: `${index * 50}ms`,
-                  background: 'linear-gradient(135deg, var(--primary) 0%, #dc2626 100%)',
+                  ...getBoardCardBackground(board.background),
                 }}
               >
                 {/* Ambient glow */}

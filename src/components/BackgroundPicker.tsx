@@ -3,49 +3,65 @@
 import { useState, useRef, useEffect } from 'react';
 import { BoardBackground } from '@/types';
 
-// Gradient presets
+// Gradient presets with hex colors for HSL interpolation
 export const GRADIENT_PRESETS = [
   {
     name: 'Ember',
-    value: 'from-orange-500 via-orange-500 to-red-500',
-    preview: 'linear-gradient(to right, #f97316, #f97316, #ef4444)',
+    value: 'ember',
+    colors: ['#f97316', '#f97316', '#ef4444'],
   },
   {
     name: 'Ocean',
-    value: 'from-blue-500 via-cyan-500 to-teal-500',
-    preview: 'linear-gradient(to right, #3b82f6, #06b6d4, #14b8a6)',
+    value: 'ocean',
+    colors: ['#3b82f6', '#06b6d4', '#14b8a6'],
   },
   {
     name: 'Sunset',
-    value: 'from-orange-400 via-pink-500 to-purple-500',
-    preview: 'linear-gradient(to right, #fb923c, #ec4899, #a855f7)',
+    value: 'sunset',
+    colors: ['#fb923c', '#ec4899', '#a855f7'],
   },
   {
     name: 'Forest',
-    value: 'from-green-500 via-emerald-500 to-teal-500',
-    preview: 'linear-gradient(to right, #22c55e, #10b981, #14b8a6)',
+    value: 'forest',
+    colors: ['#22c55e', '#10b981', '#14b8a6'],
   },
   {
     name: 'Lavender',
-    value: 'from-purple-500 via-violet-500 to-indigo-500',
-    preview: 'linear-gradient(to right, #a855f7, #8b5cf6, #6366f1)',
+    value: 'lavender',
+    colors: ['#a855f7', '#8b5cf6', '#6366f1'],
   },
   {
     name: 'Midnight',
-    value: 'from-slate-700 via-slate-800 to-slate-900',
-    preview: 'linear-gradient(to right, #334155, #1e293b, #0f172a)',
+    value: 'midnight',
+    colors: ['#334155', '#1e293b', '#0f172a'],
   },
   {
     name: 'Rose',
-    value: 'from-rose-400 via-pink-500 to-red-500',
-    preview: 'linear-gradient(to right, #fb7185, #ec4899, #ef4444)',
+    value: 'rose',
+    colors: ['#fb7185', '#ec4899', '#ef4444'],
   },
   {
     name: 'Aurora',
-    value: 'from-green-400 via-blue-500 to-purple-500',
-    preview: 'linear-gradient(to right, #4ade80, #3b82f6, #a855f7)',
+    value: 'aurora',
+    colors: ['#4ade80', '#3b82f6', '#a855f7'],
   },
 ];
+
+// Helper to generate HSL-interpolated gradient CSS
+export function getGradientStyle(gradientValue: string, direction: string = 'to right'): string {
+  const preset = GRADIENT_PRESETS.find(p => p.value === gradientValue);
+  if (!preset) return '';
+  return `linear-gradient(${direction} in hsl, ${preset.colors.join(', ')})`;
+}
+
+// Helper to get gradient style object for React
+export function getGradientStyleObject(gradientValue: string, direction: string = '135deg'): React.CSSProperties {
+  const preset = GRADIENT_PRESETS.find(p => p.value === gradientValue);
+  if (!preset) return {};
+  return {
+    background: `linear-gradient(${direction} in hsl, ${preset.colors.join(', ')})`,
+  };
+}
 
 // Solid color presets
 export const COLOR_PRESETS = [
@@ -243,7 +259,8 @@ export function BackgroundPicker({
                   }`}
                 >
                   <div
-                    className={`h-20 bg-gradient-to-r ${gradient.value}`}
+                    className="h-20"
+                    style={{ background: `linear-gradient(to right in hsl, ${gradient.colors.join(', ')})` }}
                   />
                   <div className="absolute inset-0 flex items-end">
                     <div className="w-full px-3 py-2 bg-gradient-to-t from-black/50 to-transparent">

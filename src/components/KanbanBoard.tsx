@@ -28,6 +28,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Header } from './Header';
 import { Column } from './Column';
+import { GRADIENT_PRESETS } from './BackgroundPicker';
 import { EmptyState, SearchEmptyState } from './EmptyState';
 
 // Lazy load heavy components for better initial load performance
@@ -398,25 +399,39 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     [board, boardId]
   );
 
-  // Helper to get background classes
-  const getBackgroundClasses = () => {
+  // Helper to get background classes and styles
+  // Returns { className, style } for proper HSL gradient interpolation
+  const getBackground = () => {
     // Default premium background with subtle warmth (theme-aware)
-    const defaultBackground = 'bg-gradient-to-br from-slate-50 via-emerald-50/30 to-blue-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950';
+    const defaultClassName = 'bg-gradient-to-br from-slate-50 via-emerald-50/30 to-blue-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950';
     
     if (!board?.background || !board.background.value) {
-      return defaultBackground;
+      return { className: defaultClassName, style: {} as React.CSSProperties };
     }
     
     if (board.background.type === 'gradient') {
-      return `bg-gradient-to-r ${board.background.value}`;
+      // Find the gradient preset and use HSL interpolation
+      const preset = GRADIENT_PRESETS.find(p => p.value === board.background!.value);
+      if (preset) {
+        return {
+          className: '',
+          style: {
+            background: `linear-gradient(135deg in hsl, ${preset.colors.join(', ')})`,
+          } as React.CSSProperties,
+        };
+      }
+      // Fallback for unknown gradient values
+      return { className: defaultClassName, style: {} as React.CSSProperties };
     }
     
     if (board.background.type === 'color') {
-      return board.background.value;
+      return { className: board.background.value, style: {} as React.CSSProperties };
     }
     
-    return defaultBackground;
+    return { className: defaultClassName, style: {} as React.CSSProperties };
   };
+
+  const background = getBackground();
 
   // Translate text to target language
   const translate = useCallback(async (text: string, targetLanguage: 'en' | 'ja'): Promise<string> => {
@@ -968,7 +983,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       );
     }
     return (
-      <div className={`min-h-screen transition-colors duration-500 ${getBackgroundClasses()}`}>
+      <div className={`min-h-screen transition-colors duration-500 ${background.className}`} style={background.style}>
         <Header 
           boardName={board?.name} 
           boardId={boardId}
@@ -1095,7 +1110,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
 
   // Full board view
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${getBackgroundClasses()}`}>
+    <div className={`min-h-screen transition-colors duration-500 ${background.className}`} style={background.style}>
       <Header
         boardName={board?.name}
         onBoardNameChange={handleBoardNameChange}
