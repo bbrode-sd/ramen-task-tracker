@@ -20,6 +20,14 @@
       "collectionGroup": "boards",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "memberIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "isArchived", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "boards",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "parentCardId", "order": "ASCENDING" },
         { "fieldPath": "memberIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isArchived", "order": "ASCENDING" }
