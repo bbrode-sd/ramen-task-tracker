@@ -239,6 +239,9 @@ export const addBoardMember = async (
     return { success: false, error: 'Failed to add member. Please try again.' };
   }
   
+  // Propagate member addition to all sub-boards and template boards
+  await propagateMemberAddition(boardId, user.uid);
+  
   return {
     success: true,
     member: {
@@ -275,7 +278,107 @@ export const removeBoardMember = async (
     updatedAt: Timestamp.now(),
   });
   
+  // Propagate member removal to all sub-boards and template boards
+  await propagateMemberRemoval(boardId, userId);
+  
   return { success: true };
+};
+
+/**
+ * Get all child boards (sub-boards and template boards) for a parent board
+ * This is used to propagate member changes
+ */
+const getChildBoards = async (parentBoardId: string): Promise<Board[]> => {
+  const childBoards: Board[] = [];
+  
+  // Get sub-boards (boards with parentBoardId)
+  const subBoardsQuery = query(
+    collection(db, 'boards'),
+    where('parentBoardId', '==', parentBoardId),
+    where('isArchived', '==', false)
+  );
+  const subBoardsSnapshot = await getDocs(subBoardsQuery);
+  subBoardsSnapshot.docs.forEach((doc) => {
+    childBoards.push({ id: doc.id, ...doc.data() } as Board);
+  });
+  
+  // Get template boards (boards with templateForBoardId)
+  const templateBoardsQuery = query(
+    collection(db, 'boards'),
+    where('templateForBoardId', '==', parentBoardId),
+    where('isArchived', '==', false)
+  );
+  const templateBoardsSnapshot = await getDocs(templateBoardsQuery);
+  templateBoardsSnapshot.docs.forEach((doc) => {
+    childBoards.push({ id: doc.id, ...doc.data() } as Board);
+  });
+  
+  return childBoards;
+};
+
+/**
+ * Propagate a member addition to all sub-boards and template boards (recursively)
+ * This ensures that when a member is added to a parent board,
+ * they also gain access to all existing sub-boards, templates, and nested sub-boards
+ */
+const propagateMemberAddition = async (parentBoardId: string, userId: string): Promise<void> => {
+  try {
+    const childBoards = await getChildBoards(parentBoardId);
+    
+    for (const childBoard of childBoards) {
+      // Skip if user is already a member
+      if (childBoard.memberIds.includes(userId)) {
+        continue;
+      }
+      
+      const boardRef = doc(db, 'boards', childBoard.id);
+      await updateDoc(boardRef, {
+        memberIds: [...childBoard.memberIds, userId],
+        updatedAt: Timestamp.now(),
+      });
+      
+      // Recursively propagate to nested sub-boards
+      await propagateMemberAddition(childBoard.id, userId);
+    }
+  } catch (error) {
+    // Log but don't fail the parent operation
+    console.error('Error propagating member addition to child boards:', error);
+  }
+};
+
+/**
+ * Propagate a member removal to all sub-boards and template boards (recursively)
+ * This ensures that when a member is removed from a parent board,
+ * they also lose access to all existing sub-boards, templates, and nested sub-boards
+ */
+const propagateMemberRemoval = async (parentBoardId: string, userId: string): Promise<void> => {
+  try {
+    const childBoards = await getChildBoards(parentBoardId);
+    
+    for (const childBoard of childBoards) {
+      // Skip if user is not a member
+      if (!childBoard.memberIds.includes(userId)) {
+        continue;
+      }
+      
+      // Don't remove the owner of the sub-board
+      if (childBoard.ownerId === userId) {
+        continue;
+      }
+      
+      const boardRef = doc(db, 'boards', childBoard.id);
+      await updateDoc(boardRef, {
+        memberIds: childBoard.memberIds.filter((id) => id !== userId),
+        updatedAt: Timestamp.now(),
+      });
+      
+      // Recursively propagate to nested sub-boards
+      await propagateMemberRemoval(childBoard.id, userId);
+    }
+  } catch (error) {
+    // Log but don't fail the parent operation
+    console.error('Error propagating member removal to child boards:', error);
+  }
 };
 
 /**
