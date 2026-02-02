@@ -3212,8 +3212,9 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                       content={newComment}
                       onChange={setNewComment}
                       placeholder={t('cardModal.comment.placeholder')}
-                      minHeight="70px"
+                      minHeight="120px"
                       accentColor="emerald"
+                      resizable
                     />
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-xs text-slate-500 dark:text-slate-400">{t('cardModal.comment.submitHint')}</span>

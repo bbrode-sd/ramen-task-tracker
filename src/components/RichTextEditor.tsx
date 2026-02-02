@@ -16,6 +16,7 @@ interface RichTextEditorProps {
   autoFocus?: boolean;
   onKeyDown?: (event: React.KeyboardEvent) => void;
   accentColor?: 'blue' | 'red' | 'emerald';
+  resizable?: boolean;
 }
 
 interface MenuBarProps {
@@ -196,6 +197,7 @@ export function RichTextEditor({
   autoFocus = false,
   onKeyDown,
   accentColor = 'blue',
+  resizable = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -248,10 +250,12 @@ export function RichTextEditor({
       onKeyDown={onKeyDown}
     >
       <MenuBar editor={editor} accentColor={accentColor} />
-      <EditorContent 
-        editor={editor} 
-        className="rich-text-editor"
-      />
+      <div className={resizable ? 'resize-y overflow-auto rounded-b-xl' : ''} style={resizable ? { minHeight } : undefined}>
+        <EditorContent 
+          editor={editor} 
+          className="rich-text-editor"
+        />
+      </div>
       <style jsx global>{`
         .rich-text-editor .ProseMirror {
           min-height: ${minHeight};
