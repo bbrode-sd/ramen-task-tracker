@@ -245,6 +245,13 @@ body {
   box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2);
 }
 
+/* Disable focus outline for rich text editor content (parent container handles focus ring) */
+.rich-text-editor .ProseMirror:focus-visible,
+.rich-text-editor .ProseMirror *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* High contrast focus ring for buttons */
 button:focus-visible,
 [role="button"]:focus-visible {

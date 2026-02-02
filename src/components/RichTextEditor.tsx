@@ -255,6 +255,8 @@ export function RichTextEditor({
       <style jsx global>{`
         .rich-text-editor .ProseMirror {
           min-height: ${minHeight};
+          outline: none !important;
+          box-shadow: none !important;
         }
         .rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
@@ -263,8 +265,15 @@ export function RichTextEditor({
           pointer-events: none;
           height: 0;
         }
-        .rich-text-editor .ProseMirror:focus {
-          outline: none;
+        .rich-text-editor .ProseMirror:focus,
+        .rich-text-editor .ProseMirror:focus-visible,
+        .rich-text-editor .ProseMirror *:focus,
+        .rich-text-editor .ProseMirror *:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .rich-text-editor:focus-within .ProseMirror {
+          outline: none !important;
         }
         .rich-text-editor .ProseMirror ul {
           list-style-type: disc;
