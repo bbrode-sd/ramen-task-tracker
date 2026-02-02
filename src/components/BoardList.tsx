@@ -16,8 +16,8 @@ import { ShortcutHint } from './Tooltip';
 import { GRADIENT_PRESETS } from './BackgroundPicker';
 import type { BoardBackground } from '@/types';
 
-// Default gradient for board cards (Ember - orange/red theme)
-const DEFAULT_BOARD_GRADIENT = GRADIENT_PRESETS[0]; // Ember
+// Default gradient for board cards (Tomobodo - brand green to blue)
+const DEFAULT_BOARD_GRADIENT = GRADIENT_PRESETS[0]; // Tomobodo
 
 // Helper to get board card background style with HSL interpolation
 function getBoardCardBackground(background?: BoardBackground): React.CSSProperties {

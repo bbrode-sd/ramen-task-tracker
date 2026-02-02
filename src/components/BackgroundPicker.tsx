@@ -6,9 +6,14 @@ import { BoardBackground } from '@/types';
 // Gradient presets with hex colors for HSL interpolation
 export const GRADIENT_PRESETS = [
   {
+    name: 'Tomobodo',
+    value: 'tomobodo',
+    colors: ['#10b981', '#2563eb'], // Brand colors: emerald to blue
+  },
+  {
     name: 'Ember',
     value: 'ember',
-    colors: ['#f97316', '#f97316', '#ef4444'],
+    colors: ['#f97316', '#ef4444'],
   },
   {
     name: 'Ocean',
