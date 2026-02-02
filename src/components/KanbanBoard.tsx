@@ -20,6 +20,7 @@ import {
   reorderColumns,
   reorderCards,
   updateBoard,
+  updateCard,
   logActivity,
   archiveCard,
   restoreCard,
@@ -873,6 +874,43 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
               searchInputRef.current.focus();
             }
           }, 0);
+          break;
+          
+        case ' ':
+          // Toggle self-assignment on hovered card
+          if (hoveredCardId && user) {
+            e.preventDefault();
+            const cardToToggle = cards.find(c => c.id === hoveredCardId);
+            if (cardToToggle) {
+              const currentAssignees = cardToToggle.assigneeIds || [];
+              const isAssigned = currentAssignees.includes(user.uid);
+              const newAssignees = isAssigned
+                ? currentAssignees.filter(id => id !== user.uid)
+                : [...currentAssignees, user.uid];
+              
+              updateCard(boardId, hoveredCardId, { assigneeIds: newAssignees }).then(() => {
+                showToast('success', isAssigned ? 'Unassigned from card' : 'Assigned to card');
+                
+                // Log activity only when assigning (not when unassigning)
+                if (!isAssigned) {
+                  logActivity(boardId, {
+                    cardId: hoveredCardId,
+                    cardTitle: cardToToggle.titleEn,
+                    type: 'assignee_added',
+                    userId: user.uid,
+                    userName: user.displayName || 'Anonymous',
+                    userPhoto: user.photoURL,
+                    metadata: {
+                      assigneeName: user.displayName || 'Anonymous',
+                    },
+                  });
+                }
+              }).catch((error) => {
+                console.error('Failed to toggle assignment:', error);
+                showToast('error', 'Failed to update assignment');
+              });
+            }
+          }
           break;
           
         case 'c':
