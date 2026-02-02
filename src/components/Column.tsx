@@ -943,6 +943,8 @@ export const Column = memo(ColumnComponent, (prevProps, nextProps) => {
   if (prevProps.hasActiveFilters !== nextProps.hasActiveFilters) return false;
   if (prevProps.isFocused !== nextProps.isFocused) return false;
   if (prevProps.focusedCardIndex !== nextProps.focusedCardIndex) return false;
+  // Re-render when hasUnreadActivity function changes (notification state update)
+  if (prevProps.hasUnreadActivity !== nextProps.hasUnreadActivity) return false;
   
   // Fast comparison for cards array - compare by ID and order only for drag/drop
   // Individual card content changes are handled by the Card component's memo

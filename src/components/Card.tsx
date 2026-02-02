@@ -679,7 +679,8 @@ function CardComponent({
                   height={180}
                   loading="lazy"
                   sizes="300px"
-                  className="w-full h-auto max-h-[180px] object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                  style={{ width: '100%', height: 'auto' }}
+                  className="max-h-[180px] object-contain group-hover:scale-[1.02] transition-transform duration-300"
                 />
               </div>
             ) : (
