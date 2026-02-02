@@ -3215,6 +3215,12 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                       minHeight="120px"
                       accentColor="emerald"
                       resizable
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          handleAddComment();
+                        }
+                      }}
                     />
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-xs text-slate-500 dark:text-slate-400">{t('cardModal.comment.submitHint')}</span>
