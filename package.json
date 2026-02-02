@@ -17,6 +17,8 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@sendgrid/mail": "^8.1.6",
     "@tanstack/react-virtual": "^3.13.18",
+    "@tiptap/extension-bubble-menu": "^3.18.0",
+    "@tiptap/extension-floating-menu": "^3.18.0",
     "@tiptap/extension-link": "^3.18.0",
     "@tiptap/extension-placeholder": "^3.18.0",
     "@tiptap/extension-underline": "^3.18.0",
