@@ -1,10 +1,11 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { FilterProvider } from '@/contexts/FilterContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { LoginScreen } from '@/components/LoginScreen';
 import { KanbanBoard } from '@/components/KanbanBoard';
 import { ErrorBoundary, FullPageErrorFallback } from '@/components/ErrorBoundary';
@@ -19,9 +20,16 @@ interface BoardPageProps {
 export default function BoardPage({ params }: BoardPageProps) {
   const { boardId } = use(params);
   const { user, loading } = useAuth();
+  const { setBoardId } = useNotifications();
   const searchParams = useSearchParams();
   const cardId = searchParams.get('card');
   const router = useRouter();
+
+  // Set the board ID for notification tracking
+  useEffect(() => {
+    setBoardId(boardId);
+    return () => setBoardId(null);
+  }, [boardId, setBoardId]);
 
   if (loading) {
     return (

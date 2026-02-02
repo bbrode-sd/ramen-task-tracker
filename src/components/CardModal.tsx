@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board } from '@/types';
 import {
   getCard,
@@ -86,6 +87,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
   const { user } = useAuth();
   const { showToast } = useToast();
   const { locale, t } = useLocale();
+  const { markCardAsViewed } = useNotifications();
   const { 
     debouncedTranslate, 
     translateWithAutoDetect, 
@@ -264,6 +266,11 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
     
     return () => unsubscribe();
   }, [boardId, cardId]);
+
+  // Mark card as viewed when modal opens (clears notification badge)
+  useEffect(() => {
+    markCardAsViewed(cardId);
+  }, [cardId, markCardAsViewed]);
 
   // Subscribe to columns for the list selector
   useEffect(() => {

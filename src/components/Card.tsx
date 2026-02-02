@@ -417,6 +417,7 @@ interface CardProps {
   onArchive?: (cardId: string) => void;
   onDuplicate?: (cardId: string) => void;
   commentCount?: number;
+  hasUnreadActivity?: boolean;
   'data-onboarding'?: string;
 }
 
@@ -447,6 +448,7 @@ function CardComponent({
   onArchive,
   onDuplicate,
   commentCount = 0,
+  hasUnreadActivity = false,
   'data-onboarding': dataOnboarding 
 }: CardProps) {
   const { searchQuery } = useFilter();
@@ -651,6 +653,17 @@ function CardComponent({
               <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
+            </div>
+          )}
+          
+          {/* Notification badge for unread activity */}
+          {hasUnreadActivity && !isSelected && !snapshot.isDragging && (
+            <div 
+              className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-md z-10 animate-pulse"
+              title="New activity on this card"
+              aria-label="New activity"
+            >
+              <span className="sr-only">New activity</span>
             </div>
           )}
           
@@ -985,6 +998,7 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.selectedCount === nextProps.selectedCount &&
     prevProps.commentCount === nextProps.commentCount &&
+    prevProps.hasUnreadActivity === nextProps.hasUnreadActivity &&
     prevProps.onArchive === nextProps.onArchive &&
     prevProps.onDuplicate === nextProps.onDuplicate &&
     shallowArrayEqual(prevProps.card.labels, nextProps.card.labels) &&

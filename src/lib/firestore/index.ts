@@ -136,3 +136,11 @@ export {
   cancelPendingInvitation,
   processPendingInvitationsForUser,
 } from './invitations';
+
+// Notification operations
+export {
+  markCardAsViewed,
+  subscribeToCardViews,
+  BADGE_TRIGGERING_ACTIVITY_TYPES,
+  shouldTriggerBadge,
+} from './notifications';

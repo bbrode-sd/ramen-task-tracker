@@ -11,6 +11,7 @@ import { useFilter } from '@/contexts/FilterContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { Board, Column as ColumnType, Card as CardType, BoardBackground } from '@/types';
 import {
   subscribeToColumns,
@@ -105,6 +106,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     hoveredCardId,
   } = useKeyboardShortcuts();
   const { showToast } = useToast();
+  const { hasUnreadActivity } = useNotifications();
   const { t } = useLocale();
   const router = useRouter();
   const [board, setBoard] = useState<Board | null>(null);
@@ -1046,6 +1048,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                     focusedCardIndex={null}
                     selectedCards={selectedCards}
                     onCardSelectToggle={handleCardSelectToggle}
+                    hasUnreadActivity={hasUnreadActivity}
                   />
                 ))}
                 {provided.placeholder}
@@ -1251,6 +1254,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                     focusedCardIndex={focusedColumnIndex === index ? focusedCardIndex : null}
                     selectedCards={selectedCards}
                     onCardSelectToggle={handleCardSelectToggle}
+                    hasUnreadActivity={hasUnreadActivity}
                   />
                 ))}
                 {provided.placeholder}

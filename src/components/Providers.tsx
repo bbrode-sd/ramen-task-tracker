@@ -10,6 +10,7 @@ import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { TranslationProvider } from '@/contexts/TranslationContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ToastContainer } from './Toast';
 import { OfflineIndicator } from './OfflineIndicator';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -39,23 +40,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <LocaleProvider>
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>
-              <TranslationProvider>
-                <SyncProvider>
-                  <OfflineProvider>
-                    <KeyboardShortcutsProvider>
-                      <OnboardingProvider>
-                        <OfflineIndicator position="top" />
-                        {children}
-                        <ToastContainer />
-                        <KeyboardShortcutsHelp />
-                        <OnboardingTour />
-                      </OnboardingProvider>
-                    </KeyboardShortcutsProvider>
-                  </OfflineProvider>
-                </SyncProvider>
-              </TranslationProvider>
-            </ToastProvider>
+            <NotificationProvider>
+              <ToastProvider>
+                <TranslationProvider>
+                  <SyncProvider>
+                    <OfflineProvider>
+                      <KeyboardShortcutsProvider>
+                        <OnboardingProvider>
+                          <OfflineIndicator position="top" />
+                          {children}
+                          <ToastContainer />
+                          <KeyboardShortcutsHelp />
+                          <OnboardingTour />
+                        </OnboardingProvider>
+                      </KeyboardShortcutsProvider>
+                    </OfflineProvider>
+                  </SyncProvider>
+                </TranslationProvider>
+              </ToastProvider>
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </LocaleProvider>

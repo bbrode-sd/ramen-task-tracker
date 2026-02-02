@@ -41,6 +41,8 @@ interface ColumnProps {
   focusedCardIndex?: number | null;
   selectedCards?: Set<string>;
   onCardSelectToggle?: (cardId: string, shiftKey: boolean) => void;
+  /** Check if a card has unread activity */
+  hasUnreadActivity?: (cardId: string) => boolean;
   /** Embedded mode for sub-boards - uses narrower columns */
   embedded?: boolean;
 }
@@ -68,6 +70,7 @@ function ColumnComponent({
   focusedCardIndex = null,
   selectedCards = new Set(),
   onCardSelectToggle,
+  hasUnreadActivity,
 }: ColumnProps) {
   const renderStart = process.env.NODE_ENV === 'development' ? performance.now() : 0;
   const { user } = useAuth();
@@ -743,6 +746,7 @@ function ColumnComponent({
                       onArchive={handleArchiveCard}
                       onDuplicate={handleDuplicateCard}
                       commentCount={card.commentCount || 0}
+                      hasUnreadActivity={hasUnreadActivity?.(card.id)}
                       data-onboarding={cardIndex === 0 ? "card" : undefined}
                     />
                   ));
