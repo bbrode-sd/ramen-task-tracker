@@ -8,6 +8,7 @@ import { Timestamp } from 'firebase/firestore';
 import { Comment } from '@/types';
 import { updateCommentTranslation } from '@/lib/firestore';
 import { useLocale } from '@/contexts/LocaleContext';
+import { RichTextEditor, RichTextDisplay } from '@/components/RichTextEditor';
 
 interface CommentItemProps {
   comment: Comment;
@@ -193,12 +194,12 @@ export function CommentItem({
               </div>
               {editingLang === 'en' ? (
                 <div className="space-y-2">
-                  <textarea
-                    value={editingContent}
-                    onChange={(e) => setEditingContent(e.target.value)}
-                    className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                    rows={3}
+                  <RichTextEditor
+                    content={editingContent}
+                    onChange={setEditingContent}
+                    minHeight="60px"
                     autoFocus
+                    accentColor="blue"
                   />
                   <div className="flex gap-2 justify-end">
                     <button
@@ -210,7 +211,7 @@ export function CommentItem({
                     </button>
                     <button
                       onClick={handleConfirmEdit}
-                      disabled={isSaving || !editingContent.trim()}
+                      disabled={isSaving || !editingContent.trim() || editingContent === '<p></p>'}
                       className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
                     >
                       {isSaving ? t('cardModal.comment.saving') : t('common.confirm')}
@@ -218,7 +219,7 @@ export function CommentItem({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{englishContent}</p>
+                <RichTextDisplay content={englishContent} className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed" />
               )}
             </div>
           </div>
@@ -255,12 +256,12 @@ export function CommentItem({
               </div>
               {editingLang === 'ja' ? (
                 <div className="space-y-2">
-                  <textarea
-                    value={editingContent}
-                    onChange={(e) => setEditingContent(e.target.value)}
-                    className="w-full text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                    rows={3}
+                  <RichTextEditor
+                    content={editingContent}
+                    onChange={setEditingContent}
+                    minHeight="60px"
                     autoFocus
+                    accentColor="red"
                   />
                   <div className="flex gap-2 justify-end">
                     <button
@@ -272,7 +273,7 @@ export function CommentItem({
                     </button>
                     <button
                       onClick={handleConfirmEdit}
-                      disabled={isSaving || !editingContent.trim()}
+                      disabled={isSaving || !editingContent.trim() || editingContent === '<p></p>'}
                       className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
                     >
                       {isSaving ? t('cardModal.comment.saving') : t('common.confirm')}
@@ -280,7 +281,7 @@ export function CommentItem({
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{japaneseContent}</p>
+                <RichTextDisplay content={japaneseContent} className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed" />
               )}
             </div>
           </div>

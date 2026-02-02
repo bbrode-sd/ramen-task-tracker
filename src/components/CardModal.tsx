@@ -55,6 +55,7 @@ import { CommentItem } from './CardModal/CommentItem';
 import { ActivityItem } from './CardModal/ActivityItem';
 import { COVER_COLORS, getAvatarColor, getInitials } from './CardModal/utils';
 import { KanbanBoard } from './KanbanBoard';
+import { RichTextEditor, RichTextDisplay } from './RichTextEditor';
 
 /** Parent card info for sub-tickets */
 export interface ParentCardInfo {
@@ -2323,27 +2324,18 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                 </div>
                 {editingField === 'descriptionEn' ? (
                   <div className="space-y-2">
-                    <textarea
-                      id="card-description-en"
-                      value={editDescriptionEn}
-                      onChange={(e) => setEditDescriptionEn(e.target.value)}
+                    <RichTextEditor
+                      content={editDescriptionEn}
+                      onChange={setEditDescriptionEn}
+                      placeholder={t('cardModal.enterDescriptionEn')}
+                      minHeight="100px"
+                      autoFocus
+                      accentColor="blue"
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
                           cancelEditing();
-                        } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          e.preventDefault();
-                          saveDescriptionEn();
                         }
                       }}
-                      autoFocus
-                      aria-describedby={translationState.errors[fieldKeys.descriptionEn] ? 'desc-en-error' : undefined}
-                      aria-invalid={!!translationState.errors[fieldKeys.descriptionEn]}
-                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                        translationState.errors[fieldKeys.descriptionEn]
-                          ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                          : 'border-slate-200 dark:border-slate-700/80 focus:ring-blue-500/20 focus:border-blue-400'
-                      }`}
-                      placeholder={t('cardModal.enterDescriptionEn')}
                     />
                     <div className="flex gap-2">
                       <button
@@ -2368,7 +2360,11 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                       }`}
                       onClick={startEditingDescriptionEn}
                     >
-                      <p className="whitespace-pre-wrap">{descriptionEn || t('cardModal.noDescription')}</p>
+                      {descriptionEn ? (
+                        <RichTextDisplay content={descriptionEn} className="text-sm" />
+                      ) : (
+                        <p className="text-slate-400 dark:text-slate-500 italic">{t('cardModal.noDescription')}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -2398,27 +2394,18 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                 </div>
                 {editingField === 'descriptionJa' ? (
                   <div className="space-y-2">
-                    <textarea
-                      id="card-description-ja"
-                      value={editDescriptionJa}
-                      onChange={(e) => setEditDescriptionJa(e.target.value)}
+                    <RichTextEditor
+                      content={editDescriptionJa}
+                      onChange={setEditDescriptionJa}
+                      placeholder={t('cardModal.enterDescriptionJa')}
+                      minHeight="100px"
+                      autoFocus
+                      accentColor="red"
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') {
                           cancelEditing();
-                        } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          e.preventDefault();
-                          saveDescriptionJa();
                         }
                       }}
-                      autoFocus
-                      aria-describedby={translationState.errors[fieldKeys.descriptionJa] ? 'desc-ja-error' : undefined}
-                      aria-invalid={!!translationState.errors[fieldKeys.descriptionJa]}
-                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 min-h-[130px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
-                        translationState.errors[fieldKeys.descriptionJa]
-                          ? 'border-red-300 dark:border-red-600 focus:ring-red-500/20 focus:border-red-400'
-                          : 'border-slate-200 dark:border-slate-700/80 focus:ring-red-500/20 focus:border-red-400'
-                      }`}
-                      placeholder={t('cardModal.enterDescriptionJa')}
                     />
                     <div className="flex gap-2">
                       <button
@@ -2443,7 +2430,11 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                       }`}
                       onClick={startEditingDescriptionJa}
                     >
-                      <p className="whitespace-pre-wrap">{descriptionJa || t('cardModal.noDescription')}</p>
+                      {descriptionJa ? (
+                        <RichTextDisplay content={descriptionJa} className="text-sm" />
+                      ) : (
+                        <p className="text-slate-400 dark:text-slate-500 italic">{t('cardModal.noDescription')}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -3217,22 +3208,18 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                    <RichTextEditor
+                      content={newComment}
+                      onChange={setNewComment}
                       placeholder={t('cardModal.comment.placeholder')}
-                      className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 min-h-[90px] resize-y transition-all bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          handleAddComment();
-                        }
-                      }}
+                      minHeight="70px"
+                      accentColor="emerald"
                     />
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-xs text-slate-500 dark:text-slate-400">{t('cardModal.comment.submitHint')}</span>
                       <button
                         onClick={handleAddComment}
-                        disabled={!newComment.trim() || isAddingComment}
+                        disabled={!newComment.trim() || newComment === '<p></p>' || isAddingComment}
                         className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-sm active:scale-[0.98]"
                       >
                         {isAddingComment ? t('cardModal.comment.posting') : t('cardModal.comment.postComment')}
