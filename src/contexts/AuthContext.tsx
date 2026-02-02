@@ -9,7 +9,7 @@ import {
   signInAnonymously,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
-import { saveUserProfile } from '@/lib/firestore';
+import { saveUserProfile, processPendingInvitationsForUser } from '@/lib/firestore';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -61,6 +61,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (userData.email) {
           try {
             await saveUserProfile(userData);
+            
+            // Process any pending invitations for this user
+            // This adds them to boards they were invited to before signing up
+            try {
+              const result = await processPendingInvitationsForUser(userData.uid, userData.email);
+              if (result.count > 0) {
+                console.log(`[Auth] Processed ${result.count} pending invitation(s) for ${userData.email}`);
+              }
+            } catch (invitationError) {
+              // Don't fail the sign-in if invitation processing fails
+              console.error('Error processing pending invitations:', invitationError);
+            }
           } catch (error) {
             console.error('Error saving user profile:', error);
           }

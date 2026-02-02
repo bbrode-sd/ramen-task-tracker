@@ -246,3 +246,18 @@ export interface Activity {
   metadata: Record<string, unknown>; // e.g., { from: 'To Do', to: 'Done' }
   createdAt: Timestamp;
 }
+
+// Pending invitation for users who haven't signed up yet
+export interface PendingInvitation {
+  id: string;
+  email: string;              // Email of the invitee (lowercase)
+  boardId: string;            // Board they're invited to
+  boardName: string;          // Board name for display in email/UI
+  invitedBy: string;          // User ID who sent the invitation
+  invitedByName: string;      // Display name of inviter
+  invitedByEmail: string;     // Email of inviter
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  acceptedAt?: Timestamp;     // When the invitation was accepted
+}

@@ -129,25 +129,22 @@ export const getBoardMembers = async (boardId: string): Promise<BoardMember[]> =
 
 /**
  * Add a member to the board by email
+ * If user doesn't exist yet, creates a pending invitation and optionally sends an email
  */
 export const addBoardMember = async (
   boardId: string,
-  email: string
-): Promise<{ success: boolean; error?: string; member?: BoardMember }> => {
-  // Find user by email
-  let user;
-  try {
-    user = await getUserByEmail(email.toLowerCase());
-  } catch (error) {
-    console.error('Error looking up user by email:', error);
-    return { success: false, error: 'Failed to look up user. Please try again.' };
-  }
+  email: string,
+  inviter?: { uid: string; displayName: string | null; email: string | null }
+): Promise<{ 
+  success: boolean; 
+  error?: string; 
+  member?: BoardMember;
+  pendingInvitation?: boolean;
+  invitationId?: string;
+}> => {
+  const normalizedEmail = email.toLowerCase().trim();
   
-  if (!user) {
-    return { success: false, error: 'User not found. They need to sign in first.' };
-  }
-  
-  // Get the board
+  // Get the board first (needed for both paths)
   let board;
   try {
     board = await getBoard(boardId);
@@ -158,6 +155,67 @@ export const addBoardMember = async (
   
   if (!board) {
     return { success: false, error: 'Board not found.' };
+  }
+  
+  // Find user by email
+  let user;
+  try {
+    user = await getUserByEmail(normalizedEmail);
+  } catch (error) {
+    console.error('Error looking up user by email:', error);
+    return { success: false, error: 'Failed to look up user. Please try again.' };
+  }
+  
+  // If user doesn't exist, create a pending invitation
+  if (!user) {
+    if (!inviter) {
+      return { success: false, error: 'Inviter information required for pending invitations.' };
+    }
+    
+    try {
+      // Import the invitation function dynamically to avoid circular dependencies
+      const { createPendingInvitation } = await import('./invitations');
+      
+      const invitationId = await createPendingInvitation(
+        normalizedEmail,
+        boardId,
+        board.name,
+        inviter.uid,
+        inviter.displayName || inviter.email || 'A Tomobodo user',
+        inviter.email || ''
+      );
+      
+      // Send invitation email via API
+      try {
+        const response = await fetch('/api/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: normalizedEmail,
+            boardId,
+            boardName: board.name,
+            inviterName: inviter.displayName || inviter.email || 'A Tomobodo user',
+            inviterEmail: inviter.email || '',
+          }),
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to send invitation email, but invitation was created');
+        }
+      } catch (emailError) {
+        console.warn('Failed to send invitation email:', emailError);
+        // Don't fail the whole operation if email fails
+      }
+      
+      return {
+        success: true,
+        pendingInvitation: true,
+        invitationId,
+      };
+    } catch (error) {
+      console.error('Error creating pending invitation:', error);
+      return { success: false, error: 'Failed to create invitation. Please try again.' };
+    }
   }
   
   // Check if already a member

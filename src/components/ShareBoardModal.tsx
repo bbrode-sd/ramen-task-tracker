@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { BoardMember } from '@/types';
+import { BoardMember, PendingInvitation } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { addBoardMember, removeBoardMember, subscribeToBoardMembers, getBoard } from '@/lib/firestore';
+import { addBoardMember, removeBoardMember, subscribeToBoardMembers, getBoard, subscribeToPendingInvitations, cancelPendingInvitation } from '@/lib/firestore';
 
 interface ShareBoardModalProps {
   boardId: string;
@@ -64,6 +64,7 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
   const { user } = useAuth();
   const { showToast } = useToast();
   const [members, setMembers] = useState<BoardMember[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -73,8 +74,12 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
   useEffect(() => {
     if (!isOpen || !boardId) return;
 
-    const unsubscribe = subscribeToBoardMembers(boardId, (fetchedMembers) => {
+    const unsubscribeMembers = subscribeToBoardMembers(boardId, (fetchedMembers) => {
       setMembers(fetchedMembers);
+    });
+
+    const unsubscribeInvitations = subscribeToPendingInvitations(boardId, (fetchedInvitations) => {
+      setPendingInvitations(fetchedInvitations);
     });
 
     // Check if current user is owner
@@ -84,7 +89,10 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeMembers();
+      unsubscribeInvitations();
+    };
   }, [boardId, isOpen, user]);
 
   useEffect(() => {
@@ -119,13 +127,21 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || isLoading) return;
+    if (!email.trim() || isLoading || !user) return;
 
     setIsLoading(true);
     try {
-      const result = await addBoardMember(boardId, email.trim());
+      const result = await addBoardMember(boardId, email.trim(), {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+      });
       if (result.success) {
-        showToast('success', 'Member added successfully!');
+        if (result.pendingInvitation) {
+          showToast('success', 'Invitation sent! They will get access when they sign up.');
+        } else {
+          showToast('success', 'Member added successfully!');
+        }
         setEmail('');
       } else {
         showToast('error', result.error || 'Failed to add member');
@@ -135,6 +151,18 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
       showToast('error', 'Failed to add member');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCancelInvitation = async (invitationId: string) => {
+    if (!isOwner) return;
+
+    try {
+      await cancelPendingInvitation(invitationId);
+      showToast('success', 'Invitation cancelled');
+    } catch (error) {
+      console.error('Error cancelling invitation:', error);
+      showToast('error', 'Failed to cancel invitation');
     }
   };
 
@@ -234,7 +262,7 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
               </button>
             </div>
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              User must have signed in at least once to be added
+              Enter an email to invite them. If they haven&apos;t signed up yet, they&apos;ll get access when they do.
             </p>
           </form>
 
@@ -243,7 +271,7 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Members ({members.length})
             </h3>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto">
               {members.map((member) => (
                 <div
                   key={member.uid}
@@ -290,6 +318,54 @@ export function ShareBoardModal({ boardId, isOpen, onClose }: ShareBoardModalPro
               ))}
             </div>
           </div>
+
+          {/* Pending invitations */}
+          {pendingInvitations.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Pending Invitations ({pendingInvitations.length})
+              </h3>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {pendingInvitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 ring-2 ring-white flex items-center justify-center text-white font-semibold text-sm">
+                      {invitation.email.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900 dark:text-white truncate">
+                          {invitation.email}
+                        </span>
+                        <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded-full flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Pending
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 block">
+                        Invited by {invitation.invitedByName}
+                      </span>
+                    </div>
+                    {isOwner && (
+                      <button
+                        onClick={() => handleCancelInvitation(invitation.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Cancel invitation"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Copy link button */}
           <button
