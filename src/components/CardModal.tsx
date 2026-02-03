@@ -1925,7 +1925,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
         aria-modal="true"
         aria-labelledby="card-modal-title"
         aria-describedby="card-modal-description"
-        className="relative bg-white dark:bg-slate-950/95 rounded-none sm:rounded-2xl shadow-2xl dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.85)] w-full min-h-screen sm:min-h-0 sm:max-w-[1230px] sm:my-0 animate-in fade-in duration-200 border border-slate-200/70 dark:border-slate-800/80 ring-1 ring-black/5 dark:ring-white/5"
+        className={`relative bg-white dark:bg-slate-950/95 rounded-none sm:rounded-2xl shadow-2xl dark:shadow-[0_40px_120px_-60px_rgba(0,0,0,0.85)] w-full min-h-screen sm:min-h-0 ${userTextDisplayMode === 'both' ? 'sm:max-w-[1230px]' : 'sm:max-w-[900px]'} sm:my-0 animate-in fade-in duration-200 border border-slate-200/70 dark:border-slate-800/80 ring-1 ring-black/5 dark:ring-white/5`}
         onClick={(e) => e.stopPropagation()}
         onPaste={handlePaste}
         onDragEnter={handleDragEnter}
