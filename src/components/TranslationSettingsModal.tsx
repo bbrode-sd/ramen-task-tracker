@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation, TranslationContextMode, PrimaryLanguage } from '@/contexts/TranslationContext';
+import { useTranslation, TranslationContextMode } from '@/contexts/TranslationContext';
 
 interface TranslationSettingsModalProps {
   isOpen: boolean;
@@ -18,7 +18,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
   const [displayContextMode, setDisplayContextMode] = useState<'general' | 'custom'>(
     getDisplayMode(settings.contextMode)
   );
-  const [primaryLanguage, setPrimaryLanguage] = useState<PrimaryLanguage>(settings.primaryLanguage);
   const [customContext, setCustomContext] = useState(settings.customContext);
 
   if (!isOpen) return null;
@@ -30,7 +29,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
     
     updateSettings({
       contextMode: actualContextMode,
-      primaryLanguage,
       customContext: displayContextMode === 'custom' ? customContext : settings.customContext,
     });
     onClose();
@@ -46,24 +44,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
       value: 'custom',
       label: 'Custom',
       description: 'Define your own translation context',
-    },
-  ];
-
-  const languageOptions: { value: PrimaryLanguage; label: string; description: string }[] = [
-    {
-      value: 'auto',
-      label: 'Auto-detect',
-      description: 'Detect language based on input',
-    },
-    {
-      value: 'en',
-      label: 'English',
-      description: 'English is your primary language',
-    },
-    {
-      value: 'ja',
-      label: '日本語',
-      description: 'Japanese is your primary language',
     },
   ];
 
@@ -106,32 +86,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Primary Language */}
-          <div className="space-y-3">
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Primary Language
-            </label>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              When you type, which language do you usually write in?
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {languageOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setPrimaryLanguage(option.value)}
-                  className={`p-3 rounded-xl border-2 transition-all text-left ${
-                    primaryLanguage === option.value
-                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30'
-                      : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
-                  }`}
-                >
-                  <div className="text-sm font-medium text-slate-800 dark:text-white">{option.label}</div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{option.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Translation Context */}
           <div className="space-y-3">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
