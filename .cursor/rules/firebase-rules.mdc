@@ -1,0 +1,42 @@
+---
+description: Reminder to check and deploy Firebase security rules when implementing Firestore features
+alwaysApply: true
+---
+
+# Firebase Security Rules Checklist
+
+When implementing features that interact with Firestore, verify that `firestore.rules` has been updated and deployed. The error "Missing or insufficient permissions" typically means the security rules don't allow the operation.
+
+## Before Completing Any Firestore Feature
+
+Check if the feature involves:
+- **New collections** - Add a new `match` block with read/write rules
+- **New fields on existing documents** - Update `hasAll()` and `hasOnly()` field allowlists
+- **New subcollections** - Add nested `match` rules under the parent
+- **Changed access patterns** - Update `isBoardMember()`, `isBoardOwner()`, or similar checks
+
+## Firestore Rules Location
+
+The rules file is at `firestore.rules` in the project root.
+
+## Common Patterns in This Project
+
+- `isBoardMember(boardId)` - Checks if user is in `memberIds` array
+- `isBoardOwner(boardId)` - Checks if user is the `ownerId`
+- `isResourceOwner(resource)` - Checks if user is `createdBy`
+- `hasOnly([...fields])` - Allowlist of permitted fields (add new fields here!)
+- `hasAll([...required])` - Required fields for create operations
+
+## Deployment
+
+After updating rules, deploy with:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+## Example: Adding a New Field
+
+If adding a `priority` field to cards, update both:
+1. The `allow create` rule's `hasAll()` (if required) and `hasOnly()` lists
+2. The `allow update` rule's `hasOnly()` list and any validation
