@@ -52,7 +52,7 @@ const MiniAvatar = memo(function MiniAvatar({
   className?: string;
 }) {
   return (
-    <div className={`relative group ${className}`}>
+    <div className={`relative group/avatar ${className}`}>
       {user.photoURL ? (
         <Image
           src={user.photoURL}
@@ -71,7 +71,7 @@ const MiniAvatar = memo(function MiniAvatar({
       )}
       
       {/* Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover/avatar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
         {user.displayName || 'Unknown User'}
       </div>
     </div>
