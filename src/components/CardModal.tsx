@@ -3233,7 +3233,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
               {/* Add comment */}
               <div className="flex justify-center">
-                <div className="w-full md:w-1/2 flex gap-3">
+                <div className={`w-full ${userTextDisplayMode === 'both' ? 'md:w-1/2' : ''} flex gap-3`}>
                   {user?.photoURL && (
                     <Image
                       src={user.photoURL}
