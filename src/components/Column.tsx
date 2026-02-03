@@ -73,6 +73,7 @@ function ColumnComponent({
   selectedCards = new Set(),
   onCardSelectToggle,
   hasUnreadActivity,
+  boardTags = [],
 }: ColumnProps) {
   const renderStart = process.env.NODE_ENV === 'development' ? performance.now() : 0;
   const { user } = useAuth();
@@ -739,6 +740,7 @@ function ColumnComponent({
                       card={card}
                       index={cards.indexOf(card)} // Use original index for drag-drop ordering
                       boardId={boardId}
+                      boardTags={boardTags}
                       onClick={() => onCardClick(card.id)}
                       isDimmed={false}
                       isFocused={focusedCardIndex === cardIndex}

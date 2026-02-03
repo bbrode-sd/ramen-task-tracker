@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
 import { Draggable, DraggableStateSnapshot } from '@hello-pangea/dnd';
-import { Card as CardType } from '@/types';
+import { Card as CardType, BoardTag } from '@/types';
+import { getTagColorConfig } from './TagManagementModal';
 import { useFilter } from '@/contexts/FilterContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -151,6 +152,25 @@ const PriorityBadge = memo(function PriorityBadge({
     >
       <span className={`w-2 h-2 rounded-full ${config.dot}`} aria-hidden="true" />
       <span>{config.label}</span>
+    </div>
+  );
+});
+
+// Custom tag badge component for displaying board tags
+const TagBadge = memo(function TagBadge({ 
+  tag 
+}: { 
+  tag: BoardTag;
+}) {
+  const colorConfig = getTagColorConfig(tag.color);
+  
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${colorConfig.bg} ${colorConfig.text} ${colorConfig.border}`}
+      title={tag.name}
+    >
+      <span className={`w-2 h-2 rounded-full ${colorConfig.dot}`} aria-hidden="true" />
+      <span>{tag.name}</span>
     </div>
   );
 });
@@ -408,6 +428,7 @@ interface CardProps {
   card: CardType;
   index: number;
   boardId: string;
+  boardTags?: BoardTag[];
   onClick: () => void;
   isDimmed?: boolean;
   isFocused?: boolean;
@@ -439,6 +460,7 @@ interface AssigneeData {
 function CardComponent({ 
   card, 
   index, 
+  boardTags = [],
   onClick, 
   isDimmed = false, 
   isFocused = false, 
@@ -558,6 +580,16 @@ function CardComponent({
       : { completed: 0, total: 0 };
     return { hasChecklists, checklistStats: stats };
   }, [card.checklists]);
+  
+  // Compute resolved tags from card.tagIds and boardTags
+  const resolvedTags = useMemo(() => {
+    if (!card.tagIds?.length || !boardTags?.length) return [];
+    return card.tagIds
+      .map(tagId => boardTags.find(t => t.id === tagId))
+      .filter((t): t is BoardTag => t !== undefined)
+      .sort((a, b) => a.order - b.order);
+  }, [card.tagIds, boardTags]);
+  const hasTags = resolvedTags.length > 0;
   
   // Assignee state
   const [assignees, setAssignees] = useState<AssigneeData[]>([]);
@@ -740,10 +772,15 @@ function CardComponent({
             </div>
 
             {/* Card metadata */}
-            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId) && (
-              <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700">
-                {/* Priority badge */}
-                <PriorityBadge priority={card.priority} />
+            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || hasTags || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId) && (
+              <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
+                {/* Custom tags */}
+                {resolvedTags.map(tag => (
+                  <TagBadge key={tag.id} tag={tag} />
+                ))}
+                
+                {/* Legacy priority badge (only shown if no custom tags) */}
+                {!hasTags && <PriorityBadge priority={card.priority} />}
 
                 {/* Due date badge */}
                 {card.dueDate && (
@@ -1008,6 +1045,8 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevCoverAttachmentSignature === nextCoverAttachmentSignature &&
     shallowArrayEqual(prevProps.card.assigneeIds, nextProps.card.assigneeIds) &&
     shallowArrayEqual(prevProps.card.watcherIds, nextProps.card.watcherIds) &&
+    shallowArrayEqual(prevProps.card.tagIds, nextProps.card.tagIds) &&
+    prevProps.boardTags === nextProps.boardTags &&
     prevProps.card.subBoardId === nextProps.card.subBoardId &&
     prevProps.card.subBoardApprovedCount === nextProps.card.subBoardApprovedCount &&
     prevProps.card.subBoardTotalCount === nextProps.card.subBoardTotalCount

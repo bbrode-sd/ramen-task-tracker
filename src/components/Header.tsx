@@ -10,7 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { SyncIndicator } from './SyncIndicator';
 import Image from 'next/image';
-import { BoardMember, Card } from '@/types';
+import { BoardMember, Card, BoardTag } from '@/types';
 import { subscribeToBoardMembers, subscribeToArchivedCards, subscribeToArchivedColumns, subscribeToCards } from '@/lib/firestore';
 // Avatar is used inline for member display, keep static import
 import { Avatar } from './ShareBoardModal';
@@ -63,6 +63,12 @@ const SubBoardTemplateModal = dynamic(() => import('./SubBoardTemplateModal').th
   loading: () => null,
 });
 
+// TagManagementModal - loaded when user opens tag management
+const TagManagementModal = dynamic(() => import('./TagManagementModal').then(mod => ({ default: mod.TagManagementModal })), {
+  ssr: false,
+  loading: () => null,
+});
+
 interface DueDateStats {
   overdue: number;
   today: number;
@@ -91,6 +97,8 @@ interface HeaderProps {
   parentCard?: ParentCardInfo | null;
   isTemplate?: boolean;
   templateForBoardId?: string;
+  tags?: BoardTag[];
+  onTagsChange?: (tags: BoardTag[]) => void;
 }
 
 export function Header({ 
@@ -107,6 +115,8 @@ export function Header({
   parentCard,
   isTemplate,
   templateForBoardId,
+  tags = [],
+  onTagsChange,
 }: HeaderProps) {
   const router = useRouter();
   const { user, signOut } = useAuth();
@@ -129,6 +139,7 @@ export function Header({
   const [showTranslationSettings, setShowTranslationSettings] = useState(false);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [showSubBoardTemplates, setShowSubBoardTemplates] = useState(false);
+  const [showTagManagement, setShowTagManagement] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -913,6 +924,28 @@ export function Header({
                       {t('header.exportImport')}
                     </button>
 
+                    {/* Tags */}
+                    {onTagsChange && (
+                      <button
+                        role="menuitem"
+                        onClick={() => {
+                          setShowTagManagement(true);
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Manage Tags
+                        {tags.length > 0 && (
+                          <span className="ml-auto min-w-[20px] h-5 flex items-center justify-center px-1.5 text-xs font-bold bg-emerald-100 text-emerald-600 rounded-full">
+                            {tags.length}
+                          </span>
+                        )}
+                      </button>
+                    )}
+
                     <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" role="separator" />
 
                     {/* Translation Settings */}
@@ -1171,6 +1204,17 @@ export function Header({
         boardId={boardId}
       />
 
+      {/* Tag Management Modal */}
+      {boardId && onTagsChange && (
+        <TagManagementModal
+          boardId={boardId}
+          tags={tags}
+          isOpen={showTagManagement}
+          onClose={() => setShowTagManagement(false)}
+          onTagsChange={onTagsChange}
+        />
+      )}
+
       {/* Filter Panel */}
       {boardId && (
         <FilterPanel
@@ -1179,6 +1223,7 @@ export function Header({
           availableLabels={availableLabels}
           cards={cards}
           members={members}
+          boardTags={tags}
           onCardClick={(cardId) => {
             // Navigate to card
             window.location.href = `/boards/${boardId}?card=${cardId}`;

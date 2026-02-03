@@ -21,7 +21,8 @@ interface FilterContextType {
   // State
   searchQuery: string;
   selectedLabels: string[];
-  selectedPriorities: CardPriority[];
+  selectedPriorities: CardPriority[]; // @deprecated - use selectedTagIds
+  selectedTagIds: string[]; // Custom tag IDs for filtering
   showOnlyMyCards: boolean;
   selectedMembers: MemberFilter[];
   selectedDueDates: DueDateFilter[];
@@ -30,7 +31,8 @@ interface FilterContextType {
   // Methods
   setSearchQuery: (query: string) => void;
   toggleLabel: (label: string) => void;
-  togglePriority: (priority: CardPriority) => void;
+  togglePriority: (priority: CardPriority) => void; // @deprecated - use toggleTag
+  toggleTag: (tagId: string) => void;
   toggleMember: (member: MemberFilter) => void;
   toggleDueDate: (dueDate: DueDateFilter) => void;
   setShowComplete: (value: boolean | null) => void;
@@ -52,6 +54,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQueryState] = useState('');
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<CardPriority[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showOnlyMyCards, setShowOnlyMyCards] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<MemberFilter[]>([]);
   const [selectedDueDates, setSelectedDueDates] = useState<DueDateFilter[]>([]);
@@ -70,6 +73,12 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
   const togglePriority = useCallback((priority: CardPriority) => {
     setSelectedPriorities((prev) =>
       prev.includes(priority) ? prev.filter((p) => p !== priority) : [...prev, priority]
+    );
+  }, []);
+
+  const toggleTag = useCallback((tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
     );
   }, []);
 
@@ -93,6 +102,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
     setSearchQueryState('');
     setSelectedLabels([]);
     setSelectedPriorities([]);
+    setSelectedTagIds([]);
     setShowOnlyMyCards(false);
     setSelectedMembers([]);
     setSelectedDueDates([]);
@@ -104,24 +114,26 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
       searchQuery.length > 0 || 
       selectedLabels.length > 0 || 
       selectedPriorities.length > 0 || 
+      selectedTagIds.length > 0 ||
       showOnlyMyCards ||
       selectedMembers.length > 0 ||
       selectedDueDates.length > 0 ||
       showComplete !== null
     );
-  }, [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete]);
+  }, [searchQuery, selectedLabels, selectedPriorities, selectedTagIds, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (searchQuery.length > 0) count++;
     count += selectedLabels.length;
     count += selectedPriorities.length;
+    count += selectedTagIds.length;
     if (showOnlyMyCards) count++;
     count += selectedMembers.length;
     count += selectedDueDates.length;
     if (showComplete !== null) count++;
     return count;
-  }, [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete]);
+  }, [searchQuery, selectedLabels, selectedPriorities, selectedTagIds, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete]);
 
   // Helper to check if card is complete (all checklists done)
   const isCardComplete = useCallback((card: Card): boolean => {
@@ -245,10 +257,22 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Check priority filter
+      // Check priority filter (deprecated - for backwards compatibility)
       if (selectedPriorities.length > 0) {
         const cardPriority = card.priority ?? null;
         if (!selectedPriorities.includes(cardPriority)) {
+          return false;
+        }
+      }
+
+      // Check tag filter
+      if (selectedTagIds.length > 0) {
+        const cardTagIds = card.tagIds || [];
+        // Card must have at least one of the selected tags
+        const hasMatchingTag = selectedTagIds.some((tagId) =>
+          cardTagIds.includes(tagId)
+        );
+        if (!hasMatchingTag) {
           return false;
         }
       }
@@ -272,7 +296,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
 
       return true;
     },
-    [searchQuery, selectedLabels, selectedPriorities, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete, matchesMemberFilter, matchesDueDateFilter, isCardComplete]
+    [searchQuery, selectedLabels, selectedPriorities, selectedTagIds, showOnlyMyCards, selectedMembers, selectedDueDates, showComplete, matchesMemberFilter, matchesDueDateFilter, isCardComplete]
   );
 
   const filterCards = useCallback(
@@ -298,6 +322,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         searchQuery,
         selectedLabels,
         selectedPriorities,
+        selectedTagIds,
         showOnlyMyCards,
         selectedMembers,
         selectedDueDates,
@@ -305,6 +330,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
         setSearchQuery,
         toggleLabel,
         togglePriority,
+        toggleTag,
         toggleMember,
         toggleDueDate,
         setShowComplete,

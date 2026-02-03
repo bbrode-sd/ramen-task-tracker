@@ -12,7 +12,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useNotifications } from '@/contexts/NotificationContext';
-import { Board, Column as ColumnType, Card as CardType, BoardBackground } from '@/types';
+import { Board, Column as ColumnType, Card as CardType, BoardBackground, BoardTag } from '@/types';
 import {
   subscribeToColumns,
   subscribeToCards,
@@ -409,6 +409,15 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       await updateBoard(boardId, { background });
     },
     [board, boardId]
+  );
+
+  const handleTagsChange = useCallback(
+    (tags: BoardTag[]) => {
+      if (!board) return;
+      setBoard({ ...board, tags });
+      // Note: The actual Firestore update is done in TagManagementModal
+    },
+    [board]
   );
 
   // Helper to get background classes and styles
@@ -1102,6 +1111,8 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           parentCard={parentCard}
           isTemplate={board?.isTemplate}
           templateForBoardId={board?.templateForBoardId}
+          tags={board?.tags || []}
+          onTagsChange={handleTagsChange}
         />
         <div className="flex items-center justify-center h-[calc(100vh-64px)]">
           <div className="relative">
@@ -1236,6 +1247,8 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
         parentCard={parentCard}
         isTemplate={board?.isTemplate}
         templateForBoardId={board?.templateForBoardId}
+        tags={board?.tags || []}
+        onTagsChange={handleTagsChange}
       />
 
       {/* Accessibility: Live region for screen reader announcements */}

@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFilterOptional, DueDateFilter, MemberFilter } from '@/contexts/FilterContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, BoardMember, CardPriority } from '@/types';
+import { Card, BoardMember, CardPriority, BoardTag } from '@/types';
+import { getTagColorConfig } from './TagManagementModal';
 import Image from 'next/image';
 
 interface FilterPanelProps {
@@ -13,6 +14,7 @@ interface FilterPanelProps {
   availableLabels: string[];
   cards: Card[];
   members: BoardMember[];
+  boardTags?: BoardTag[];
   onCardClick?: (cardId: string) => void;
 }
 
@@ -22,6 +24,7 @@ export function FilterPanel({
   availableLabels,
   cards,
   members,
+  boardTags = [],
   onCardClick,
 }: FilterPanelProps) {
   const { t } = useLocale();
@@ -41,6 +44,8 @@ export function FilterPanel({
   const toggleLabel = filterContext?.toggleLabel ?? (() => {});
   const selectedPriorities = filterContext?.selectedPriorities ?? [];
   const togglePriority = filterContext?.togglePriority ?? (() => {});
+  const selectedTagIds = filterContext?.selectedTagIds ?? [];
+  const toggleTag = filterContext?.toggleTag ?? (() => {});
   const selectedMembers = filterContext?.selectedMembers ?? [];
   const toggleMember = filterContext?.toggleMember ?? (() => {});
   const selectedDueDates = filterContext?.selectedDueDates ?? [];
@@ -475,28 +480,37 @@ export function FilterPanel({
             </div>
           )}
 
-          {/* Priority */}
+          {/* Tags */}
           <div className="p-4">
             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-              {t('header.priority')}
+              Tags
             </label>
-            <div className="space-y-1">
-              {priorityOptions.map((priority) => (
-                <label
-                  key={priority.value}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedPriorities.includes(priority.value)}
-                    onChange={() => togglePriority(priority.value)}
-                    className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-500 focus:ring-emerald-500"
-                  />
-                  <span className={`w-3 h-3 rounded-full ${priority.color}`} />
-                  <span className="text-sm text-gray-700 dark:text-gray-200">{priority.label}</span>
-                </label>
-              ))}
-            </div>
+            {boardTags.length > 0 ? (
+              <div className="space-y-1">
+                {boardTags.sort((a, b) => a.order - b.order).map((tag) => {
+                  const colorConfig = getTagColorConfig(tag.color);
+                  return (
+                    <label
+                      key={tag.id}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTagIds.includes(tag.id)}
+                        onChange={() => toggleTag(tag.id)}
+                        className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className={`w-3 h-3 rounded-full ${colorConfig.dot}`} />
+                      <span className="text-sm text-gray-700 dark:text-gray-200">{tag.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+                No tags defined. Add tags via board menu.
+              </p>
+            )}
           </div>
         </div>
 

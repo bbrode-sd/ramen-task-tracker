@@ -31,6 +31,14 @@ export interface BoardBackground {
   value: string;
 }
 
+// Custom tag definition stored at board level
+export interface BoardTag {
+  id: string;
+  name: string;
+  color: string; // Tailwind color class prefix, e.g., 'red', 'blue', 'emerald'
+  order: number;
+}
+
 export interface Board {
   id: string;
   name: string;
@@ -40,6 +48,7 @@ export interface Board {
   updatedAt: Timestamp;
   isArchived: boolean;
   background?: BoardBackground;
+  tags?: BoardTag[];          // Custom tags for this board
   // Sub-board support
   parentCardId?: string;      // If set, this is a sub-board linked to a parent card
   parentBoardId?: string;     // Reference to the parent board (for queries)
@@ -66,6 +75,7 @@ export interface CardCover {
   color?: string;
 }
 
+// @deprecated - Use tagIds with BoardTag instead
 export type CardPriority = 'low' | 'medium' | 'high' | 'urgent' | null;
 
 export interface Card {
@@ -93,7 +103,8 @@ export interface Card {
   assigneeIds?: string[];
   checklists?: Checklist[];
   coverImage?: CardCover;
-  priority?: CardPriority;
+  priority?: CardPriority; // @deprecated - Use tagIds instead
+  tagIds?: string[];       // Custom tag IDs from board.tags
   watcherIds?: string[];
   commentCount?: number;
   // Sub-board support

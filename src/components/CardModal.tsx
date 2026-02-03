@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useNotifications } from '@/contexts/NotificationContext';
-import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board } from '@/types';
+import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board, BoardTag } from '@/types';
 import {
   getCard,
   updateCard,
@@ -40,7 +40,9 @@ import {
   cloneTemplateBoardAsSubBoard,
   getTemplateBoardsForBoard,
   removeSubBoard,
+  getBoard,
 } from '@/lib/firestore';
+import { getTagColorConfig } from './TagManagementModal';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { uploadFile, uploadFromPaste, getFileType } from '@/lib/storage';
@@ -152,8 +154,12 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
   // Due date
   const [dueDate, setDueDate] = useState<string>('');
 
-  // Priority
+  // Priority (deprecated - use tags)
   const [priority, setPriority] = useState<CardPriority>(null);
+
+  // Custom tags
+  const [boardTags, setBoardTags] = useState<BoardTag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   // Assignees
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
@@ -250,8 +256,10 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
               const date = cardData.dueDate.toDate();
               setDueDate(date.toISOString().split('T')[0]);
             }
-            // Initialize priority
+            // Initialize priority (deprecated)
             setPriority(cardData.priority ?? null);
+            // Initialize selected tags
+            setSelectedTagIds(cardData.tagIds || []);
             // Initialize checklists
             setChecklists(cardData.checklists || []);
           }
@@ -373,6 +381,17 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       setBoardMembers(members);
     };
     fetchMembers();
+  }, [boardId]);
+
+  // Fetch board tags
+  useEffect(() => {
+    const fetchBoardTags = async () => {
+      const board = await getBoard(boardId);
+      if (board?.tags) {
+        setBoardTags(board.tags);
+      }
+    };
+    fetchBoardTags();
   }, [boardId]);
 
   useEffect(() => {
@@ -936,6 +955,17 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
   const handlePriorityChange = async (newPriority: CardPriority) => {
     setPriority(newPriority);
     await updateCard(boardId, cardId, { priority: newPriority });
+    const updatedCard = await getCard(boardId, cardId);
+    if (updatedCard) setCard(updatedCard);
+  };
+
+  const handleToggleTag = async (tagId: string) => {
+    const isSelected = selectedTagIds.includes(tagId);
+    const newTagIds = isSelected
+      ? selectedTagIds.filter(id => id !== tagId)
+      : [...selectedTagIds, tagId];
+    setSelectedTagIds(newTagIds);
+    await updateCard(boardId, cardId, { tagIds: newTagIds });
     const updatedCard = await getCard(boardId, cardId);
     if (updatedCard) setCard(updatedCard);
   };
@@ -3889,7 +3919,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
               )}
             </div>
 
-            {/* Priority */}
+            {/* Tags */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <svg
@@ -3903,39 +3933,42 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                   />
                 </svg>
-                {t('cardModal.sidebar.priority')}
+                Tags
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {([
-                  { value: null, labelKey: 'cardModal.sidebar.priorityNone', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50' },
-                  { value: 'low', labelKey: 'cardModal.sidebar.priorityLow', color: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/50', dot: 'bg-slate-400' },
-                  { value: 'medium', labelKey: 'cardModal.sidebar.priorityMedium', color: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-800/40', dot: 'bg-yellow-500' },
-                  { value: 'high', labelKey: 'cardModal.sidebar.priorityHigh', color: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-800/40', dot: 'bg-orange-500' },
-                  { value: 'urgent', labelKey: 'cardModal.sidebar.priorityUrgent', color: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-800/40', dot: 'bg-red-500' },
-                ] as { value: CardPriority; labelKey: string; color: string; dot?: string }[]).map((option) => (
-                  <button
-                    key={option.value ?? 'none'}
-                    onClick={() => handlePriorityChange(option.value)}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all flex items-center justify-center gap-1.5 ${
-                      priority === option.value
-                        ? `ring-2 ring-emerald-500 ${option.color}`
-                        : option.color
-                    }`}
-                    aria-pressed={priority === option.value}
-                  >
-                    {option.dot && (
-                      <span 
-                        className={`w-2 h-2 rounded-full ${option.dot} ${option.value === 'urgent' && priority === 'urgent' ? 'animate-pulse' : ''}`} 
-                        aria-hidden="true" 
-                      />
-                    )}
-                    {t(option.labelKey)}
-                  </button>
-                ))}
-              </div>
+              {boardTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {boardTags.sort((a, b) => a.order - b.order).map((tag) => {
+                    const colorConfig = getTagColorConfig(tag.color);
+                    const isSelected = selectedTagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => handleToggleTag(tag.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${colorConfig.bg} ${colorConfig.text} ${colorConfig.border} ${
+                          isSelected ? 'ring-2 ring-emerald-500' : 'opacity-60 hover:opacity-100'
+                        }`}
+                        aria-pressed={isSelected}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${colorConfig.dot}`} aria-hidden="true" />
+                        {tag.name}
+                        {isSelected && (
+                          <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-xs text-slate-400 dark:text-slate-500">
+                  <p>No tags defined.</p>
+                  <p className="mt-1">Add tags via board menu.</p>
+                </div>
+              )}
             </div>
 
             <hr className="border-slate-200 dark:border-slate-700" />
