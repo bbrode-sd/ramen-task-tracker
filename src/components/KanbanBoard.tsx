@@ -1137,7 +1137,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex gap-3 pb-2 min-w-max ${
+                className={`flex gap-3 pb-2 min-w-max h-full items-stretch ${
                   boardSnapshot.isDraggingOver ? 'gap-4' : ''
                 }`}
               >

@@ -508,7 +508,7 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[280px] sm:w-[300px] bg-[var(--surface)] rounded-2xl flex flex-col border ${
+          className={`flex-shrink-0 w-[280px] sm:w-[300px] max-h-full bg-[var(--surface)] rounded-2xl flex flex-col border ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
               : 'shadow-md transition-all duration-300'
@@ -710,7 +710,7 @@ function ColumnComponent({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 px-2 py-2 min-h-[60px] transition-colors duration-200 column-drop-zone rounded-lg ${
+                className={`flex-1 px-2 py-2 min-h-[60px] overflow-y-auto transition-colors duration-200 column-drop-zone rounded-lg ${
                   snapshot.isDraggingOver 
                     ? 'dragging-over bg-gradient-to-b from-emerald-50/60 to-emerald-100/40 dark:from-emerald-900/30 dark:to-emerald-800/20' 
                     : ''
