@@ -561,7 +561,7 @@ function CardComponent({
           aria-grabbed={snapshot.isDragging}
           aria-selected={isSelected}
           style={getDragStyle(snapshot, provided.draggableProps.style)}
-          className={`relative bg-[var(--surface)] rounded-lg mb-1.5 cursor-pointer border group drag-handle
+          className={`relative bg-[var(--surface)] rounded-md mb-1.5 cursor-pointer border group drag-handle
             ${snapshot.isDragging 
               ? 'card-dragging drag-shadow z-50' 
               : 'shadow-sm hover:shadow-md transition-[box-shadow,border-color,opacity,ring] duration-150 hover:border-[var(--text-tertiary)]'
@@ -609,7 +609,7 @@ function CardComponent({
           {/* Cover image/color if exists */}
           {coverData && (
             coverData.type === 'image' ? (
-              <div className="rounded-t-lg overflow-hidden bg-black/50">
+              <div className="rounded-t-md overflow-hidden bg-black/50">
                 <Image
                   src={coverData.url}
                   alt="Card cover"
@@ -623,7 +623,7 @@ function CardComponent({
               </div>
             ) : (
               <div 
-                className="h-8 rounded-t-lg"
+                className="h-8 rounded-t-md"
                 style={{ backgroundColor: coverData.color }}
               />
             )
@@ -656,20 +656,34 @@ function CardComponent({
             <div className="space-y-0.5">
               {/* English */}
               {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
-                <p className="text-sm text-[var(--text-primary)] leading-snug">
-                  {card.titleEn ? <HighlightedText text={card.titleEn} searchQuery={searchQuery} /> : '—'}
-                </p>
+                <div className="flex items-start gap-1.5">
+                  {userTextDisplayMode === 'both' && (
+                    <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[9px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded mt-0.5">
+                      EN
+                    </span>
+                  )}
+                  <p className="text-sm text-[var(--text-primary)] leading-snug">
+                    {card.titleEn ? <HighlightedText text={card.titleEn} searchQuery={searchQuery} /> : '—'}
+                  </p>
+                </div>
               )}
               
               {/* Japanese */}
               {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
-                <p className={`text-sm leading-snug ${userTextDisplayMode === 'both' ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>
-                  {card.titleJa ? (
-                    <HighlightedText text={card.titleJa} searchQuery={searchQuery} />
-                  ) : (
-                    <span className="text-[var(--text-muted)] italic text-xs">翻訳中...</span>
+                <div className="flex items-start gap-1.5">
+                  {userTextDisplayMode === 'both' && (
+                    <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded mt-0.5">
+                      JP
+                    </span>
                   )}
-                </p>
+                  <p className={`text-sm leading-snug ${userTextDisplayMode === 'both' ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>
+                    {card.titleJa ? (
+                      <HighlightedText text={card.titleJa} searchQuery={searchQuery} />
+                    ) : (
+                      <span className="text-[var(--text-muted)] italic text-xs">翻訳中...</span>
+                    )}
+                  </p>
+                </div>
               )}
             </div>
 
