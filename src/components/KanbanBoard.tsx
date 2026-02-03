@@ -1159,7 +1159,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex gap-3 pb-2 min-w-max h-full items-stretch ${
+                className={`flex gap-3 pb-2 min-w-max h-full items-start ${
                   boardSnapshot.isDraggingOver ? 'gap-4' : ''
                 }`}
               >
@@ -1300,7 +1300,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex gap-5 h-full items-stretch pb-4 transition-all duration-200 ${
+                className={`flex gap-5 h-full items-start pb-4 transition-all duration-200 ${
                   boardSnapshot.isDraggingOver ? 'gap-6' : ''
                 }`}
               >
