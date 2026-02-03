@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import pokemonNames from '@/data/pokemon-names.json';
-import heldItems from '@/data/held-items.json';
+import pokemonItems from '@/data/pokemon-items.json';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -14,7 +14,7 @@ interface NameLookup {
 }
 
 const pokemonLookup = pokemonNames as NameLookup;
-const heldItemLookup = heldItems as NameLookup;
+const itemLookup = pokemonItems as NameLookup;
 
 // Context mode type
 type ContextMode = 'general' | 'pokemon' | 'custom';
@@ -43,15 +43,15 @@ function findPokemonNames(text: string, sourceLanguage: 'en' | 'ja'): { original
   return found;
 }
 
-// Find potential held items in source text and return their translations as context hints
-// Unlike Pokémon names, these are hints only - the word may or may not be referring to the held item
-function findHeldItems(text: string, sourceLanguage: 'en' | 'ja'): { original: string; translation: string }[] {
+// Find potential Pokémon items in source text and return their translations as context hints
+// Unlike Pokémon names, these are hints only - the word may or may not be referring to the item
+function findPokemonItems(text: string, sourceLanguage: 'en' | 'ja'): { original: string; translation: string }[] {
   const found: { original: string; translation: string }[] = [];
   const textLower = text.toLowerCase();
   
   if (sourceLanguage === 'en') {
-    // Look for English held item names in the text
-    for (const [enName, jaName] of Object.entries(heldItemLookup.en_to_ja)) {
+    // Look for English item names in the text
+    for (const [enName, jaName] of Object.entries(itemLookup.en_to_ja)) {
       // Use word boundary for multi-word items, simple includes for single words
       const regex = new RegExp(`\\b${enName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
       if (regex.test(textLower)) {
@@ -61,8 +61,8 @@ function findHeldItems(text: string, sourceLanguage: 'en' | 'ja'): { original: s
       }
     }
   } else {
-    // Look for Japanese held item names in the text
-    for (const [jaName, enName] of Object.entries(heldItemLookup.ja_to_en)) {
+    // Look for Japanese item names in the text
+    for (const [jaName, enName] of Object.entries(itemLookup.ja_to_en)) {
       if (text.includes(jaName)) {
         found.push({ original: jaName, translation: enName });
       }
@@ -72,12 +72,12 @@ function findHeldItems(text: string, sourceLanguage: 'en' | 'ja'): { original: s
   return found;
 }
 
-// Build a context hint for held items (these are hints, not mandatory replacements)
-function buildHeldItemHint(heldItems: { original: string; translation: string }[]): string {
-  if (heldItems.length === 0) return '';
+// Build a context hint for Pokémon items (these are hints, not mandatory replacements)
+function buildItemHint(items: { original: string; translation: string }[]): string {
+  if (items.length === 0) return '';
   
-  const hints = heldItems.map(item => `${item.original} → ${item.translation}`).join(', ');
-  return `\n\nNOTE: The following words may be Pokémon held items. If used in that context, use these official translations: ${hints}. However, if the word is used in a different context (not as a held item), translate it naturally.`;
+  const hints = items.map(item => `${item.original} → ${item.translation}`).join(', ');
+  return `\n\nNOTE: The following words may be Pokémon game items. If used in that context, use these official translations: ${hints}. However, if the word is used in a different context (not as an item name), translate it naturally.`;
 }
 
 // Build a prompt injection with correct Pokémon name translations
@@ -230,9 +230,9 @@ export async function POST(request: NextRequest) {
       const foundPokemonNames = contextMode === 'pokemon' ? findPokemonNames(text, detectedLanguage) : [];
       const pokemonHint = buildPokemonNameHint(foundPokemonNames);
 
-      // Find potential held items in source text and build context hint
-      const foundHeldItems = contextMode === 'pokemon' ? findHeldItems(text, detectedLanguage) : [];
-      const heldItemHint = buildHeldItemHint(foundHeldItems);
+      // Find potential Pokémon items in source text and build context hint
+      const foundItems = contextMode === 'pokemon' ? findPokemonItems(text, detectedLanguage) : [];
+      const itemHint = buildItemHint(foundItems);
 
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -245,7 +245,7 @@ Translate the following ${sourceLanguageName} text to ${targetLanguageName}.
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${targetLanguageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation.${pokemonHint}${heldItemHint}`,
+For very short phrases or single words, provide the most natural translation.${pokemonHint}${itemHint}`,
           },
           {
             role: 'user',
@@ -292,9 +292,9 @@ For very short phrases or single words, provide the most natural translation.${p
     const foundPokemonNames = contextMode === 'pokemon' ? findPokemonNames(text, sourceLanguage) : [];
     const pokemonHint = buildPokemonNameHint(foundPokemonNames);
 
-    // Find potential held items in source text and build context hint
-    const foundHeldItems = contextMode === 'pokemon' ? findHeldItems(text, sourceLanguage) : [];
-    const heldItemHint = buildHeldItemHint(foundHeldItems);
+    // Find potential Pokémon items in source text and build context hint
+    const foundItems = contextMode === 'pokemon' ? findPokemonItems(text, sourceLanguage) : [];
+    const itemHint = buildItemHint(foundItems);
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -307,7 +307,7 @@ Translate the following ${sourceLanguage === 'en' ? 'English' : 'Japanese'} text
 Only respond with the translation, nothing else. 
 Maintain the same tone and meaning. 
 If the text is already in ${languageName}, return it as-is.
-For very short phrases or single words, provide the most natural translation.${pokemonHint}${heldItemHint}`,
+For very short phrases or single words, provide the most natural translation.${pokemonHint}${itemHint}`,
         },
         {
           role: 'user',
