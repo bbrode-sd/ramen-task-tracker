@@ -394,7 +394,15 @@
     "batchDescription": "すべてのカードを選択した言語に翻訳",
     "translateAll": "すべて翻訳",
     "translating": "翻訳中...",
-    "translated": "{{count}}件を翻訳しました"
+    "translated": "{{count}}件を翻訳しました",
+    "userTextDisplay": "ユーザーテキスト表示",
+    "userTextDisplayDescription": "バイリンガルコンテンツの表示方法を選択",
+    "displayBoth": "両言語",
+    "displayBothDescription": "英語と日本語を並べて表示",
+    "displayEnOnly": "英語のみ",
+    "displayEnOnlyDescription": "英語コンテンツのみを表示",
+    "displayJaOnly": "日本語のみ",
+    "displayJaOnlyDescription": "日本語コンテンツのみを表示"
   },
   "language": {
     "title": "言語設定",

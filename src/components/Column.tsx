@@ -86,7 +86,9 @@ function ColumnComponent({
     cancelTranslation,
     clearError,
     retryTranslation,
+    settings: translationSettings,
   } = useTranslation();
+  const userTextDisplayMode = translationSettings.userTextDisplayMode;
   
   // Use filter context directly to ensure re-render when filters change
   const { hasActiveFilters: hasActiveFiltersContext, matchesFilter: matchesFilterContext } = useFilter();
@@ -531,10 +533,13 @@ function ColumnComponent({
             <div className="flex items-start gap-2.5">
               <div className="flex-1 min-w-0 space-y-1.5">
                 {/* English name */}
+                {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
                 <div className="flex items-center gap-1.5">
+                  {userTextDisplayMode === 'both' && (
                   <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded border border-sky-200/60 dark:border-sky-700/50">
                     EN
                   </span>
+                  )}
                   {editingField === 'en' ? (
                     <div className="flex-1 flex items-center gap-1.5">
                       <input
@@ -582,12 +587,16 @@ function ColumnComponent({
                     </div>
                   )}
                 </div>
+                )}
                 
                 {/* Japanese name */}
+                {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
                 <div className="flex items-center gap-1.5">
+                  {userTextDisplayMode === 'both' && (
                   <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-4 text-[8px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded border border-rose-200/60 dark:border-rose-700/50">
                     JP
                   </span>
+                  )}
                   {editingField === 'ja' ? (
                     <div className="flex-1 flex items-center gap-1.5">
                       <input
@@ -630,7 +639,7 @@ function ColumnComponent({
                         </span>
                       ) : (
                         <>
-                          <span className="text-xs text-[var(--text-secondary)] truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                          <span className={`truncate transition-colors ${userTextDisplayMode === 'both' ? 'text-xs text-[var(--text-secondary)] group-hover:text-rose-600 dark:group-hover:text-rose-400' : 'text-sm font-semibold text-[var(--text-primary)] group-hover:text-rose-600 dark:group-hover:text-rose-400'}`}>
                             {columnNameJa || '—'}
                           </span>
                           <TranslationIndicator
@@ -647,6 +656,7 @@ function ColumnComponent({
                     </div>
                   )}
                 </div>
+                )}
               </div>
               
               {/* Column Menu */}

@@ -5,11 +5,13 @@ import { useToast } from './ToastContext';
 
 export type TranslationContextMode = 'general' | 'pokemon' | 'custom';
 export type PrimaryLanguage = 'en' | 'ja' | 'auto';
+export type UserTextDisplayMode = 'en' | 'ja' | 'both';
 
 interface TranslationSettings {
   primaryLanguage: PrimaryLanguage;
   contextMode: TranslationContextMode;
   customContext: string;
+  userTextDisplayMode: UserTextDisplayMode;
 }
 
 interface TranslationState {
@@ -92,6 +94,7 @@ const DEFAULT_SETTINGS: TranslationSettings = {
   primaryLanguage: 'auto',
   contextMode: 'pokemon',
   customContext: '',
+  userTextDisplayMode: 'both',
 };
 
 export function TranslationProvider({ children }: { children: ReactNode }) {

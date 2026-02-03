@@ -8,6 +8,7 @@ import { Timestamp } from 'firebase/firestore';
 import { Comment } from '@/types';
 import { updateCommentTranslation } from '@/lib/firestore';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useTranslation } from '@/contexts/TranslationContext';
 import { RichTextEditor, RichTextDisplay } from '@/components/RichTextEditor';
 
 interface CommentItemProps {
@@ -31,6 +32,8 @@ export function CommentItem({
   onDelete,
 }: CommentItemProps) {
   const { t, locale } = useLocale();
+  const { settings: translationSettings } = useTranslation();
+  const userTextDisplayMode = translationSettings.userTextDisplayMode;
   const isOwner = currentUserId === comment.createdBy;
   
   // Editing state
@@ -161,8 +164,9 @@ export function CommentItem({
     <div className="flex gap-3 group">
       <div className="flex-1 min-w-0">
         {/* Bilingual comment display - side by side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className={`grid grid-cols-1 ${userTextDisplayMode === 'both' ? 'md:grid-cols-2' : ''} gap-3`}>
           {/* English version */}
+          {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
           <div className="relative pt-5">
             {/* Avatar overlapping the comment box */}
             <div className="absolute top-0 left-3 z-10">
@@ -223,8 +227,10 @@ export function CommentItem({
               )}
             </div>
           </div>
+          )}
           
           {/* Japanese version */}
+          {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
           <div className="relative pt-5">
             {/* Avatar overlapping the comment box */}
             <div className="absolute top-0 left-3 z-10">
@@ -285,6 +291,7 @@ export function CommentItem({
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

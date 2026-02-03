@@ -394,7 +394,15 @@
     "batchDescription": "Translate all cards to the selected language",
     "translateAll": "Translate All",
     "translating": "Translating...",
-    "translated": "Translated {{count}} items"
+    "translated": "Translated {{count}} items",
+    "userTextDisplay": "User Text Display",
+    "userTextDisplayDescription": "Choose how to display bilingual content",
+    "displayBoth": "Both Languages",
+    "displayBothDescription": "Show English and Japanese side-by-side",
+    "displayEnOnly": "English Only",
+    "displayEnOnlyDescription": "Show only English content",
+    "displayJaOnly": "Japanese Only",
+    "displayJaOnlyDescription": "Show only Japanese content"
   },
   "language": {
     "title": "Language Settings",

@@ -99,6 +99,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
     retryTranslation,
     settings: translationSettings,
   } = useTranslation();
+  const userTextDisplayMode = translationSettings.userTextDisplayMode;
   const [card, setCard] = useState<Card | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2096,9 +2097,10 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
           </div>
           
           {/* Bilingual Title Display/Edit - Equal Billing */}
-          <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <fieldset className={`grid grid-cols-1 ${userTextDisplayMode === 'both' ? 'md:grid-cols-2' : ''} gap-2`}>
             <legend className="sr-only">Card Title in English and Japanese</legend>
             {/* English Title */}
+            {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
             <div className="space-y-1">
               {editingField === 'titleEn' ? (
                 <div className="space-y-1.5">
@@ -2191,8 +2193,10 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                 <span id="title-en-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleEn]}</span>
               )}
             </div>
+            )}
 
             {/* Japanese Title */}
+            {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
             <div className="space-y-1">
               {editingField === 'titleJa' ? (
                 <div className="space-y-1.5">
@@ -2285,6 +2289,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                 <span id="title-ja-error" className="sr-only">Translation error: {translationState.errors[fieldKeys.titleJa]}</span>
               )}
             </div>
+            )}
           </fieldset>
         </header>
 
@@ -2325,9 +2330,10 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
           {/* Main Content */}
           <div className="flex-1 min-w-0 p-4 sm:p-5 md:p-6 space-y-5 sm:space-y-6">
             {/* Bilingual Description Section */}
-            <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <fieldset className={`grid grid-cols-1 ${userTextDisplayMode === 'both' ? 'md:grid-cols-2' : ''} gap-5`}>
               <legend className="sr-only">Card Description in English and Japanese</legend>
               {/* English Description */}
+              {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <div className="flex flex-col items-start shrink-0">
@@ -2396,8 +2402,10 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                   </div>
                 )}
               </div>
+              )}
 
               {/* Japanese Description */}
+              {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
               <div className="space-y-2.5">
                 <div className="flex items-start gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <div className="flex flex-col items-start shrink-0">
@@ -2466,6 +2474,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                   </div>
                 )}
               </div>
+              )}
             </fieldset>
 
             {/* Checklists */}
