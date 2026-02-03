@@ -9,7 +9,6 @@ import { useTranslation } from '@/contexts/TranslationContext';
 import { useFilter } from '@/contexts/FilterContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tooltip } from './Tooltip';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
 import { getUserProfiles } from '@/lib/firestore';
@@ -58,21 +57,21 @@ const MiniAvatar = memo(function MiniAvatar({
         <Image
           src={user.photoURL}
           alt={user.displayName || 'User'}
-          width={24}
-          height={24}
-          className="w-6 h-6 rounded-full object-cover ring-2 ring-[var(--surface)]"
+          width={20}
+          height={20}
+          className="w-5 h-5 rounded-full object-cover ring-1 ring-[var(--surface)]"
           loading="lazy"
         />
       ) : (
         <div 
-          className={`w-6 h-6 rounded-full bg-gradient-to-br ${getAvatarColor(user.uid)} flex items-center justify-center ring-2 ring-[var(--surface)]`}
+          className={`w-5 h-5 rounded-full bg-gradient-to-br ${getAvatarColor(user.uid)} flex items-center justify-center ring-1 ring-[var(--surface)]`}
         >
-          <span className="font-medium text-white text-[10px]">{getInitials(user.displayName)}</span>
+          <span className="font-medium text-white text-[9px]">{getInitials(user.displayName)}</span>
         </div>
       )}
       
       {/* Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
         {user.displayName || 'Unknown User'}
       </div>
     </div>
@@ -106,7 +105,7 @@ const HighlightedText = memo(function HighlightedText({ text, searchQuery }: { t
   );
 });
 
-// Custom tag badge component for displaying board tags
+// Custom tag badge component for displaying board tags - Trello-style compact
 const TagBadge = memo(function TagBadge({ 
   tag 
 }: { 
@@ -118,16 +117,14 @@ const TagBadge = memo(function TagBadge({
   
   return (
     <div
-      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${colorConfig.bg} ${colorConfig.text} ${colorConfig.border}`}
+      className={`h-2 w-10 rounded-sm ${colorConfig.dot}`}
       title={displayName}
-    >
-      <span className={`w-2 h-2 rounded-full ${colorConfig.dot}`} aria-hidden="true" />
-      <span>{displayName}</span>
-    </div>
+      aria-label={displayName}
+    />
   );
 });
 
-// Translation status indicator for cards - shows when one language is missing
+// Translation status indicator for cards - compact version
 const TranslationStatusBadge = memo(function TranslationStatusBadge({ 
   hasEn, 
   hasJa, 
@@ -143,11 +140,8 @@ const TranslationStatusBadge = memo(function TranslationStatusBadge({
   // If translating, show spinner
   if (isTranslating) {
     return (
-      <div 
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--info-bg)] text-[var(--info)] border border-[var(--info)]/30"
-        title="Translation in progress"
-      >
-        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+      <div title="Translation in progress">
+        <svg className="w-3.5 h-3.5 animate-spin text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -161,13 +155,12 @@ const TranslationStatusBadge = memo(function TranslationStatusBadge({
   
   return (
     <div 
-      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--warning-bg)] text-[var(--warning)] border border-[var(--warning)]/30"
+      className="text-[var(--warning)]"
       title={`${missingLang === 'EN' ? 'English' : 'Japanese'} translation missing`}
     >
-      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
       </svg>
-      <span>{missingLang === 'EN' ? 'JP only' : 'EN only'}</span>
     </div>
   );
 });
@@ -267,7 +260,7 @@ const dueDateConfig: Record<DueDateStatus, {
   },
 };
 
-// Due date badge component with enhanced styling
+// Due date badge component - compact Trello-style
 const DueDateBadge = memo(function DueDateBadge({ 
   dueDate,
   isCompleted = false,
@@ -283,7 +276,7 @@ const DueDateBadge = memo(function DueDateBadge({
   if (isCompleted) {
     return (
       <div
-        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30"
+        className="flex items-center gap-1 text-[var(--success)]"
         title={`Completed - was due: ${formattedDate}`}
         aria-label={`Completed, was due: ${formattedDate}`}
       >
@@ -301,77 +294,37 @@ const DueDateBadge = memo(function DueDateBadge({
             d="M5 13l4 4L19 7"
           />
         </svg>
-        <span aria-hidden="true" className="line-through opacity-75">{formattedDate}</span>
+        <span className="text-[11px] line-through opacity-75">{formattedDate}</span>
       </div>
     );
   }
   
-  // Render the appropriate icon
-  const renderIcon = () => {
-    switch (config.icon) {
-      case 'alert':
-        return (
-          <svg
-            className={`w-3.5 h-3.5 ${config.pulse ? 'animate-pulse' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        );
-      case 'clock':
-        return (
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        );
-      case 'calendar':
-      default:
-        return (
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        );
-    }
-  };
+  // Render the clock icon for all states
+  const renderIcon = () => (
+    <svg
+      className={`w-3.5 h-3.5 ${config.pulse ? 'animate-pulse' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
   
   return (
     <div
-      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}
+      className={`flex items-center gap-1 ${config.text}`}
       title={`${config.label}: ${formattedDate}`}
       aria-label={`${config.label}: ${formattedDate}`}
     >
       {renderIcon()}
-      <span aria-hidden="true">{formattedDate}</span>
+      <span className="text-[11px]">{formattedDate}</span>
     </div>
   );
 });
@@ -608,14 +561,13 @@ function CardComponent({
           aria-grabbed={snapshot.isDragging}
           aria-selected={isSelected}
           style={getDragStyle(snapshot, provided.draggableProps.style)}
-          className={`relative bg-[var(--surface)] rounded-xl mb-2.5 cursor-pointer border group drag-handle
+          className={`relative bg-[var(--surface)] rounded-lg mb-1.5 cursor-pointer border group drag-handle
             ${snapshot.isDragging 
               ? 'card-dragging drag-shadow z-50' 
-              : 'shadow-sm hover:shadow-xl transition-[box-shadow,border-color,opacity,ring] duration-200 hover:ring-1 hover:ring-[var(--primary)] hover:border-[var(--primary)]'
+              : 'shadow-sm hover:shadow-md transition-[box-shadow,border-color,opacity,ring] duration-150 hover:border-[var(--text-tertiary)]'
             }
-            ${'' /* removed animate-drop - was causing visual hangs */}
             ${isDimmed ? 'opacity-40 scale-[0.98] border-[var(--border-subtle)]' : ''} 
-            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-lg' : 'border-[var(--border)]'}
+            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-md' : 'border-[var(--border)]'}
             ${isSelected && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]' : ''}
           `}
         >
@@ -657,91 +609,74 @@ function CardComponent({
           {/* Cover image/color if exists */}
           {coverData && (
             coverData.type === 'image' ? (
-              <div className="rounded-t-xl overflow-hidden transition-all duration-300 bg-black/50">
+              <div className="rounded-t-lg overflow-hidden bg-black/50">
                 <Image
                   src={coverData.url}
                   alt="Card cover"
-                  width={400}
-                  height={180}
+                  width={300}
+                  height={140}
                   loading="lazy"
-                  sizes="300px"
+                  sizes="260px"
                   style={{ width: '100%', height: 'auto' }}
-                  className="max-h-[180px] object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                  className="max-h-[140px] object-contain"
                 />
               </div>
             ) : (
               <div 
-                className="h-10 rounded-t-xl transition-all duration-300"
+                className="h-8 rounded-t-lg"
                 style={{ backgroundColor: coverData.color }}
               />
             )
           )}
 
-          <div className="p-3.5">
-            {/* Labels */}
-            {card.labels && card.labels.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {card.labels.map((label, i) => (
-                  <span
-                    key={i}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg bg-[var(--primary-light)] text-[var(--primary)] border border-[var(--primary)]/20"
-                  >
-                    {label}
-                  </span>
+          <div className="px-2 py-1.5">
+            {/* Tags - Trello-style colored bars */}
+            {hasTags && (
+              <div className="flex flex-wrap gap-1 mb-1.5">
+                {resolvedTags.map(tag => (
+                  <TagBadge key={tag.id} tag={tag} />
                 ))}
               </div>
             )}
 
-            {/* Bilingual Title */}
-            <div className="space-y-2.5">
+            {/* Labels (legacy) */}
+            {card.labels && card.labels.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-1.5">
+                {card.labels.map((label, i) => (
+                  <span
+                    key={i}
+                    className="h-2 w-10 rounded-sm bg-[var(--primary)]"
+                    title={label}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Title - compact, single or dual language */}
+            <div className="space-y-0.5">
               {/* English */}
               {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
-                <div className="flex items-start gap-2.5">
-                  {userTextDisplayMode === 'both' && (
-                    <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded-md mt-0.5 border border-sky-200/60 dark:border-sky-700/50">
-                      EN
-                    </span>
-                  )}
-                  <p className="text-sm text-[var(--text-primary)] leading-relaxed font-medium">
-                    {card.titleEn ? <HighlightedText text={card.titleEn} searchQuery={searchQuery} /> : '—'}
-                  </p>
-                </div>
+                <p className="text-sm text-[var(--text-primary)] leading-snug">
+                  {card.titleEn ? <HighlightedText text={card.titleEn} searchQuery={searchQuery} /> : '—'}
+                </p>
               )}
               
               {/* Japanese */}
               {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
-                <div className="flex items-start gap-2.5">
-                  {userTextDisplayMode === 'both' && (
-                    <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-5 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 rounded-md mt-0.5 border border-rose-200/60 dark:border-rose-700/50">
-                      JP
-                    </span>
+                <p className={`text-sm leading-snug ${userTextDisplayMode === 'both' ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]'}`}>
+                  {card.titleJa ? (
+                    <HighlightedText text={card.titleJa} searchQuery={searchQuery} />
+                  ) : (
+                    <span className="text-[var(--text-muted)] italic text-xs">翻訳中...</span>
                   )}
-                  <p className={`text-sm leading-relaxed ${userTextDisplayMode === 'both' ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)] font-medium'}`}>
-                    {card.titleJa ? (
-                      <HighlightedText text={card.titleJa} searchQuery={searchQuery} />
-                    ) : (
-                      <span className="text-[var(--text-muted)] italic flex items-center gap-1.5">
-                        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        翻訳中...
-                      </span>
-                    )}
-                  </p>
-                </div>
+                </p>
               )}
             </div>
 
-            {/* Card metadata */}
-            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || hasTags || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId) && (
-              <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
-                {/* Custom tags */}
-                {resolvedTags.map(tag => (
-                  <TagBadge key={tag.id} tag={tag} />
-                ))}
-
-                {/* Due date badge */}
+            {/* Card metadata - Trello-style compact icons */}
+            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId || commentCount > 0 || isWatching) && (
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[var(--text-tertiary)]">
+                {/* Due date */}
                 {card.dueDate && (
                   <DueDateBadge 
                     dueDate={card.dueDate} 
@@ -749,7 +684,7 @@ function CardComponent({
                   />
                 )}
 
-                {/* Translation status badge */}
+                {/* Translation status */}
                 <TranslationStatusBadge
                   hasEn={!!card.titleEn && (!card.descriptionJa || !!card.descriptionEn)}
                   hasJa={!!card.titleJa && (!card.descriptionEn || !!card.descriptionJa)}
@@ -758,165 +693,84 @@ function CardComponent({
 
                 {/* Watching indicator */}
                 {isWatching && (
-                  <div 
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-cyan-50 text-cyan-600 border border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800"
-                    title="You are watching this card"
-                  >
-                    <svg className="w-3 h-3" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
+                  <span title="You are watching this card">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                     </svg>
-                  </div>
+                  </span>
                 )}
 
                 {/* Description indicator */}
                 {(card.descriptionEn || card.descriptionJa) && (
-                  <Tooltip content="This card has a description." position="top">
-                    <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 6h16M4 12h16M4 18h7"
-                        />
-                      </svg>
-                    </div>
-                  </Tooltip>
-                )}
-
-                {/* Comments indicator */}
-                {commentCount > 0 && (
-                  <Tooltip content={`${commentCount} comment${commentCount !== 1 ? 's' : ''}`} position="top">
-                    <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                      <span className="text-xs font-medium">{commentCount}</span>
-                    </div>
-                  </Tooltip>
-                )}
-
-                {/* Attachments indicator */}
-                {hasAttachments && (
-                  <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500" title="Has attachments">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                      />
+                  <span title="Has description">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                     </svg>
-                    <span className="text-xs font-medium">{card.attachments.length}</span>
+                  </span>
+                )}
+
+                {/* Comments */}
+                {commentCount > 0 && (
+                  <div className="flex items-center gap-0.5" title={`${commentCount} comment${commentCount !== 1 ? 's' : ''}`}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span className="text-[11px]">{commentCount}</span>
                   </div>
                 )}
 
-                {/* Checklist progress indicator */}
+                {/* Attachments */}
+                {hasAttachments && (
+                  <div className="flex items-center gap-0.5" title={`${card.attachments.length} attachment${card.attachments.length !== 1 ? 's' : ''}`}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                    <span className="text-[11px]">{card.attachments.length}</span>
+                  </div>
+                )}
+
+                {/* Checklist progress */}
                 {hasChecklists && checklistStats.total > 0 && (
                   <div 
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
-                      checklistStats.completed === checklistStats.total
-                        ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30'
-                        : 'bg-[var(--surface-hover)] text-[var(--text-secondary)] border-[var(--border)]'
-                    }`}
+                    className={`flex items-center gap-0.5 ${checklistStats.completed === checklistStats.total ? 'text-[var(--success)]' : ''}`}
                     title={`Checklist: ${checklistStats.completed}/${checklistStats.total} completed`}
                   >
-                    <svg
-                      className={`w-3.5 h-3.5 ${
-                        checklistStats.completed === checklistStats.total ? 'text-[var(--success)]' : 'text-[var(--text-tertiary)]'
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                      />
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
-                    <span>{checklistStats.completed}/{checklistStats.total}</span>
+                    <span className="text-[11px]">{checklistStats.completed}/{checklistStats.total}</span>
                   </div>
                 )}
 
-                {/* Sub-board progress indicator */}
+                {/* Sub-board */}
                 {card.subBoardId && (
-                  <Tooltip content={`Sub-board: ${card.subBoardApprovedCount ?? 0} approved${typeof card.subBoardTotalCount === 'number' ? ` of ${card.subBoardTotalCount} total` : ''}`} position="top">
-                    <div 
-                      className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${
-                        typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0
-                          ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30'
-                          : 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-700/50'
-                      }`}
-                      title={`Sub-board: ${card.subBoardApprovedCount ?? 0}${typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}`}
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-                        />
-                      </svg>
-                      <span>{card.subBoardApprovedCount ?? 0}{typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}</span>
-                      {typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0 && (
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                        </svg>
-                      )}
-                    </div>
-                  </Tooltip>
+                  <div 
+                    className={`flex items-center gap-0.5 ${
+                      typeof card.subBoardTotalCount === 'number' && card.subBoardApprovedCount === card.subBoardTotalCount && card.subBoardTotalCount > 0
+                        ? 'text-[var(--success)]'
+                        : 'text-purple-500 dark:text-purple-400'
+                    }`}
+                    title={`Sub-board: ${card.subBoardApprovedCount ?? 0}${typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                    <span className="text-[11px]">{card.subBoardApprovedCount ?? 0}{typeof card.subBoardTotalCount === 'number' ? `/${card.subBoardTotalCount}` : ''}</span>
+                  </div>
                 )}
 
-                {/* Spacer to push assignees to the right */}
+                {/* Spacer */}
                 <div className="flex-1" />
 
                 {/* Assignees */}
                 {hasAssignees && (
-                  <div className="flex items-center -space-x-1.5">
+                  <div className="flex items-center -space-x-1">
                     {assignees.slice(0, maxVisibleAssignees).map((assignee) => (
                       <MiniAvatar key={assignee.uid} user={assignee} />
                     ))}
                     {extraAssignees > 0 && (
-                      <div className="w-6 h-6 rounded-full bg-[var(--surface-hover)] flex items-center justify-center ring-2 ring-[var(--surface)]">
-                        <span className="text-[10px] font-medium text-[var(--text-secondary)]">+{extraAssignees}</span>
+                      <div className="w-5 h-5 rounded-full bg-[var(--surface-hover)] flex items-center justify-center ring-1 ring-[var(--surface)]">
+                        <span className="text-[9px] font-medium text-[var(--text-secondary)]">+{extraAssignees}</span>
                       </div>
                     )}
                   </div>
