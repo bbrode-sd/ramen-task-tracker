@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BoardTag } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
-import { useLocale } from '@/contexts/LocaleContext';
+import { useLocale, Locale } from '@/contexts/LocaleContext';
 import { updateBoard } from '@/lib/firestore';
 
 interface TagManagementModalProps {
@@ -12,6 +12,23 @@ interface TagManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   onTagsChange: (tags: BoardTag[]) => void;
+}
+
+// Helper to get the localized tag name based on user's locale
+export function getLocalizedTagName(tag: BoardTag, locale: Locale): string {
+  if (locale === 'ja') {
+    return tag.nameJa || tag.name;
+  }
+  return tag.name;
+}
+
+// Helper to check if a tag has a translation in the non-original language
+export function hasTranslation(tag: BoardTag): boolean {
+  const original = tag.nameOriginalLanguage || 'en';
+  if (original === 'en') {
+    return !!tag.nameJa;
+  }
+  return !!tag.name && tag.name !== tag.nameJa;
 }
 
 // Available tag colors with their display values
@@ -42,12 +59,12 @@ export function getTagColorConfig(colorId: string) {
 
 export { TAG_COLORS };
 
-// Default tags that match the old priority system
+// Default tags that match the old priority system (with EN/JA translations)
 export const DEFAULT_TAGS: BoardTag[] = [
-  { id: 'default-low', name: 'Low', color: 'slate', order: 0 },
-  { id: 'default-medium', name: 'Medium', color: 'yellow', order: 1 },
-  { id: 'default-high', name: 'High', color: 'orange', order: 2 },
-  { id: 'default-urgent', name: 'Urgent', color: 'red', order: 3 },
+  { id: 'default-low', name: 'Low', nameJa: '低', nameOriginalLanguage: 'en', color: 'slate', order: 0 },
+  { id: 'default-medium', name: 'Medium', nameJa: '中', nameOriginalLanguage: 'en', color: 'yellow', order: 1 },
+  { id: 'default-high', name: 'High', nameJa: '高', nameOriginalLanguage: 'en', color: 'orange', order: 2 },
+  { id: 'default-urgent', name: 'Urgent', nameJa: '緊急', nameOriginalLanguage: 'en', color: 'red', order: 3 },
 ];
 
 // Create a fresh copy of default tags with unique IDs (for new boards)
@@ -61,15 +78,17 @@ export function createDefaultTags(): BoardTag[] {
 
 export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChange }: TagManagementModalProps) {
   const { showToast } = useToast();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [localTags, setLocalTags] = useState<BoardTag[]>(tags);
-  const [newTagName, setNewTagName] = useState('');
+  const [newTagNameEn, setNewTagNameEn] = useState('');
+  const [newTagNameJa, setNewTagNameJa] = useState('');
   const [newTagColor, setNewTagColor] = useState('blue');
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
+  const [editingNameEn, setEditingNameEn] = useState('');
+  const [editingNameJa, setEditingNameJa] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -130,20 +149,29 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
   }, [boardId, onTagsChange, showToast]);
 
   const handleAddTag = async () => {
-    const name = newTagName.trim();
-    if (!name) return;
+    const nameEn = newTagNameEn.trim();
+    const nameJa = newTagNameJa.trim();
+    
+    // Need at least one name
+    if (!nameEn && !nameJa) return;
 
+    // Determine original language based on which field was filled first/primarily
+    const nameOriginalLanguage: 'en' | 'ja' = nameEn ? 'en' : 'ja';
+    
     const newTag: BoardTag = {
       id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name,
+      name: nameEn || nameJa, // English name (fallback to Japanese if not provided)
+      nameJa: nameJa || undefined,
+      nameOriginalLanguage,
       color: newTagColor,
       order: localTags.length,
     };
 
     const newTags = [...localTags, newTag];
     await saveTags(newTags);
-    setNewTagName('');
-    showToast('success', 'Tag created');
+    setNewTagNameEn('');
+    setNewTagNameJa('');
+    showToast('success', t('tags.created') || 'Tag created');
   };
 
   const handleDeleteTag = async (tagId: string) => {
@@ -153,16 +181,27 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
   };
 
   const handleRenameTag = async (tagId: string) => {
-    const name = editingName.trim();
-    if (!name) {
+    const nameEn = editingNameEn.trim();
+    const nameJa = editingNameJa.trim();
+    
+    // Need at least one name
+    if (!nameEn && !nameJa) {
       setEditingTagId(null);
       return;
     }
 
-    const newTags = localTags.map(t => t.id === tagId ? { ...t, name } : t);
+    const newTags = localTags.map(t => {
+      if (t.id !== tagId) return t;
+      return { 
+        ...t, 
+        name: nameEn || nameJa,
+        nameJa: nameJa || undefined,
+      };
+    });
     await saveTags(newTags);
     setEditingTagId(null);
-    setEditingName('');
+    setEditingNameEn('');
+    setEditingNameJa('');
   };
 
   const handleColorChange = async (tagId: string, colorId: string) => {
@@ -173,7 +212,8 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
 
   const startEditing = (tag: BoardTag) => {
     setEditingTagId(tag.id);
-    setEditingName(tag.name);
+    setEditingNameEn(tag.name);
+    setEditingNameJa(tag.nameJa || '');
   };
 
   if (!isOpen) return null;
@@ -211,9 +251,9 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
           {/* Add new tag */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Add New Tag
+              {t('tags.addNew') || 'Add New Tag'}
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-start">
               {/* Color selector */}
               <div className="relative">
                 <button
@@ -239,26 +279,47 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                   </div>
                 )}
               </div>
-              <input
-                ref={inputRef}
-                type="text"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                placeholder="Tag name..."
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">EN</span>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newTagNameEn}
+                    onChange={(e) => setNewTagNameEn(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    placeholder="English name..."
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">JA</span>
+                  <input
+                    type="text"
+                    value={newTagNameJa}
+                    onChange={(e) => setNewTagNameJa(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    placeholder="日本語名..."
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
               <button
                 onClick={handleAddTag}
-                disabled={!newTagName.trim() || isSaving}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                disabled={(!newTagNameEn.trim() && !newTagNameJa.trim()) || isSaving}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors self-start"
               >
-                Add
+                {t('tags.add') || 'Add'}
               </button>
             </div>
           </div>
@@ -266,83 +327,135 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
           {/* Existing tags */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Current Tags ({localTags.length})
+              {t('tags.current') || 'Current Tags'} ({localTags.length})
             </label>
             {localTags.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                <p>No tags yet. Add your first tag above.</p>
+                <p>{t('tags.noTags') || 'No tags yet. Add your first tag above.'}</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {localTags.sort((a, b) => a.order - b.order).map(tag => {
                   const colorConfig = getTagColorConfig(tag.color);
+                  const isEditing = editingTagId === tag.id;
+                  
                   return (
                     <div
                       key={tag.id}
-                      className={`flex items-center gap-2 p-2 rounded-lg ${colorConfig.bg} border ${colorConfig.border}`}
+                      className={`p-3 rounded-lg ${colorConfig.bg} border ${colorConfig.border}`}
                     >
-                      {/* Color picker button */}
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowColorPicker(showColorPicker === tag.id ? null : tag.id)}
-                          className={`w-6 h-6 rounded-full ${colorConfig.dot} hover:scale-110 transition-transform`}
-                          title="Change color"
-                        />
-                        {showColorPicker === tag.id && (
-                          <div className="absolute top-full left-0 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 grid grid-cols-6 gap-1 w-48">
-                            {TAG_COLORS.map(color => (
-                              <button
-                                key={color.id}
-                                onClick={() => handleColorChange(tag.id, color.id)}
-                                className={`w-6 h-6 rounded-full ${color.dot} hover:scale-110 transition-transform ${tag.color === color.id ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
-                                title={color.name}
-                              />
-                            ))}
-                          </div>
+                      <div className="flex items-start gap-2">
+                        {/* Color picker button */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowColorPicker(showColorPicker === tag.id ? null : tag.id)}
+                            className={`w-6 h-6 rounded-full ${colorConfig.dot} hover:scale-110 transition-transform mt-1`}
+                            title={t('tags.changeColor') || 'Change color'}
+                          />
+                          {showColorPicker === tag.id && (
+                            <div className="absolute top-full left-0 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 grid grid-cols-6 gap-1 w-48">
+                              {TAG_COLORS.map(color => (
+                                <button
+                                  key={color.id}
+                                  onClick={() => handleColorChange(tag.id, color.id)}
+                                  className={`w-6 h-6 rounded-full ${color.dot} hover:scale-110 transition-transform ${tag.color === color.id ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                                  title={color.name}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Tag names (editable) */}
+                        <div className="flex-1 min-w-0">
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">EN</span>
+                                <input
+                                  type="text"
+                                  value={editingNameEn}
+                                  onChange={(e) => setEditingNameEn(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleRenameTag(tag.id);
+                                    } else if (e.key === 'Escape') {
+                                      setEditingTagId(null);
+                                    }
+                                  }}
+                                  autoFocus
+                                  placeholder="English name..."
+                                  className={`flex-1 px-2 py-1 rounded border-0 bg-white/50 dark:bg-gray-900/50 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500`}
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">JA</span>
+                                <input
+                                  type="text"
+                                  value={editingNameJa}
+                                  onChange={(e) => setEditingNameJa(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleRenameTag(tag.id);
+                                    } else if (e.key === 'Escape') {
+                                      setEditingTagId(null);
+                                    }
+                                  }}
+                                  placeholder="日本語名..."
+                                  className={`flex-1 px-2 py-1 rounded border-0 bg-white/50 dark:bg-gray-900/50 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500`}
+                                />
+                              </div>
+                              <div className="flex justify-end gap-2 mt-2">
+                                <button
+                                  onClick={() => setEditingTagId(null)}
+                                  className="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded"
+                                >
+                                  {t('common.cancel') || 'Cancel'}
+                                </button>
+                                <button
+                                  onClick={() => handleRenameTag(tag.id)}
+                                  className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600"
+                                >
+                                  {t('common.save') || 'Save'}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => startEditing(tag)}
+                              className={`w-full text-left px-2 py-1 rounded hover:bg-white/30 dark:hover:bg-gray-900/30 transition-colors`}
+                              title={t('tags.clickToEdit') || 'Click to edit'}
+                            >
+                              <div className={`${colorConfig.text} font-medium`}>
+                                {getLocalizedTagName(tag, locale)}
+                              </div>
+                              {tag.nameJa && tag.name !== tag.nameJa && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                  {locale === 'ja' ? `EN: ${tag.name}` : `JA: ${tag.nameJa}`}
+                                </div>
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Delete button */}
+                        {!isEditing && (
+                          <button
+                            onClick={() => handleDeleteTag(tag.id)}
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
+                            title={t('tags.delete') || 'Delete tag'}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         )}
                       </div>
-
-                      {/* Tag name (editable) */}
-                      {editingTagId === tag.id ? (
-                        <input
-                          type="text"
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onBlur={() => handleRenameTag(tag.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleRenameTag(tag.id);
-                            } else if (e.key === 'Escape') {
-                              setEditingTagId(null);
-                            }
-                          }}
-                          autoFocus
-                          className={`flex-1 px-2 py-1 rounded border-0 bg-white/50 dark:bg-gray-900/50 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500`}
-                        />
-                      ) : (
-                        <button
-                          onClick={() => startEditing(tag)}
-                          className={`flex-1 text-left px-2 py-1 rounded hover:bg-white/30 dark:hover:bg-gray-900/30 ${colorConfig.text} font-medium transition-colors`}
-                          title="Click to rename"
-                        >
-                          {tag.name}
-                        </button>
-                      )}
-
-                      {/* Delete button */}
-                      <button
-                        onClick={() => handleDeleteTag(tag.id)}
-                        className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
-                        title="Delete tag"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
                     </div>
                   );
                 })}

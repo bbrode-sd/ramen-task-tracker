@@ -5,7 +5,7 @@ import { useFilterOptional, DueDateFilter, MemberFilter } from '@/contexts/Filte
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, BoardMember, BoardTag } from '@/types';
-import { getTagColorConfig } from './TagManagementModal';
+import { getTagColorConfig, getLocalizedTagName } from './TagManagementModal';
 import Image from 'next/image';
 
 interface FilterPanelProps {
@@ -27,7 +27,7 @@ export function FilterPanel({
   boardTags = [],
   onCardClick,
 }: FilterPanelProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { user } = useAuth();
   const filterContext = useFilterOptional();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -491,7 +491,7 @@ export function FilterPanel({
                         className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-500 focus:ring-emerald-500"
                       />
                       <span className={`w-3 h-3 rounded-full ${colorConfig.dot}`} />
-                      <span className="text-sm text-gray-700 dark:text-gray-200">{tag.name}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-200">{getLocalizedTagName(tag, locale)}</span>
                     </label>
                   );
                 })}

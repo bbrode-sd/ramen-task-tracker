@@ -34,7 +34,9 @@ export interface BoardBackground {
 // Custom tag definition stored at board level
 export interface BoardTag {
   id: string;
-  name: string;
+  name: string; // English name (primary)
+  nameJa?: string; // Japanese name
+  nameOriginalLanguage?: 'en' | 'ja'; // Which language was originally typed
   color: string; // Tailwind color class prefix, e.g., 'red', 'blue', 'emerald'
   order: number;
 }

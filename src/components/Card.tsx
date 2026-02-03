@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
 import { Draggable, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Card as CardType, BoardTag } from '@/types';
-import { getTagColorConfig } from './TagManagementModal';
+import { getTagColorConfig, getLocalizedTagName } from './TagManagementModal';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useFilter } from '@/contexts/FilterContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -110,15 +111,17 @@ const TagBadge = memo(function TagBadge({
 }: { 
   tag: BoardTag;
 }) {
+  const { locale } = useLocale();
   const colorConfig = getTagColorConfig(tag.color);
+  const displayName = getLocalizedTagName(tag, locale);
   
   return (
     <div
       className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${colorConfig.bg} ${colorConfig.text} ${colorConfig.border}`}
-      title={tag.name}
+      title={displayName}
     >
       <span className={`w-2 h-2 rounded-full ${colorConfig.dot}`} aria-hidden="true" />
-      <span>{tag.name}</span>
+      <span>{displayName}</span>
     </div>
   );
 });

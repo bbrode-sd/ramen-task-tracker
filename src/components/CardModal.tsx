@@ -42,7 +42,7 @@ import {
   removeSubBoard,
   getBoard,
 } from '@/lib/firestore';
-import { getTagColorConfig } from './TagManagementModal';
+import { getTagColorConfig, getLocalizedTagName } from './TagManagementModal';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { uploadFile, uploadFromPaste, getFileType } from '@/lib/storage';
@@ -3941,7 +3941,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
                         aria-pressed={isSelected}
                       >
                         <span className={`w-2 h-2 rounded-full ${colorConfig.dot}`} aria-hidden="true" />
-                        {tag.name}
+                        {getLocalizedTagName(tag, locale)}
                         {isSelected && (
                           <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
