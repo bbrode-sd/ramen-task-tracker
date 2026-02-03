@@ -428,12 +428,12 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                           <div className="flex gap-3">
                             {/* English field */}
                             <div className="flex-1">
-                              <div className="flex flex-col items-start mb-1.5">
+                              <div className="flex items-center gap-2 mb-1.5">
                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
                                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                                   EN
                                 </span>
-                                <span className={`text-[10px] font-medium whitespace-nowrap mt-0.5 ${
+                                <span className={`text-[10px] font-medium whitespace-nowrap ${
                                   originalLang === 'en' 
                                     ? 'text-blue-500 dark:text-blue-300' 
                                     : 'text-slate-400 dark:text-slate-400'
@@ -461,12 +461,12 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                             
                             {/* Japanese field */}
                             <div className="flex-1">
-                              <div className="flex flex-col items-start mb-1.5">
+                              <div className="flex items-center gap-2 mb-1.5">
                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
                                   <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                                   JP
                                 </span>
-                                <span className={`text-[10px] font-medium whitespace-nowrap mt-0.5 ${
+                                <span className={`text-[10px] font-medium whitespace-nowrap ${
                                   originalLang === 'ja' 
                                     ? 'text-red-500 dark:text-red-300' 
                                     : 'text-slate-400 dark:text-slate-400'
@@ -548,12 +548,12 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                             <div className="flex gap-4">
                               {/* English */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex flex-col items-start mb-0.5">
+                                <div className="flex items-center gap-2 mb-1">
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
                                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
                                     EN
                                   </span>
-                                  <span className={`text-[10px] font-medium whitespace-nowrap mt-0.5 ${
+                                  <span className={`text-[10px] font-medium whitespace-nowrap ${
                                     originalLang === 'en' 
                                       ? 'text-blue-500 dark:text-blue-300' 
                                       : 'text-slate-400 dark:text-slate-400'
@@ -571,12 +571,12 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                               
                               {/* Japanese */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex flex-col items-start mb-0.5">
+                                <div className="flex items-center gap-2 mb-1">
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
                                     <span className="w-1.5 h-1.5 rounded-full bg-red-400/80 dark:bg-red-300/80" />
                                     JP
                                   </span>
-                                  <span className={`text-[10px] font-medium whitespace-nowrap mt-0.5 ${
+                                  <span className={`text-[10px] font-medium whitespace-nowrap ${
                                     originalLang === 'ja' 
                                       ? 'text-red-500 dark:text-red-300' 
                                       : 'text-slate-400 dark:text-slate-400'
