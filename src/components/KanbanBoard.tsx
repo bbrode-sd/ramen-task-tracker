@@ -32,6 +32,7 @@ import { Header } from './Header';
 import { Column } from './Column';
 import { GRADIENT_PRESETS } from './BackgroundPicker';
 import { EmptyState, SearchEmptyState } from './EmptyState';
+import { createDefaultTags } from './TagManagementModal';
 
 // Lazy load heavy components for better initial load performance
 // CardModal is only loaded when a card is selected - significant bundle reduction
@@ -221,6 +222,16 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
             setLoading(false);
             return;
           }
+          // Initialize default tags if board has none
+          if (!boardData.tags || boardData.tags.length === 0) {
+            const defaultTags = createDefaultTags();
+            boardData.tags = defaultTags;
+            // Save to Firestore (fire and forget)
+            updateBoard(boardId, { tags: defaultTags }).catch(err => 
+              console.error('Failed to initialize default tags:', err)
+            );
+          }
+          
           setBoard(boardData);
           
           // If this is a sub-board, fetch parent card info and recalculate approved count

@@ -452,7 +452,7 @@ function ColumnComponent({
         if (fullCard.titleTranslatorEn) updates.titleTranslatorEn = fullCard.titleTranslatorEn;
         if (fullCard.titleTranslatorJa) updates.titleTranslatorJa = fullCard.titleTranslatorJa;
         if (fullCard.labels && fullCard.labels.length > 0) updates.labels = fullCard.labels;
-        if (fullCard.priority) updates.priority = fullCard.priority;
+        if (fullCard.tagIds && fullCard.tagIds.length > 0) updates.tagIds = fullCard.tagIds;
         if (fullCard.checklists && fullCard.checklists.length > 0) {
           // Reset checklist items completion status
           updates.checklists = fullCard.checklists.map(checklist => ({

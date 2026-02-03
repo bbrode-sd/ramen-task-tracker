@@ -42,6 +42,23 @@ export function getTagColorConfig(colorId: string) {
 
 export { TAG_COLORS };
 
+// Default tags that match the old priority system
+export const DEFAULT_TAGS: BoardTag[] = [
+  { id: 'default-low', name: 'Low', color: 'slate', order: 0 },
+  { id: 'default-medium', name: 'Medium', color: 'yellow', order: 1 },
+  { id: 'default-high', name: 'High', color: 'orange', order: 2 },
+  { id: 'default-urgent', name: 'Urgent', color: 'red', order: 3 },
+];
+
+// Create a fresh copy of default tags with unique IDs (for new boards)
+export function createDefaultTags(): BoardTag[] {
+  const timestamp = Date.now();
+  return DEFAULT_TAGS.map((tag, index) => ({
+    ...tag,
+    id: `tag-${timestamp}-${index}`,
+  }));
+}
+
 export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChange }: TagManagementModalProps) {
   const { showToast } = useToast();
   const { t } = useLocale();

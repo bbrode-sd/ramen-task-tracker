@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFilterOptional, DueDateFilter, MemberFilter } from '@/contexts/FilterContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, BoardMember, CardPriority, BoardTag } from '@/types';
+import { Card, BoardMember, BoardTag } from '@/types';
 import { getTagColorConfig } from './TagManagementModal';
 import Image from 'next/image';
 
@@ -42,8 +42,6 @@ export function FilterPanel({
   const setSearchQuery = filterContext?.setSearchQuery ?? (() => {});
   const selectedLabels = filterContext?.selectedLabels ?? [];
   const toggleLabel = filterContext?.toggleLabel ?? (() => {});
-  const selectedPriorities = filterContext?.selectedPriorities ?? [];
-  const togglePriority = filterContext?.togglePriority ?? (() => {});
   const selectedTagIds = filterContext?.selectedTagIds ?? [];
   const toggleTag = filterContext?.toggleTag ?? (() => {});
   const selectedMembers = filterContext?.selectedMembers ?? [];
@@ -55,14 +53,6 @@ export function FilterPanel({
   const hasActiveFilters = filterContext?.hasActiveFilters ?? false;
   const clearFilters = filterContext?.clearFilters ?? (() => {});
   const searchCards = filterContext?.searchCards ?? (() => []);
-
-  // Priority options
-  const priorityOptions: { value: CardPriority; label: string; color: string }[] = [
-    { value: 'urgent', label: t('header.priorityUrgent'), color: 'bg-red-500' },
-    { value: 'high', label: t('header.priorityHigh'), color: 'bg-amber-500' },
-    { value: 'medium', label: t('header.priorityMedium'), color: 'bg-yellow-500' },
-    { value: 'low', label: t('header.priorityLow'), color: 'bg-blue-500' },
-  ];
 
   // Due date options
   const dueDateOptions: { value: DueDateFilter; label: string; icon: React.ReactNode }[] = [

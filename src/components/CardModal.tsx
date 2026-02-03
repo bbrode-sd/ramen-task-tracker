@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/contexts/TranslationContext';
 import { useNotifications } from '@/contexts/NotificationContext';
-import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, CardPriority, Column, Board, BoardTag } from '@/types';
+import { Card, Comment, BoardMember, Checklist, ChecklistItem, Activity, Column, Board, BoardTag } from '@/types';
 import {
   getCard,
   updateCard,
@@ -154,9 +154,6 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
   // Due date
   const [dueDate, setDueDate] = useState<string>('');
 
-  // Priority (deprecated - use tags)
-  const [priority, setPriority] = useState<CardPriority>(null);
-
   // Custom tags
   const [boardTags, setBoardTags] = useState<BoardTag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
@@ -256,8 +253,6 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
               const date = cardData.dueDate.toDate();
               setDueDate(date.toISOString().split('T')[0]);
             }
-            // Initialize priority (deprecated)
-            setPriority(cardData.priority ?? null);
             // Initialize selected tags
             setSelectedTagIds(cardData.tagIds || []);
             // Initialize checklists
@@ -948,13 +943,6 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
   const handleClearDueDate = async () => {
     setDueDate('');
     await updateCard(boardId, cardId, { dueDate: null });
-    const updatedCard = await getCard(boardId, cardId);
-    if (updatedCard) setCard(updatedCard);
-  };
-
-  const handlePriorityChange = async (newPriority: CardPriority) => {
-    setPriority(newPriority);
-    await updateCard(boardId, cardId, { priority: newPriority });
     const updatedCard = await getCard(boardId, cardId);
     if (updatedCard) setCard(updatedCard);
   };

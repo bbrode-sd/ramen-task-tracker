@@ -104,58 +104,6 @@ const HighlightedText = memo(function HighlightedText({ text, searchQuery }: { t
   );
 });
 
-// Priority badge component with colored indicator
-const PriorityBadge = memo(function PriorityBadge({ 
-  priority 
-}: { 
-  priority: 'low' | 'medium' | 'high' | 'urgent' | null | undefined;
-}) {
-  if (!priority) return null;
-  
-  const priorityConfig = {
-    low: {
-      bg: 'bg-[var(--surface-hover)]',
-      text: 'text-[var(--text-secondary)]',
-      border: 'border-[var(--border)]',
-      dot: 'bg-slate-400 dark:bg-slate-500',
-      label: 'Low',
-    },
-    medium: {
-      bg: 'bg-[var(--warning-bg)]',
-      text: 'text-[var(--warning)]',
-      border: 'border-[var(--warning)]/30',
-      dot: 'bg-[var(--warning)]',
-      label: 'Medium',
-    },
-    high: {
-      bg: 'bg-orange-50 dark:bg-orange-900/30',
-      text: 'text-orange-700 dark:text-orange-400',
-      border: 'border-orange-200 dark:border-orange-800/50',
-      dot: 'bg-orange-500',
-      label: 'High',
-    },
-    urgent: {
-      bg: 'bg-[var(--error-bg)]',
-      text: 'text-[var(--error)]',
-      border: 'border-[var(--error)]/30',
-      dot: 'bg-[var(--error)] animate-pulse',
-      label: 'Urgent',
-    },
-  };
-  
-  const config = priorityConfig[priority];
-  
-  return (
-    <div
-      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}
-      title={`Priority: ${config.label}`}
-    >
-      <span className={`w-2 h-2 rounded-full ${config.dot}`} aria-hidden="true" />
-      <span>{config.label}</span>
-    </div>
-  );
-});
-
 // Custom tag badge component for displaying board tags
 const TagBadge = memo(function TagBadge({ 
   tag 
@@ -772,15 +720,12 @@ function CardComponent({
             </div>
 
             {/* Card metadata */}
-            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || hasTags || card.priority || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId) && (
+            {(card.descriptionEn || card.descriptionJa || hasAttachments || card.dueDate || hasTags || hasAssignees || (hasChecklists && checklistStats.total > 0) || card.subBoardId) && (
               <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-700 flex-wrap">
                 {/* Custom tags */}
                 {resolvedTags.map(tag => (
                   <TagBadge key={tag.id} tag={tag} />
                 ))}
-                
-                {/* Legacy priority badge (only shown if no custom tags) */}
-                {!hasTags && <PriorityBadge priority={card.priority} />}
 
                 {/* Due date badge */}
                 {card.dueDate && (
@@ -1029,7 +974,6 @@ export const Card = memo(CardComponent, (prevProps, nextProps) => {
     prevProps.card.order === nextProps.card.order &&
     coverImageEqual(prevProps.card.coverImage, nextProps.card.coverImage) &&
     prevProps.card.dueDate === nextProps.card.dueDate &&
-    prevProps.card.priority === nextProps.card.priority &&
     prevProps.index === nextProps.index &&
     prevProps.isDimmed === nextProps.isDimmed &&
     prevProps.isFocused === nextProps.isFocused &&
