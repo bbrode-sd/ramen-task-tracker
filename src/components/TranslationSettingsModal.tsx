@@ -10,31 +10,37 @@ interface TranslationSettingsModalProps {
 
 export function TranslationSettingsModal({ isOpen, onClose }: TranslationSettingsModalProps) {
   const { settings, updateSettings } = useTranslation();
-  const [contextMode, setContextMode] = useState<TranslationContextMode>(settings.contextMode);
+  // Map 'pokemon' (the internal default) to 'general' for UI display
+  // This hides the Pokémon branding while keeping it as the default behavior
+  const getDisplayMode = (mode: TranslationContextMode): 'general' | 'custom' => 
+    mode === 'custom' ? 'custom' : 'general';
+  
+  const [displayContextMode, setDisplayContextMode] = useState<'general' | 'custom'>(
+    getDisplayMode(settings.contextMode)
+  );
   const [primaryLanguage, setPrimaryLanguage] = useState<PrimaryLanguage>(settings.primaryLanguage);
   const [customContext, setCustomContext] = useState(settings.customContext);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
+    // 'general' in UI maps to 'pokemon' internally (the optimized default)
+    const actualContextMode: TranslationContextMode = 
+      displayContextMode === 'custom' ? 'custom' : 'pokemon';
+    
     updateSettings({
-      contextMode,
+      contextMode: actualContextMode,
       primaryLanguage,
-      customContext: contextMode === 'custom' ? customContext : settings.customContext,
+      customContext: displayContextMode === 'custom' ? customContext : settings.customContext,
     });
     onClose();
   };
 
-  const contextOptions: { value: TranslationContextMode; label: string; description: string }[] = [
+  const contextOptions: { value: 'general' | 'custom'; label: string; description: string }[] = [
     {
       value: 'general',
       label: 'General',
-      description: 'Standard translations without specialized terminology',
-    },
-    {
-      value: 'pokemon',
-      label: 'Pokémon TCG',
-      description: 'Uses official Pokémon game localization terms',
+      description: 'Optimized translations with game terminology',
     },
     {
       value: 'custom',
@@ -138,19 +144,19 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
               {contextOptions.map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setContextMode(option.value)}
+                  onClick={() => setDisplayContextMode(option.value)}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-start gap-3 ${
-                    contextMode === option.value
+                    displayContextMode === option.value
                       ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30'
                       : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    contextMode === option.value
+                    displayContextMode === option.value
                       ? 'border-violet-500 bg-violet-500'
                       : 'border-slate-300 dark:border-slate-500'
                   }`}>
-                    {contextMode === option.value && (
+                    {displayContextMode === option.value && (
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                       </svg>
@@ -166,7 +172,7 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
           </div>
 
           {/* Custom Context Input */}
-          {contextMode === 'custom' && (
+          {displayContextMode === 'custom' && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
                 Custom Context Instructions
