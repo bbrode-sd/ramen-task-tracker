@@ -134,6 +134,15 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   const scrollAnimationRef = useRef<number | null>(null);
   const edgeScrollRef = useRef({ left: false, right: false });
   
+  // Drag-to-scroll state (for scrolling by dragging empty area)
+  const [isDragScrolling, setIsDragScrolling] = useState(false);
+  const dragScrollRef = useRef({
+    startX: 0,
+    scrollLeft: 0,
+    isMouseDown: false,
+    hasMoved: false,
+  });
+  
   // Track pending optimistic updates to prevent subscription from overwriting them
   const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; expiresAt: number }>>(new Map());
   
@@ -510,6 +519,62 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       scrollAnimationRef.current = null;
     }
     edgeScrollRef.current = { left: false, right: false };
+  }, []);
+
+  // Drag-to-scroll handlers - allows scrolling by dragging empty area
+  const handleDragScrollMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only trigger on left mouse button
+    if (e.button !== 0) return;
+    
+    // Don't trigger if clicking on interactive elements (cards, columns, buttons, inputs)
+    const target = e.target as HTMLElement;
+    const isInteractive = target.closest('[data-rbd-draggable-id], [data-rbd-droppable-id], button, input, a, [role="button"]');
+    if (isInteractive) return;
+    
+    const container = boardContainerRef.current;
+    if (!container) return;
+    
+    dragScrollRef.current = {
+      startX: e.pageX - container.offsetLeft,
+      scrollLeft: container.scrollLeft,
+      isMouseDown: true,
+      hasMoved: false,
+    };
+  }, []);
+
+  const handleDragScrollMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragScrollRef.current.isMouseDown) return;
+    
+    const container = boardContainerRef.current;
+    if (!container) return;
+    
+    e.preventDefault();
+    const x = e.pageX - container.offsetLeft;
+    const walk = (x - dragScrollRef.current.startX) * 1.5; // Scroll speed multiplier
+    
+    // Only set isDragScrolling after moving a bit (prevents accidental activation)
+    if (Math.abs(walk) > 5 && !dragScrollRef.current.hasMoved) {
+      dragScrollRef.current.hasMoved = true;
+      setIsDragScrolling(true);
+    }
+    
+    if (dragScrollRef.current.hasMoved) {
+      container.scrollLeft = dragScrollRef.current.scrollLeft - walk;
+    }
+  }, []);
+
+  const handleDragScrollMouseUp = useCallback(() => {
+    dragScrollRef.current.isMouseDown = false;
+    dragScrollRef.current.hasMoved = false;
+    setIsDragScrolling(false);
+  }, []);
+
+  const handleDragScrollMouseLeave = useCallback(() => {
+    if (dragScrollRef.current.isMouseDown) {
+      dragScrollRef.current.isMouseDown = false;
+      dragScrollRef.current.hasMoved = false;
+      setIsDragScrolling(false);
+    }
   }, []);
 
   // Handle mouse move during drag for edge scrolling
@@ -1054,9 +1119,13 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   if (embedded) {
     return (
       <div 
-        className="overflow-x-auto" 
+        className={`overflow-x-auto ${isDragScrolling ? 'cursor-grabbing select-none' : 'cursor-default'}`}
         style={{ maxHeight }}
         ref={boardContainerRef}
+        onMouseDown={handleDragScrollMouseDown}
+        onMouseMove={handleDragScrollMouseMove}
+        onMouseUp={handleDragScrollMouseUp}
+        onMouseLeave={handleDragScrollMouseLeave}
       >
         <DragDropContext 
           onDragStart={handleDragStart}
@@ -1079,6 +1148,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                     cards={getCardsForColumn(column.id)}
                     index={index}
                     boardId={boardId}
+                    boardTags={board?.tags || []}
                     onCardClick={handleCardClick}
                     hasActiveFilters={false}
                     matchesFilter={() => true}
@@ -1181,8 +1251,12 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       <main 
         id="main-content"
         ref={boardContainerRef}
-        className="overflow-x-auto p-4 sm:p-6"
+        className={`overflow-x-auto p-4 sm:p-6 h-[calc(100vh-64px)] ${isDragScrolling ? 'cursor-grabbing select-none' : 'cursor-default'}`}
         aria-label={`${board?.name || 'Board'} with ${columns.length} lists and ${cards.length} cards`}
+        onMouseDown={handleDragScrollMouseDown}
+        onMouseMove={handleDragScrollMouseMove}
+        onMouseUp={handleDragScrollMouseUp}
+        onMouseLeave={handleDragScrollMouseLeave}
       >
         {/* Edge scroll indicators */}
         {isDragging && (
@@ -1202,7 +1276,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex gap-5 h-full items-start pb-4 transition-all duration-200 ${
+                className={`flex gap-5 h-full items-stretch pb-4 transition-all duration-200 ${
                   boardSnapshot.isDraggingOver ? 'gap-6' : ''
                 }`}
               >
@@ -1285,6 +1359,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                     cards={getCardsForColumn(column.id)}
                     index={index}
                     boardId={boardId}
+                    boardTags={board?.tags || []}
                     onCardClick={handleCardClick}
                     hasActiveFilters={hasActiveFilters}
                     matchesFilter={(card) => matchesFilter(card, user?.uid)}
