@@ -459,7 +459,7 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                             {/* Japanese field */}
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-1">
-                                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">JA</span>
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">JP</span>
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
                                   originalLang === 'ja' 
                                     ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' 
@@ -563,7 +563,7 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                               {/* Japanese */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 mb-0.5">
-                                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">JA</span>
+                                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">JP</span>
                                   <span className={`text-xs px-1.5 py-0.5 rounded ${
                                     originalLang === 'ja' 
                                       ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' 
