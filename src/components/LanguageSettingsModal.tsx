@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useLocale, Locale } from '@/contexts/LocaleContext';
+import { useTranslation, UserTextDisplayMode } from '@/contexts/TranslationContext';
 
 interface LanguageSettingsModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface LanguageSettingsModalProps {
 
 export function LanguageSettingsModal({ isOpen, onClose }: LanguageSettingsModalProps) {
   const { locale, setLocale, t } = useLocale();
+  const { settings: translationSettings, updateSettings } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Handle escape key
@@ -51,8 +53,30 @@ export function LanguageSettingsModal({ isOpen, onClose }: LanguageSettingsModal
     { value: 'ja', label: 'Japanese', nativeLabel: '日本語', flag: '🇯🇵' },
   ];
 
+  const userTextDisplayOptions: { value: UserTextDisplayMode; label: string; description: string }[] = [
+    {
+      value: 'both',
+      label: t('translation.displayBoth'),
+      description: t('translation.displayBothDescription'),
+    },
+    {
+      value: 'en',
+      label: t('translation.displayEnOnly'),
+      description: t('translation.displayEnOnlyDescription'),
+    },
+    {
+      value: 'ja',
+      label: t('translation.displayJaOnly'),
+      description: t('translation.displayJaOnlyDescription'),
+    },
+  ];
+
   const handleLanguageChange = (newLocale: Locale) => {
     setLocale(newLocale);
+  };
+
+  const handleUserTextDisplayChange = (mode: UserTextDisplayMode) => {
+    updateSettings({ userTextDisplayMode: mode });
   };
 
   return (
@@ -132,6 +156,36 @@ export function LanguageSettingsModal({ isOpen, onClose }: LanguageSettingsModal
                 )}
               </button>
             ))}
+          </div>
+
+          {/* User Text Display */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              {t('translation.userTextDisplay')}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              {t('translation.userTextDisplayDescription')}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {userTextDisplayOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleUserTextDisplayChange(option.value)}
+                  className={`p-3 rounded-xl border-2 transition-all text-left ${
+                    translationSettings.userTextDisplayMode === option.value
+                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-orange-300 dark:hover:border-orange-700'
+                  }`}
+                >
+                  <div className={`text-sm font-medium ${
+                    translationSettings.userTextDisplayMode === option.value
+                      ? 'text-orange-700 dark:text-orange-400'
+                      : 'text-gray-800 dark:text-white'
+                  }`}>{option.label}</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{option.description}</div>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Info box */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation, TranslationContextMode, PrimaryLanguage, UserTextDisplayMode } from '@/contexts/TranslationContext';
+import { useTranslation, TranslationContextMode, PrimaryLanguage } from '@/contexts/TranslationContext';
 
 interface TranslationSettingsModalProps {
   isOpen: boolean;
@@ -20,7 +20,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
   );
   const [primaryLanguage, setPrimaryLanguage] = useState<PrimaryLanguage>(settings.primaryLanguage);
   const [customContext, setCustomContext] = useState(settings.customContext);
-  const [userTextDisplayMode, setUserTextDisplayMode] = useState<UserTextDisplayMode>(settings.userTextDisplayMode);
 
   if (!isOpen) return null;
 
@@ -33,7 +32,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
       contextMode: actualContextMode,
       primaryLanguage,
       customContext: displayContextMode === 'custom' ? customContext : settings.customContext,
-      userTextDisplayMode,
     });
     onClose();
   };
@@ -66,24 +64,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
       value: 'ja',
       label: '日本語',
       description: 'Japanese is your primary language',
-    },
-  ];
-
-  const userTextDisplayOptions: { value: UserTextDisplayMode; label: string; description: string }[] = [
-    {
-      value: 'both',
-      label: 'Both Languages',
-      description: 'Show English and Japanese side-by-side',
-    },
-    {
-      value: 'en',
-      label: 'English Only',
-      description: 'Show only English content',
-    },
-    {
-      value: 'ja',
-      label: 'Japanese Only',
-      description: 'Show only Japanese content',
     },
   ];
 
@@ -141,32 +121,6 @@ export function TranslationSettingsModal({ isOpen, onClose }: TranslationSetting
                   onClick={() => setPrimaryLanguage(option.value)}
                   className={`p-3 rounded-xl border-2 transition-all text-left ${
                     primaryLanguage === option.value
-                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30'
-                      : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
-                  }`}
-                >
-                  <div className="text-sm font-medium text-slate-800 dark:text-white">{option.label}</div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{option.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* User Text Display */}
-          <div className="space-y-3">
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              User Text Display
-            </label>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Choose how to display bilingual content (cards, comments, columns)
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {userTextDisplayOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setUserTextDisplayMode(option.value)}
-                  className={`p-3 rounded-xl border-2 transition-all text-left ${
-                    userTextDisplayMode === option.value
                       ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30'
                       : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                   }`}
