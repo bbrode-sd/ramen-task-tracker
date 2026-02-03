@@ -530,5 +530,25 @@
     "deleteFailed": "Failed to delete template",
     "confirmDelete": "Are you sure you want to delete this template?",
     "needAtLeastOneColumn": "Please add at least one list to save the template"
+  },
+  "tags": {
+    "manage": "Manage Tags",
+    "addNew": "Add New Tag",
+    "addHint": "Type in English or Japanese. The other language will be auto-translated.",
+    "namePlaceholder": "Tag name (EN or JP)...",
+    "add": "Add",
+    "current": "Current Tags",
+    "noTags": "No tags yet. Add your first tag above.",
+    "created": "Tag created",
+    "deleted": "Tag deleted",
+    "createFailed": "Failed to create tag",
+    "saveFailed": "Failed to save tags",
+    "delete": "Delete tag",
+    "changeColor": "Change color",
+    "selectColor": "Select color",
+    "clickToEdit": "Click to edit",
+    "original": "Original",
+    "autoTranslated": "Auto-translated",
+    "translatedBy": "Translated by {name}"
   }
 }

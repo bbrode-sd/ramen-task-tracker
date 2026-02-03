@@ -154,9 +154,24 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
   const saveTags = useCallback(async (newTags: BoardTag[]) => {
     setIsSaving(true);
     try {
-      await updateBoard(boardId, { tags: newTags });
-      onTagsChange(newTags);
-      setLocalTags(newTags);
+      // Clean tags to remove undefined values (Firestore doesn't accept undefined)
+      const cleanedTags = newTags.map(tag => {
+        const cleaned: BoardTag = {
+          id: tag.id,
+          name: tag.name,
+          color: tag.color,
+          order: tag.order,
+        };
+        if (tag.nameJa) cleaned.nameJa = tag.nameJa;
+        if (tag.nameOriginalLanguage) cleaned.nameOriginalLanguage = tag.nameOriginalLanguage;
+        if (tag.nameTranslatorEn) cleaned.nameTranslatorEn = tag.nameTranslatorEn;
+        if (tag.nameTranslatorJa) cleaned.nameTranslatorJa = tag.nameTranslatorJa;
+        return cleaned;
+      });
+      
+      await updateBoard(boardId, { tags: cleanedTags });
+      onTagsChange(cleanedTags);
+      setLocalTags(cleanedTags);
     } catch (error) {
       console.error('Failed to save tags:', error);
       showToast('error', t('tags.saveFailed') || 'Failed to save tags');
@@ -183,7 +198,7 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
       const newTag: BoardTag = {
         id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: nameEn,
-        nameJa: nameJa || undefined,
+        nameJa: nameJa || '',
         nameOriginalLanguage: detectedLang,
         color: newTagColor,
         order: localTags.length,
@@ -250,11 +265,11 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
           if (editedLang === 'en') {
             updatedTag.name = newNameEn;
             updatedTag.nameJa = result.translation || newNameJa;
-            updatedTag.nameTranslatorJa = undefined; // Clear manual translation marker
+            delete updatedTag.nameTranslatorJa; // Clear manual translation marker
           } else {
             updatedTag.name = result.translation || newNameEn;
             updatedTag.nameJa = newNameJa;
-            updatedTag.nameTranslatorEn = undefined; // Clear manual translation marker
+            delete updatedTag.nameTranslatorEn; // Clear manual translation marker
           }
         }
       } else {
@@ -408,68 +423,70 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                       className={`p-3 rounded-lg ${colorConfig.bg} border ${colorConfig.border}`}
                     >
                       {isEditing ? (
-                        // Edit mode - show both languages with labels
+                        // Edit mode - EN/JP side by side as equals
                         <div className="space-y-3">
-                          {/* English field */}
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">English</span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                originalLang === 'en' 
-                                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
-                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                              }`}>
-                                {getTranslationLabel('en', tag, t)}
-                              </span>
+                          <div className="flex gap-3">
+                            {/* English field */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">EN</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  originalLang === 'en' 
+                                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' 
+                                    : 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                                }`}>
+                                  {getTranslationLabel('en', tag, t)}
+                                </span>
+                              </div>
+                              <input
+                                type="text"
+                                value={editingNameEn}
+                                onChange={(e) => setEditingNameEn(e.target.value)}
+                                onBlur={() => handleSaveEdit(tag.id, 'en')}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleSaveEdit(tag.id, 'en');
+                                  } else if (e.key === 'Escape') {
+                                    setEditingTagId(null);
+                                  }
+                                }}
+                                autoFocus={originalLang === 'en'}
+                                placeholder="English..."
+                                className={`w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
+                              />
                             </div>
-                            <input
-                              type="text"
-                              value={editingNameEn}
-                              onChange={(e) => setEditingNameEn(e.target.value)}
-                              onBlur={() => handleSaveEdit(tag.id, 'en')}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleSaveEdit(tag.id, 'en');
-                                } else if (e.key === 'Escape') {
-                                  setEditingTagId(null);
-                                }
-                              }}
-                              autoFocus={originalLang === 'en'}
-                              placeholder="English name..."
-                              className={`w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
-                            />
-                          </div>
-                          
-                          {/* Japanese field */}
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">日本語</span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                originalLang === 'ja' 
-                                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
-                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                              }`}>
-                                {getTranslationLabel('ja', tag, t)}
-                              </span>
+                            
+                            {/* Japanese field */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">JA</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  originalLang === 'ja' 
+                                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' 
+                                    : 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                                }`}>
+                                  {getTranslationLabel('ja', tag, t)}
+                                </span>
+                              </div>
+                              <input
+                                type="text"
+                                value={editingNameJa}
+                                onChange={(e) => setEditingNameJa(e.target.value)}
+                                onBlur={() => handleSaveEdit(tag.id, 'ja')}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleSaveEdit(tag.id, 'ja');
+                                  } else if (e.key === 'Escape') {
+                                    setEditingTagId(null);
+                                  }
+                                }}
+                                autoFocus={originalLang === 'ja'}
+                                placeholder="日本語..."
+                                className={`w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
+                              />
                             </div>
-                            <input
-                              type="text"
-                              value={editingNameJa}
-                              onChange={(e) => setEditingNameJa(e.target.value)}
-                              onBlur={() => handleSaveEdit(tag.id, 'ja')}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleSaveEdit(tag.id, 'ja');
-                                } else if (e.key === 'Escape') {
-                                  setEditingTagId(null);
-                                }
-                              }}
-                              autoFocus={originalLang === 'ja'}
-                              placeholder="日本語名..."
-                              className={`w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
-                            />
                           </div>
                           
                           <div className="flex justify-end gap-2">
@@ -482,10 +499,10 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                           </div>
                         </div>
                       ) : (
-                        // View mode
-                        <div className="flex items-center gap-2">
+                        // View mode - EN/JP side by side as equals
+                        <div className="flex items-start gap-2">
                           {/* Color picker button */}
-                          <div className="relative">
+                          <div className="relative pt-1">
                             <button
                               onClick={() => setShowColorPicker(showColorPicker === tag.id ? null : tag.id)}
                               className={`w-6 h-6 rounded-full ${colorConfig.dot} hover:scale-110 transition-transform`}
@@ -505,29 +522,56 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                             )}
                           </div>
 
-                          {/* Tag name - click to edit */}
+                          {/* Tag names - EN/JP side by side as equals */}
                           <button
                             onClick={() => startEditing(tag)}
-                            className={`flex-1 text-left px-2 py-1 rounded hover:bg-white/30 dark:hover:bg-gray-900/30 transition-colors`}
+                            className="flex-1 text-left px-2 py-1 rounded hover:bg-white/30 dark:hover:bg-gray-900/30 transition-colors"
                             title={t('tags.clickToEdit') || 'Click to edit'}
                           >
-                            <div className={`${colorConfig.text} font-medium`}>
-                              {getLocalizedTagName(tag, locale)}
-                            </div>
-                            {/* Show translation status */}
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                              {locale === 'ja' ? (
-                                <>EN: {tag.name} • {getTranslationLabel('en', tag, t)}</>
-                              ) : (
-                                tag.nameJa && <>JA: {tag.nameJa} • {getTranslationLabel('ja', tag, t)}</>
-                              )}
+                            <div className="flex gap-4">
+                              {/* English */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">EN</span>
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                    originalLang === 'en' 
+                                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' 
+                                      : 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    {getTranslationLabel('en', tag, t)}
+                                  </span>
+                                </div>
+                                <div className={`${colorConfig.text} font-medium truncate`}>
+                                  {tag.name || '—'}
+                                </div>
+                              </div>
+                              
+                              {/* Divider */}
+                              <div className="w-px bg-gray-300 dark:bg-gray-600 self-stretch" />
+                              
+                              {/* Japanese */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">JA</span>
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                    originalLang === 'ja' 
+                                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' 
+                                      : 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                                  }`}>
+                                    {getTranslationLabel('ja', tag, t)}
+                                  </span>
+                                </div>
+                                <div className={`${colorConfig.text} font-medium truncate`}>
+                                  {tag.nameJa || '—'}
+                                </div>
+                              </div>
                             </div>
                           </button>
 
                           {/* Delete button */}
                           <button
                             onClick={() => handleDeleteTag(tag.id)}
-                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors mt-1"
                             title={t('tags.delete') || 'Delete tag'}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

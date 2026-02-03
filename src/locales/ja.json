@@ -530,5 +530,25 @@
     "deleteFailed": "テンプレートの削除に失敗しました",
     "confirmDelete": "このテンプレートを削除してもよろしいですか？",
     "needAtLeastOneColumn": "テンプレートを保存するには、少なくとも1つのリストを追加してください"
+  },
+  "tags": {
+    "manage": "タグを管理",
+    "addNew": "新しいタグを追加",
+    "addHint": "英語または日本語で入力してください。他の言語は自動翻訳されます。",
+    "namePlaceholder": "タグ名（英語または日本語）...",
+    "add": "追加",
+    "current": "現在のタグ",
+    "noTags": "タグがまだありません。上から最初のタグを追加してください。",
+    "created": "タグを作成しました",
+    "deleted": "タグを削除しました",
+    "createFailed": "タグの作成に失敗しました",
+    "saveFailed": "タグの保存に失敗しました",
+    "delete": "タグを削除",
+    "changeColor": "色を変更",
+    "selectColor": "色を選択",
+    "clickToEdit": "クリックして編集",
+    "original": "オリジナル",
+    "autoTranslated": "自動翻訳",
+    "translatedBy": "{name}が翻訳"
   }
 }
