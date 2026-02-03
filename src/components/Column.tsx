@@ -45,6 +45,8 @@ interface ColumnProps {
   hasUnreadActivity?: (cardId: string) => boolean;
   /** Embedded mode for sub-boards - uses narrower columns */
   embedded?: boolean;
+  /** Board tags for displaying tag badges on cards */
+  boardTags?: import('@/types').BoardTag[];
 }
 
 /**
@@ -710,7 +712,7 @@ function ColumnComponent({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 px-2 py-2 min-h-[60px] overflow-y-auto transition-colors duration-200 column-drop-zone rounded-lg ${
+                className={`flex-1 px-2 py-2 min-h-[60px] overflow-y-auto overflow-x-hidden transition-colors duration-200 column-drop-zone rounded-lg ${
                   snapshot.isDraggingOver 
                     ? 'dragging-over bg-gradient-to-b from-emerald-50/60 to-emerald-100/40 dark:from-emerald-900/30 dark:to-emerald-800/20' 
                     : ''
