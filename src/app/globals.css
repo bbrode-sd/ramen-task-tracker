@@ -148,7 +148,7 @@
   --glass-border: rgba(71, 85, 105, 0.5);
   
   /* === Column/List Surface === */
-  --surface-column: #101214;
+  --surface-column: #0d1520;
 }
 
 /* Dark mode via system preference (fallback when no class is set) */
@@ -205,7 +205,7 @@
     --glass-border: rgba(71, 85, 105, 0.5);
     
     /* === Column/List Surface === */
-    --surface-column: #101214;
+    --surface-column: #0d1520;
   }
 }
 
