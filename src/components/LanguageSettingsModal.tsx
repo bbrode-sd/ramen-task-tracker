@@ -121,8 +121,16 @@ export function LanguageSettingsModal({ isOpen, onClose }: LanguageSettingsModal
 
         {/* Content */}
         <div className="p-6">
-          <div className="space-y-3">
-            {languages.map((lang) => (
+          {/* UI Language */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+              {locale === 'ja' ? 'UIの言語' : 'UI Language'}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              {locale === 'ja' ? 'アプリの表示言語を選択' : 'Choose the display language for the app'}
+            </p>
+            <div className="space-y-3">
+              {languages.map((lang) => (
               <button
                 key={lang.value}
                 onClick={() => handleLanguageChange(lang.value)}
@@ -156,6 +164,7 @@ export function LanguageSettingsModal({ isOpen, onClose }: LanguageSettingsModal
                 )}
               </button>
             ))}
+            </div>
           </div>
 
           {/* User Text Display */}
