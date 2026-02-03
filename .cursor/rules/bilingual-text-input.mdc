@@ -1,0 +1,86 @@
+---
+description: Bilingual EN/JP text input pattern for this app
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Bilingual Text Input Pattern
+
+This app supports English and Japanese. All user-entered text fields must follow this pattern:
+
+## Single Input, Auto-Translate
+
+- **ONE text input field** - not separate EN/JA inputs
+- **Auto-detect language** using `translateWithAutoDetect()` from `TranslationContext`
+- **Store both languages** - e.g., `titleEn`, `titleJa`, `nameOriginalLanguage`
+- **Track original language** - `nameOriginalLanguage: 'en' | 'ja'`
+
+```typescript
+// ✅ CORRECT - Single input with auto-translate
+const handleAdd = async () => {
+  const result = await translateWithAutoDetect(text, `field-${Date.now()}`);
+  const nameEn = result.detectedLanguage === 'en' ? text : result.translation;
+  const nameJa = result.detectedLanguage === 'ja' ? text : result.translation;
+  await save({ name: nameEn, nameJa, nameOriginalLanguage: result.detectedLanguage });
+};
+
+// ❌ WRONG - Separate inputs for each language
+<input value={nameEn} onChange={...} placeholder="English" />
+<input value={nameJa} onChange={...} placeholder="日本語" />
+```
+
+## Editing Translations
+
+When editing existing bilingual content:
+
+1. **Show both languages** with status labels (Original, Auto-translated, Translated by X)
+2. **Editing the original** → re-translate the other language automatically
+3. **Editing the translation** → save with `translatorInfo`, do NOT re-translate
+
+```typescript
+// Track who manually edited translations
+interface TranslatorInfo {
+  uid: string;
+  displayName: string;
+}
+
+// When editing the translation (not original)
+if (!isEditingOriginal && user) {
+  const translatorInfo = { uid: user.uid, displayName: user.displayName };
+  await save({ nameTranslatorJa: translatorInfo });
+}
+```
+
+## Display with Locale
+
+Use the user's locale to show the correct translation:
+
+```typescript
+import { useLocale } from '@/contexts/LocaleContext';
+
+const { locale } = useLocale();
+const displayName = locale === 'ja' ? (item.nameJa || item.name) : item.name;
+```
+
+## Translation Status Labels
+
+Show which version is original vs translated:
+
+```typescript
+function getTranslationLabel(lang: 'en' | 'ja', item: Item) {
+  const isOriginal = lang === item.nameOriginalLanguage;
+  if (isOriginal) return 'Original';
+  
+  const translator = lang === 'en' ? item.nameTranslatorEn : item.nameTranslatorJa;
+  if (translator) return `Translated by ${translator.displayName}`;
+  
+  return 'Auto-translated';
+}
+```
+
+## See Also
+
+- `src/contexts/TranslationContext.tsx` - Translation API
+- `src/components/CardModal.tsx` - Title/description editing example
+- `src/components/CardModal/CommentItem.tsx` - Comment translation example
+- `src/components/TagManagementModal.tsx` - Tag translation example
