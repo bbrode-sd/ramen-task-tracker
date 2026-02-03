@@ -513,12 +513,12 @@ function ColumnComponent({
                 ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
                 : provided.draggableProps.style?.transition,
           }}
-          className={`flex-shrink-0 w-[280px] sm:w-[300px] max-h-full bg-[var(--surface)] rounded-2xl flex flex-col border ${
+          className={`flex-shrink-0 w-[280px] sm:w-[300px] max-h-full bg-[var(--surface-column)] rounded-xl flex flex-col ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
               : 'shadow-md transition-all duration-300'
           } ${snapshot.isDropAnimating ? 'animate-drop' : ''} ${
-            isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-lg' : 'border-[var(--border)]'
+            isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] shadow-lg' : ''
           }`}
         >
           {/* Screen reader drag instructions for column */}
@@ -528,7 +528,7 @@ function ColumnComponent({
           {/* Column Header */}
           <div
             {...provided.dragHandleProps}
-            className="px-3 py-3.5 border-b border-[var(--border-subtle)]"
+            className="px-3 py-2.5"
           >
             <div className="flex items-start gap-2.5">
               <div className="flex-1 min-w-0 space-y-1.5">
@@ -556,7 +556,7 @@ function ColumnComponent({
                             cancelEditing();
                           }
                         }}
-                        className="flex-1 px-2 py-1 text-sm font-semibold bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                        className="flex-1 px-2 py-1 text-sm font-semibold bg-[var(--surface)] text-[var(--text-primary)] rounded-md border-2 border-[var(--primary)] focus:outline-none"
                         autoFocus
                         placeholder="List name (English)"
                       />
@@ -613,7 +613,7 @@ function ColumnComponent({
                             cancelEditing();
                           }
                         }}
-                        className="flex-1 px-2 py-1 text-xs bg-[var(--surface)] text-[var(--text-primary)] rounded-lg border-2 border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                        className="flex-1 px-2 py-1 text-xs bg-[var(--surface)] text-[var(--text-primary)] rounded-md border-2 border-[var(--primary)] focus:outline-none"
                         autoFocus
                         placeholder="リスト名（日本語）"
                       />
@@ -666,7 +666,7 @@ function ColumnComponent({
                   aria-expanded={showMenu}
                   aria-haspopup="menu"
                   aria-label={`${column.name} list actions menu`}
-                  className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
+                  className="p-1.5 hover:bg-[var(--surface-hover)] rounded-md transition-colors touch-manipulation min-w-[28px] min-h-[28px] flex items-center justify-center"
                 >
                   <svg
                     className="w-4 h-4 text-slate-400"
@@ -688,7 +688,7 @@ function ColumnComponent({
                   <div 
                     role="menu"
                     aria-label={`Actions for ${column.name} list`}
-                    className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-10 overflow-hidden"
+                    className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-100 dark:border-slate-700 py-1.5 z-10 overflow-hidden"
                   >
                     <button
                       role="menuitem"
@@ -723,7 +723,7 @@ function ColumnComponent({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex-1 px-2 py-2 min-h-[60px] overflow-y-auto overflow-x-hidden transition-colors duration-200 column-drop-zone rounded-lg ${
+                className={`flex-1 px-1.5 py-1.5 min-h-[60px] overflow-y-auto overflow-x-hidden transition-colors duration-200 column-drop-zone rounded-md ${
                   snapshot.isDraggingOver 
                     ? 'dragging-over bg-gradient-to-b from-emerald-50/60 to-emerald-100/40 dark:from-emerald-900/30 dark:to-emerald-800/20' 
                     : ''
@@ -773,7 +773,7 @@ function ColumnComponent({
           {/* Add Card */}
           <div className="px-2 pb-2 pt-1">
             {isAddingCard ? (
-              <div className="bg-white dark:bg-slate-700 rounded-xl shadow-md border border-slate-200 dark:border-slate-600 p-3" role="form" aria-label="Add new card">
+              <div className="bg-[var(--surface)] rounded-lg shadow-md p-2" role="form" aria-label="Add new card">
                 <label htmlFor={`add-card-${column.id}`} className="sr-only">
                   Enter card title in English
                 </label>
@@ -782,9 +782,9 @@ function ColumnComponent({
                   ref={addCardTextareaRef}
                   value={newCardTitleEn}
                   onChange={(e) => setNewCardTitleEn(e.target.value)}
-                  placeholder="Enter a title for this card (English)..."
+                  placeholder="Enter a title for this card..."
                   aria-describedby={`add-card-help-${column.id}`}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className="w-full px-3 py-2 text-sm border-none bg-[var(--surface)] text-[var(--text-primary)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] resize-none placeholder:text-[var(--text-muted)] shadow-sm"
                   rows={2}
                   autoFocus
                   onKeyDown={(e) => {
@@ -801,12 +801,12 @@ function ColumnComponent({
                 <span id={`add-card-help-${column.id}`} className="sr-only">
                   Press Enter to add card, Escape to cancel. The card will be automatically translated to Japanese.
                 </span>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-2">
                   <button
                     onClick={handleAddCard}
                     disabled={!newCardTitleEn.trim()}
                     aria-label="Add card to list"
-                    className="px-4 py-2.5 sm:py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-medium rounded-lg hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm active:scale-[0.98] touch-manipulation min-h-[44px] sm:min-h-0"
+                    className="px-3 py-1.5 bg-[var(--primary)] text-white text-sm font-medium rounded-md hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] touch-manipulation min-h-[32px]"
                   >
                     Add card
                   </button>
@@ -816,7 +816,7 @@ function ColumnComponent({
                       setNewCardTitleEn('');
                     }}
                     aria-label="Cancel adding card"
-                    className="p-2.5 sm:p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                    className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] rounded-md transition-colors touch-manipulation min-w-[32px] min-h-[32px] flex items-center justify-center"
                   >
                     <svg
                       className="w-5 h-5"
@@ -841,11 +841,11 @@ function ColumnComponent({
                   onClick={() => setIsAddingCard(true)}
                   data-onboarding="add-card"
                   aria-label={`Add a card to ${column.name}`}
-                  className="flex-1 px-3 py-3 sm:py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-xl flex items-center gap-2 transition-all group touch-manipulation min-h-[48px] sm:min-h-0"
+                  className="flex-1 px-2 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] rounded-lg flex items-center gap-2 transition-all group touch-manipulation"
                 >
-                  <span className="w-6 h-6 flex items-center justify-center bg-slate-200/80 dark:bg-slate-700/80 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40 rounded-lg transition-colors" aria-hidden="true">
+                  <span className="w-5 h-5 flex items-center justify-center" aria-hidden="true">
                     <svg
-                      className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors"
+                      className="w-4 h-4 text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)] transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -869,7 +869,7 @@ function ColumnComponent({
                     aria-expanded={showTemplateDropdown}
                     aria-haspopup="menu"
                     aria-label="Create card from template"
-                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 rounded-lg transition-all touch-manipulation"
+                    className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] rounded-md transition-all touch-manipulation"
                   >
                     <svg
                       className="w-4 h-4"
@@ -887,14 +887,14 @@ function ColumnComponent({
                   </button>
                   
                   {/* Tooltip */}
-                  <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/template:opacity-100 pointer-events-none transition-opacity duration-150 z-30">
+                  <div className="absolute bottom-full right-0 mb-1 px-2 py-1 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded-md shadow-lg whitespace-nowrap opacity-0 group-hover/template:opacity-100 pointer-events-none transition-opacity duration-150 z-30">
                     Create from template...
                   </div>
                   
                   {showTemplateDropdown && (
-                    <div className="absolute bottom-full right-0 mb-1 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20">
-                      <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                        <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Card Templates</h4>
+                    <div className="absolute bottom-full right-0 mb-1 w-56 bg-[var(--surface)] rounded-lg shadow-xl border border-[var(--border)] overflow-hidden z-20">
+                      <div className="px-3 py-2 border-b border-[var(--border-subtle)] bg-[var(--surface-hover)]">
+                        <h4 className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Card Templates</h4>
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {isLoadingTemplates ? (

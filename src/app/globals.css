@@ -69,12 +69,15 @@
   --glass-blur: 16px;
   
   /* === Radius System === */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
+  
+  /* === Column/List Surface === */
+  --surface-column: #f1f2f4;
   
   /* === Transition Timing === */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -143,6 +146,9 @@
   
   --glass-bg: rgba(30, 41, 59, 0.85);
   --glass-border: rgba(71, 85, 105, 0.5);
+  
+  /* === Column/List Surface === */
+  --surface-column: #101214;
 }
 
 /* Dark mode via system preference (fallback when no class is set) */
@@ -197,6 +203,9 @@
     
     --glass-bg: rgba(30, 41, 59, 0.85);
     --glass-border: rgba(71, 85, 105, 0.5);
+    
+    /* === Column/List Surface === */
+    --surface-column: #101214;
   }
 }
 
@@ -764,7 +773,7 @@ button, a, input, textarea, select {
   opacity: 0.3;
   background: var(--surface-hover);
   border: 2px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 
 /* Pickup animation */
