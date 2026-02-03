@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { Activity } from '@/types';
+import { useTranslation } from '@/contexts/TranslationContext';
 
 // English translations for activities
 const enTranslations: Record<string, string> = {
@@ -45,6 +46,8 @@ interface ActivityItemProps {
  * Displays a bilingual activity log item (English and Japanese side by side)
  */
 export function ActivityItem({ activity }: ActivityItemProps) {
+  const { settings: translationSettings } = useTranslation();
+  const userTextDisplayMode = translationSettings.userTextDisplayMode;
   const getActivityKey = () => {
     switch (activity.type) {
       case 'card_created':
@@ -87,24 +90,28 @@ export function ActivityItem({ activity }: ActivityItemProps) {
   const jaText = interpolate(jaTranslations[key] || '', params);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+    <div className={`grid grid-cols-1 ${userTextDisplayMode === 'both' ? 'md:grid-cols-2' : ''} gap-x-6 gap-y-1`}>
       {/* English version */}
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
-        {enText}
-        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-          {format(activity.createdAt.toDate(), 'MMM d, h:mm a', { locale: enUS })}
-        </span>
-      </p>
+      {(userTextDisplayMode === 'both' || userTextDisplayMode === 'en') && (
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+          {enText}
+          <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+            {format(activity.createdAt.toDate(), 'MMM d, h:mm a', { locale: enUS })}
+          </span>
+        </p>
+      )}
       
       {/* Japanese version */}
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
-        {jaText}
-        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-          {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
-        </span>
-      </p>
+      {(userTextDisplayMode === 'both' || userTextDisplayMode === 'ja') && (
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="font-medium text-slate-700 dark:text-slate-300">{activity.userName}</span>{' '}
+          {jaText}
+          <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+            {format(activity.createdAt.toDate(), 'M月d日 H:mm', { locale: ja })}
+          </span>
+        </p>
+      )}
     </div>
   );
 }
