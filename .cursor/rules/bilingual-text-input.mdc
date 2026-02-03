@@ -78,6 +78,51 @@ function getTranslationLabel(lang: 'en' | 'ja', item: Item) {
 }
 ```
 
+## EN/JP Label Styling
+
+Use consistent styling for language labels across the app:
+
+- **EN label**: Blue dot (`bg-blue-400/80`), blue text when original
+- **JP label**: Red dot (`bg-red-400/80`), red text when original
+- **Display as equals**: EN on left, JP on right, side by side
+- **User-facing label**: Use "JP" (not "JA") for display
+
+```tsx
+// ✅ CORRECT - Pill badge with colored dot
+<span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 rounded-full">
+  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80 dark:bg-blue-300/80" />
+  EN
+</span>
+<span className={`text-[10px] font-medium ${isOriginal ? 'text-blue-500 dark:text-blue-300' : 'text-slate-400'}`}>
+  {translationLabel}
+</span>
+
+// For JP, use bg-red-400/80 for the dot and red text colors when original
+```
+
+## Layout Pattern
+
+When showing both languages, display them as equals:
+
+```tsx
+<div className="flex gap-4">
+  {/* English - left side */}
+  <div className="flex-1">
+    {/* EN label with status */}
+    {/* Content */}
+  </div>
+  
+  {/* Divider */}
+  <div className="w-px bg-gray-300 dark:bg-gray-600 self-stretch" />
+  
+  {/* Japanese - right side */}
+  <div className="flex-1">
+    {/* JP label with status */}
+    {/* Content */}
+  </div>
+</div>
+```
+
 ## See Also
 
 - `src/contexts/TranslationContext.tsx` - Translation API
