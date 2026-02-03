@@ -31,12 +31,20 @@ export interface BoardBackground {
   value: string;
 }
 
+// Translator info for manually edited translations
+export interface TranslatorInfo {
+  uid: string;
+  displayName: string;
+}
+
 // Custom tag definition stored at board level
 export interface BoardTag {
   id: string;
   name: string; // English name (primary)
   nameJa?: string; // Japanese name
   nameOriginalLanguage?: 'en' | 'ja'; // Which language was originally typed
+  nameTranslatorEn?: TranslatorInfo; // Who manually translated the English (if not auto)
+  nameTranslatorJa?: TranslatorInfo; // Who manually translated the Japanese (if not auto)
   color: string; // Tailwind color class prefix, e.g., 'red', 'blue', 'emerald'
   order: number;
 }

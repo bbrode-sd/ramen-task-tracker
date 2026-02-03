@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { BoardTag } from '@/types';
+import { BoardTag, TranslatorInfo } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
 import { useLocale, Locale } from '@/contexts/LocaleContext';
+import { useTranslation } from '@/contexts/TranslationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { updateBoard } from '@/lib/firestore';
 
 interface TagManagementModalProps {
@@ -20,15 +22,6 @@ export function getLocalizedTagName(tag: BoardTag, locale: Locale): string {
     return tag.nameJa || tag.name;
   }
   return tag.name;
-}
-
-// Helper to check if a tag has a translation in the non-original language
-export function hasTranslation(tag: BoardTag): boolean {
-  const original = tag.nameOriginalLanguage || 'en';
-  if (original === 'en') {
-    return !!tag.nameJa;
-  }
-  return !!tag.name && tag.name !== tag.nameJa;
 }
 
 // Available tag colors with their display values
@@ -76,21 +69,45 @@ export function createDefaultTags(): BoardTag[] {
   }));
 }
 
+// Helper to get translation status label
+function getTranslationLabel(
+  lang: 'en' | 'ja',
+  tag: BoardTag,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
+  const originalLang = tag.nameOriginalLanguage || 'en';
+  const isOriginal = lang === originalLang;
+  
+  if (isOriginal) {
+    return t('tags.original') || 'Original';
+  }
+  
+  // Check if there's a manual translator
+  const translator = lang === 'en' ? tag.nameTranslatorEn : tag.nameTranslatorJa;
+  if (translator) {
+    return (t('tags.translatedBy') || 'Translated by {name}').replace('{name}', translator.displayName);
+  }
+  
+  return t('tags.autoTranslated') || 'Auto-translated';
+}
+
 export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChange }: TagManagementModalProps) {
   const { showToast } = useToast();
   const { t, locale } = useLocale();
+  const { translateWithAutoDetect, translationState } = useTranslation();
+  const { user } = useAuth();
   const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [localTags, setLocalTags] = useState<BoardTag[]>(tags);
-  const [newTagNameEn, setNewTagNameEn] = useState('');
-  const [newTagNameJa, setNewTagNameJa] = useState('');
+  const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('blue');
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingNameEn, setEditingNameEn] = useState('');
   const [editingNameJa, setEditingNameJa] = useState('');
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Sync local tags when prop changes
   useEffect(() => {
@@ -142,66 +159,52 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
       setLocalTags(newTags);
     } catch (error) {
       console.error('Failed to save tags:', error);
-      showToast('error', 'Failed to save tags');
+      showToast('error', t('tags.saveFailed') || 'Failed to save tags');
     } finally {
       setIsSaving(false);
     }
-  }, [boardId, onTagsChange, showToast]);
+  }, [boardId, onTagsChange, showToast, t]);
 
+  // Add a new tag with auto-detection and translation
   const handleAddTag = async () => {
-    const nameEn = newTagNameEn.trim();
-    const nameJa = newTagNameJa.trim();
-    
-    // Need at least one name
-    if (!nameEn && !nameJa) return;
+    const name = newTagName.trim();
+    if (!name) return;
 
-    // Determine original language based on which field was filled first/primarily
-    const nameOriginalLanguage: 'en' | 'ja' = nameEn ? 'en' : 'ja';
-    
-    const newTag: BoardTag = {
-      id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: nameEn || nameJa, // English name (fallback to Japanese if not provided)
-      nameJa: nameJa || undefined,
-      nameOriginalLanguage,
-      color: newTagColor,
-      order: localTags.length,
-    };
+    setIsTranslating(true);
+    try {
+      // Auto-detect language and translate
+      const result = await translateWithAutoDetect(name, `new-tag-${Date.now()}`);
+      const detectedLang = result.detectedLanguage || 'en';
+      
+      // Set English and Japanese based on detected language
+      const nameEn = detectedLang === 'en' ? name : (result.translation || name);
+      const nameJa = detectedLang === 'ja' ? name : (result.translation || '');
 
-    const newTags = [...localTags, newTag];
-    await saveTags(newTags);
-    setNewTagNameEn('');
-    setNewTagNameJa('');
-    showToast('success', t('tags.created') || 'Tag created');
+      const newTag: BoardTag = {
+        id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: nameEn,
+        nameJa: nameJa || undefined,
+        nameOriginalLanguage: detectedLang,
+        color: newTagColor,
+        order: localTags.length,
+      };
+
+      const newTags = [...localTags, newTag];
+      await saveTags(newTags);
+      setNewTagName('');
+      showToast('success', t('tags.created') || 'Tag created');
+    } catch (error) {
+      console.error('Failed to create tag:', error);
+      showToast('error', t('tags.createFailed') || 'Failed to create tag');
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleDeleteTag = async (tagId: string) => {
     const newTags = localTags.filter(t => t.id !== tagId).map((t, i) => ({ ...t, order: i }));
     await saveTags(newTags);
-    showToast('success', 'Tag deleted');
-  };
-
-  const handleRenameTag = async (tagId: string) => {
-    const nameEn = editingNameEn.trim();
-    const nameJa = editingNameJa.trim();
-    
-    // Need at least one name
-    if (!nameEn && !nameJa) {
-      setEditingTagId(null);
-      return;
-    }
-
-    const newTags = localTags.map(t => {
-      if (t.id !== tagId) return t;
-      return { 
-        ...t, 
-        name: nameEn || nameJa,
-        nameJa: nameJa || undefined,
-      };
-    });
-    await saveTags(newTags);
-    setEditingTagId(null);
-    setEditingNameEn('');
-    setEditingNameJa('');
+    showToast('success', t('tags.deleted') || 'Tag deleted');
   };
 
   const handleColorChange = async (tagId: string, colorId: string) => {
@@ -216,13 +219,80 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
     setEditingNameJa(tag.nameJa || '');
   };
 
+  // Handle saving edits - with translation logic
+  const handleSaveEdit = async (tagId: string, editedLang: 'en' | 'ja') => {
+    const tag = localTags.find(t => t.id === tagId);
+    if (!tag) return;
+
+    const newNameEn = editingNameEn.trim();
+    const newNameJa = editingNameJa.trim();
+    
+    if (!newNameEn && !newNameJa) {
+      setEditingTagId(null);
+      return;
+    }
+
+    const originalLang = tag.nameOriginalLanguage || 'en';
+    const isEditingOriginal = editedLang === originalLang;
+
+    setIsTranslating(true);
+    try {
+      let updatedTag: BoardTag = { ...tag };
+
+      if (isEditingOriginal) {
+        // Editing the original - re-translate the other language
+        const textToTranslate = editedLang === 'en' ? newNameEn : newNameJa;
+        const targetLang = editedLang === 'en' ? 'ja' : 'en';
+        
+        if (textToTranslate) {
+          const result = await translateWithAutoDetect(textToTranslate, `tag-edit-${tagId}`);
+          
+          if (editedLang === 'en') {
+            updatedTag.name = newNameEn;
+            updatedTag.nameJa = result.translation || newNameJa;
+            updatedTag.nameTranslatorJa = undefined; // Clear manual translation marker
+          } else {
+            updatedTag.name = result.translation || newNameEn;
+            updatedTag.nameJa = newNameJa;
+            updatedTag.nameTranslatorEn = undefined; // Clear manual translation marker
+          }
+        }
+      } else {
+        // Editing the translation - just save without re-translating
+        const translatorInfo: TranslatorInfo | undefined = user ? {
+          uid: user.uid,
+          displayName: user.displayName || 'Unknown',
+        } : undefined;
+
+        if (editedLang === 'en') {
+          updatedTag.name = newNameEn;
+          updatedTag.nameTranslatorEn = translatorInfo;
+        } else {
+          updatedTag.nameJa = newNameJa;
+          updatedTag.nameTranslatorJa = translatorInfo;
+        }
+      }
+
+      const newTags = localTags.map(t => t.id === tagId ? updatedTag : t);
+      await saveTags(newTags);
+      setEditingTagId(null);
+      setEditingNameEn('');
+      setEditingNameJa('');
+    } catch (error) {
+      console.error('Failed to save tag:', error);
+      showToast('error', t('tags.saveFailed') || 'Failed to save tag');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
         ref={modalRef}
-        className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="tag-modal-title"
@@ -233,7 +303,7 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
-            Manage Tags
+            {t('tags.manage') || 'Manage Tags'}
           </h2>
           <button
             onClick={onClose}
@@ -248,18 +318,21 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
 
         {/* Content */}
         <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
-          {/* Add new tag */}
+          {/* Add new tag - single input with auto-translate */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('tags.addNew') || 'Add New Tag'}
             </label>
-            <div className="flex gap-2 items-start">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              {t('tags.addHint') || 'Type in English or Japanese. The other language will be auto-translated.'}
+            </p>
+            <div className="flex gap-2">
               {/* Color selector */}
               <div className="relative">
                 <button
                   onClick={() => setShowColorPicker(showColorPicker === 'new' ? null : 'new')}
                   className={`w-10 h-10 rounded-lg border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center ${getTagColorConfig(newTagColor).bg}`}
-                  title="Select color"
+                  title={t('tags.selectColor') || 'Select color'}
                 >
                   <span className={`w-4 h-4 rounded-full ${getTagColorConfig(newTagColor).dot}`} />
                 </button>
@@ -279,46 +352,32 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                   </div>
                 )}
               </div>
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">EN</span>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={newTagNameEn}
-                    onChange={(e) => setNewTagNameEn(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                    placeholder="English name..."
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">JA</span>
-                  <input
-                    type="text"
-                    value={newTagNameJa}
-                    onChange={(e) => setNewTagNameJa(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                    placeholder="日本語名..."
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
+              <input
+                ref={inputRef}
+                type="text"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                placeholder={t('tags.namePlaceholder') || 'Tag name (EN or JP)...'}
+                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                disabled={isTranslating}
+              />
               <button
                 onClick={handleAddTag}
-                disabled={(!newTagNameEn.trim() && !newTagNameJa.trim()) || isSaving}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors self-start"
+                disabled={!newTagName.trim() || isSaving || isTranslating}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >
+                {isTranslating && (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
                 {t('tags.add') || 'Add'}
               </button>
             </div>
@@ -337,114 +396,135 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                 <p>{t('tags.noTags') || 'No tags yet. Add your first tag above.'}</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {localTags.sort((a, b) => a.order - b.order).map(tag => {
                   const colorConfig = getTagColorConfig(tag.color);
                   const isEditing = editingTagId === tag.id;
+                  const originalLang = tag.nameOriginalLanguage || 'en';
                   
                   return (
                     <div
                       key={tag.id}
                       className={`p-3 rounded-lg ${colorConfig.bg} border ${colorConfig.border}`}
                     >
-                      <div className="flex items-start gap-2">
-                        {/* Color picker button */}
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowColorPicker(showColorPicker === tag.id ? null : tag.id)}
-                            className={`w-6 h-6 rounded-full ${colorConfig.dot} hover:scale-110 transition-transform mt-1`}
-                            title={t('tags.changeColor') || 'Change color'}
-                          />
-                          {showColorPicker === tag.id && (
-                            <div className="absolute top-full left-0 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 grid grid-cols-6 gap-1 w-48">
-                              {TAG_COLORS.map(color => (
-                                <button
-                                  key={color.id}
-                                  onClick={() => handleColorChange(tag.id, color.id)}
-                                  className={`w-6 h-6 rounded-full ${color.dot} hover:scale-110 transition-transform ${tag.color === color.id ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
-                                  title={color.name}
-                                />
-                              ))}
+                      {isEditing ? (
+                        // Edit mode - show both languages with labels
+                        <div className="space-y-3">
+                          {/* English field */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">English</span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                originalLang === 'en' 
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                              }`}>
+                                {getTranslationLabel('en', tag, t)}
+                              </span>
                             </div>
-                          )}
-                        </div>
-
-                        {/* Tag names (editable) */}
-                        <div className="flex-1 min-w-0">
-                          {isEditing ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">EN</span>
-                                <input
-                                  type="text"
-                                  value={editingNameEn}
-                                  onChange={(e) => setEditingNameEn(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleRenameTag(tag.id);
-                                    } else if (e.key === 'Escape') {
-                                      setEditingTagId(null);
-                                    }
-                                  }}
-                                  autoFocus
-                                  placeholder="English name..."
-                                  className={`flex-1 px-2 py-1 rounded border-0 bg-white/50 dark:bg-gray-900/50 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500`}
-                                />
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-8">JA</span>
-                                <input
-                                  type="text"
-                                  value={editingNameJa}
-                                  onChange={(e) => setEditingNameJa(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleRenameTag(tag.id);
-                                    } else if (e.key === 'Escape') {
-                                      setEditingTagId(null);
-                                    }
-                                  }}
-                                  placeholder="日本語名..."
-                                  className={`flex-1 px-2 py-1 rounded border-0 bg-white/50 dark:bg-gray-900/50 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500`}
-                                />
-                              </div>
-                              <div className="flex justify-end gap-2 mt-2">
-                                <button
-                                  onClick={() => setEditingTagId(null)}
-                                  className="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded"
-                                >
-                                  {t('common.cancel') || 'Cancel'}
-                                </button>
-                                <button
-                                  onClick={() => handleRenameTag(tag.id)}
-                                  className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600"
-                                >
-                                  {t('common.save') || 'Save'}
-                                </button>
-                              </div>
+                            <input
+                              type="text"
+                              value={editingNameEn}
+                              onChange={(e) => setEditingNameEn(e.target.value)}
+                              onBlur={() => handleSaveEdit(tag.id, 'en')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSaveEdit(tag.id, 'en');
+                                } else if (e.key === 'Escape') {
+                                  setEditingTagId(null);
+                                }
+                              }}
+                              autoFocus={originalLang === 'en'}
+                              placeholder="English name..."
+                              className={`w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
+                            />
+                          </div>
+                          
+                          {/* Japanese field */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">日本語</span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                originalLang === 'ja' 
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' 
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                              }`}>
+                                {getTranslationLabel('ja', tag, t)}
+                              </span>
                             </div>
-                          ) : (
+                            <input
+                              type="text"
+                              value={editingNameJa}
+                              onChange={(e) => setEditingNameJa(e.target.value)}
+                              onBlur={() => handleSaveEdit(tag.id, 'ja')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSaveEdit(tag.id, 'ja');
+                                } else if (e.key === 'Escape') {
+                                  setEditingTagId(null);
+                                }
+                              }}
+                              autoFocus={originalLang === 'ja'}
+                              placeholder="日本語名..."
+                              className={`w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 ${colorConfig.text} font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
+                            />
+                          </div>
+                          
+                          <div className="flex justify-end gap-2">
                             <button
-                              onClick={() => startEditing(tag)}
-                              className={`w-full text-left px-2 py-1 rounded hover:bg-white/30 dark:hover:bg-gray-900/30 transition-colors`}
-                              title={t('tags.clickToEdit') || 'Click to edit'}
+                              onClick={() => setEditingTagId(null)}
+                              className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-white/30 dark:hover:bg-gray-900/30 rounded-lg transition-colors"
                             >
-                              <div className={`${colorConfig.text} font-medium`}>
-                                {getLocalizedTagName(tag, locale)}
-                              </div>
-                              {tag.nameJa && tag.name !== tag.nameJa && (
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                  {locale === 'ja' ? `EN: ${tag.name}` : `JA: ${tag.nameJa}`}
-                                </div>
-                              )}
+                              {t('common.cancel') || 'Cancel'}
                             </button>
-                          )}
+                          </div>
                         </div>
+                      ) : (
+                        // View mode
+                        <div className="flex items-center gap-2">
+                          {/* Color picker button */}
+                          <div className="relative">
+                            <button
+                              onClick={() => setShowColorPicker(showColorPicker === tag.id ? null : tag.id)}
+                              className={`w-6 h-6 rounded-full ${colorConfig.dot} hover:scale-110 transition-transform`}
+                              title={t('tags.changeColor') || 'Change color'}
+                            />
+                            {showColorPicker === tag.id && (
+                              <div className="absolute top-full left-0 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10 grid grid-cols-6 gap-1 w-48">
+                                {TAG_COLORS.map(color => (
+                                  <button
+                                    key={color.id}
+                                    onClick={() => handleColorChange(tag.id, color.id)}
+                                    className={`w-6 h-6 rounded-full ${color.dot} hover:scale-110 transition-transform ${tag.color === color.id ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`}
+                                    title={color.name}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
 
-                        {/* Delete button */}
-                        {!isEditing && (
+                          {/* Tag name - click to edit */}
+                          <button
+                            onClick={() => startEditing(tag)}
+                            className={`flex-1 text-left px-2 py-1 rounded hover:bg-white/30 dark:hover:bg-gray-900/30 transition-colors`}
+                            title={t('tags.clickToEdit') || 'Click to edit'}
+                          >
+                            <div className={`${colorConfig.text} font-medium`}>
+                              {getLocalizedTagName(tag, locale)}
+                            </div>
+                            {/* Show translation status */}
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {locale === 'ja' ? (
+                                <>EN: {tag.name} • {getTranslationLabel('en', tag, t)}</>
+                              ) : (
+                                tag.nameJa && <>JA: {tag.nameJa} • {getTranslationLabel('ja', tag, t)}</>
+                              )}
+                            </div>
+                          </button>
+
+                          {/* Delete button */}
                           <button
                             onClick={() => handleDeleteTag(tag.id)}
                             className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg transition-colors"
@@ -454,8 +534,8 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -470,7 +550,7 @@ export function TagManagementModal({ boardId, tags, isOpen, onClose, onTagsChang
             onClick={onClose}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
           >
-            Done
+            {t('common.done') || 'Done'}
           </button>
         </div>
       </div>
