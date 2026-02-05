@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
-import { Draggable, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import { Draggable, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Card as CardType, BoardTag } from '@/types';
 import { getTagColorConfig, getLocalizedTagName } from './TagManagementModal';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -345,6 +345,9 @@ interface CardProps {
   commentCount?: number;
   hasUnreadActivity?: boolean;
   'data-onboarding'?: string;
+  isClone?: boolean;
+  cloneProvided?: DraggableProvided;
+  cloneSnapshot?: DraggableStateSnapshot;
 }
 
 /**
@@ -376,7 +379,10 @@ function CardComponent({
   onDuplicate,
   commentCount = 0,
   hasUnreadActivity = false,
-  'data-onboarding': dataOnboarding 
+  'data-onboarding': dataOnboarding,
+  isClone = false,
+  cloneProvided,
+  cloneSnapshot,
 }: CardProps) {
   const { searchQuery } = useFilter();
   const { setHoveredCardId } = useKeyboardShortcuts();
@@ -536,41 +542,39 @@ function CardComponent({
   const cardLabel = `${card.titleEn || 'Untitled card'}${card.titleJa ? `, Japanese: ${card.titleJa}` : ''}`;
   const dragInstructions = 'Press space bar to lift. Use arrow keys to move. Press space bar to drop.';
   
-  return (
-    <Draggable draggableId={card.id} index={index}>
-      {(provided, snapshot) => (
-        <article
-          ref={(el) => {
-            provided.innerRef(el);
-            (cardRef as React.MutableRefObject<HTMLElement | null>).current = el;
-          }}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          onClick={handleClick}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          data-card-id={card.id}
-          data-onboarding={dataOnboarding}
-          tabIndex={isFocused ? 0 : -1}
-          role="button"
-          aria-label={cardLabel}
-          aria-describedby={`card-drag-instructions-${card.id}`}
-          aria-grabbed={snapshot.isDragging}
-          aria-selected={isSelected}
-          style={getDragStyle(snapshot, provided.draggableProps.style)}
-          className={`relative bg-[var(--surface)] rounded-md mb-1.5 cursor-pointer border group drag-handle
-            ${snapshot.isDragging 
-              ? 'card-dragging drag-shadow z-50' 
-              : 'shadow-sm hover:shadow-md transition-[box-shadow,border-color,opacity,ring] duration-150 hover:border-[var(--text-tertiary)]'
-            }
-            ${isDimmed ? 'opacity-40 scale-[0.98] border-[var(--border-subtle)]' : ''} 
-            ${isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-md' : 'border-[var(--border)]'}
-            ${isSelected && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]' : ''}
-          `}
-        >
+  const renderCard = (provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+    <article
+      ref={(el) => {
+        provided.innerRef(el);
+        (cardRef as React.MutableRefObject<HTMLElement | null>).current = el;
+      }}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      data-card-id={card.id}
+      data-onboarding={dataOnboarding}
+      tabIndex={isFocused ? 0 : -1}
+      role="button"
+      aria-label={cardLabel}
+      aria-describedby={`card-drag-instructions-${card.id}`}
+      aria-grabbed={snapshot.isDragging}
+      aria-selected={isSelected}
+      style={getDragStyle(snapshot, provided.draggableProps.style)}
+      className={`relative bg-[var(--surface)] rounded-md mb-1.5 cursor-pointer border group drag-handle
+        ${snapshot.isDragging 
+          ? 'card-dragging drag-shadow z-50' 
+          : 'shadow-sm hover:shadow-md transition-[box-shadow,border-color,opacity,ring] duration-150 hover:border-[var(--text-tertiary)]'
+        }
+        ${isDimmed ? 'opacity-40 scale-[0.98] border-[var(--border-subtle)]' : ''} 
+        ${isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] border-[var(--primary)] shadow-md' : 'border-[var(--border)]'}
+        ${isSelected && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]' : ''}
+      `}
+    >
           {/* Screen reader drag instructions */}
           <span id={`card-drag-instructions-${card.id}`} className="sr-only">
             {dragInstructions}
@@ -792,8 +796,16 @@ function CardComponent({
               </div>
             )}
           </div>
-        </article>
-      )}
+    </article>
+  );
+
+  if (isClone && cloneProvided && cloneSnapshot) {
+    return renderCard(cloneProvided, cloneSnapshot);
+  }
+
+  return (
+    <Draggable draggableId={card.id} index={index}>
+      {(provided, snapshot) => renderCard(provided, snapshot)}
     </Draggable>
   );
 }
