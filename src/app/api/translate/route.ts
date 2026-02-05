@@ -151,20 +151,32 @@ When you encounter any Pokémon terminology, recall the official localization us
 For non-Pokémon content in the text, translate naturally and maintain the original tone.
 `;
 
+// HTML preservation instruction to add to all contexts
+const HTML_PRESERVATION_INSTRUCTION = `
+
+IMPORTANT: If the input contains HTML tags (like <p>, <br>, <ul>, <li>, <strong>, <em>, etc.), you MUST preserve the exact HTML structure in your translation. Only translate the text content within the tags, not the tags themselves. Return the HTML with the same structure.`;
+
 // Get the appropriate translation context based on mode
 function getTranslationContext(contextMode: ContextMode, customContext?: string): string {
+  let baseContext: string;
+  
   switch (contextMode) {
     case 'general':
-      return GENERAL_TRANSLATION_CONTEXT;
+      baseContext = GENERAL_TRANSLATION_CONTEXT;
+      break;
     case 'pokemon':
-      return POKEMON_TRANSLATION_CONTEXT;
+      baseContext = POKEMON_TRANSLATION_CONTEXT;
+      break;
     case 'custom':
-      return customContext?.trim() 
+      baseContext = customContext?.trim() 
         ? `You are a professional translator. ${customContext}\n\nTranslate naturally while maintaining the original tone and meaning.`
         : GENERAL_TRANSLATION_CONTEXT;
+      break;
     default:
-      return GENERAL_TRANSLATION_CONTEXT;
+      baseContext = GENERAL_TRANSLATION_CONTEXT;
   }
+  
+  return baseContext + HTML_PRESERVATION_INSTRUCTION;
 }
 
 // Helper function to detect if text is primarily Japanese
