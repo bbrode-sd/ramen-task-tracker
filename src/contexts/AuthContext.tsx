@@ -5,12 +5,20 @@ import {
   User as FirebaseUser,
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   signInAnonymously,
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { saveUserProfile, processPendingInvitationsForUser } from '@/lib/firestore';
 import { User } from '@/types';
+
+// Detect if we're on a mobile device where popups may not work well
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
 
 interface AuthContextType {
   user: User | null;
@@ -25,9 +33,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const anonymousSignInAttempted = useRef(false);
+  const redirectResultChecked = useRef(false);
 
   // Check if auth should be skipped for testing
   const skipAuth = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+
+  // Handle redirect result on mount (for mobile devices using signInWithRedirect)
+  useEffect(() => {
+    if (skipAuth || redirectResultChecked.current) return;
+    redirectResultChecked.current = true;
+
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          // User successfully signed in via redirect
+          console.log('[Auth] Successfully signed in via redirect');
+        }
+        // If result is null, there was no redirect operation pending
+      })
+      .catch((error) => {
+        // Handle common redirect errors gracefully
+        if (error.code === 'auth/popup-closed-by-user' || 
+            error.code === 'auth/cancelled-popup-request') {
+          console.log('[Auth] Redirect cancelled by user');
+        } else {
+          console.error('[Auth] Error getting redirect result:', error);
+        }
+      });
+  }, [skipAuth]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
@@ -109,7 +142,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      await signInWithPopup(auth, googleProvider);
+      // Use redirect on mobile devices where popups are unreliable
+      // This avoids the "missing initial state" error on iOS Safari
+      if (isMobileDevice()) {
+        console.log('[Auth] Using redirect for mobile device');
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
