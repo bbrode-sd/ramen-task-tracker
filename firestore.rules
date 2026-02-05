@@ -819,7 +819,8 @@ service cloud.firestore {
         // Prevent extra fields
         request.resource.data.keys().hasOnly(['email', 'boardId', 'boardName', 'invitedBy', 'invitedByName', 'invitedByEmail', 'status', 'createdAt', 'updatedAt', 'acceptedAt']);
       
-      // Update: user can accept their own invitation OR board owner can manage
+      // Update: user can accept their own invitation, board owner can manage,
+      // or board member can re-invite (change status to 'pending')
       allow update: if isAuthenticated() &&
         // Cannot change core fields
         request.resource.data.email == resource.data.email &&
@@ -830,13 +831,17 @@ service cloud.firestore {
         isTimestamp(request.resource.data.updatedAt) &&
         // Status validation
         isOneOf(request.resource.data.status, ['pending', 'accepted', 'declined']) &&
-        // Either the invitee OR board owner can update
+        // Prevent extra fields
+        request.resource.data.keys().hasOnly(['email', 'boardId', 'boardName', 'invitedBy', 'invitedByName', 'invitedByEmail', 'status', 'createdAt', 'updatedAt', 'acceptedAt']) &&
+        // Who can update:
+        // 1. The invitee (to accept/decline their invitation)
+        // 2. The board owner (can manage any invitation)
+        // 3. Any board member (to re-invite = change status back to 'pending')
         (
           resource.data.email == request.auth.token.email.lower() ||
-          isBoardOwner(resource.data.boardId)
-        ) &&
-        // Prevent extra fields
-        request.resource.data.keys().hasOnly(['email', 'boardId', 'boardName', 'invitedBy', 'invitedByName', 'invitedByEmail', 'status', 'createdAt', 'updatedAt', 'acceptedAt']);
+          isBoardOwner(resource.data.boardId) ||
+          (isBoardMember(resource.data.boardId) && request.resource.data.status == 'pending')
+        );
       
       // Delete: only board owner can cancel/delete invitations
       allow delete: if isAuthenticated() && isBoardOwner(resource.data.boardId);
