@@ -703,6 +703,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
+      setSelectedCards(new Set());
       return;
     }
 
