@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, memo, useMemo, RefObject } from 'react';
-import { Draggable, Droppable } from '@hello-pangea/dnd';
+import { Draggable, Droppable, DraggableProvided, DraggableRubric, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Column as ColumnType, Card as CardType, CardTemplate } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
@@ -495,7 +495,7 @@ function ColumnComponent({
   }, [boardId, cards, column.id, column.name, showToast, user]);
 
   const renderClone = useCallback(
-    (provided, snapshot, rubric) => {
+    (provided: DraggableProvided, snapshot: DraggableStateSnapshot, rubric: DraggableRubric) => {
       const cloneCard = cards[rubric.source.index];
       if (!cloneCard) return null;
 
