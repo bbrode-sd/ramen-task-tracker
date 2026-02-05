@@ -1276,7 +1276,8 @@ button, a, input, textarea, select {
   }
   
   /* Ensure draggable columns also work on touch */
-  [data-rbd-draggable-context-id] {
+  /* Note: @hello-pangea/dnd uses data-rfd-* attributes (not data-rbd-* like react-beautiful-dnd) */
+  [data-rfd-draggable-context-id] {
     touch-action: none;
   }
 }

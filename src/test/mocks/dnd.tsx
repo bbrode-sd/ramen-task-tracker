@@ -14,6 +14,7 @@ export function MockDragDropContext({ children }: { children: React.ReactNode })
 }
 
 // Mock Droppable component
+// Note: @hello-pangea/dnd uses data-rfd-* attributes (not data-rbd-* like the original react-beautiful-dnd)
 export function MockDroppable({
   children,
   droppableId,
@@ -33,6 +34,7 @@ export function MockDroppable({
 }
 
 // Mock Draggable component
+// Note: @hello-pangea/dnd uses data-rfd-* attributes (not data-rbd-* like the original react-beautiful-dnd)
 export function MockDraggable({
   children,
   draggableId,

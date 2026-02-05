@@ -548,8 +548,9 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     if (e.button !== 0) return;
     
     // Don't trigger if clicking on interactive elements (cards, columns, buttons, inputs)
+    // Note: @hello-pangea/dnd uses data-rfd-* attributes (not data-rbd-* like the original react-beautiful-dnd)
     const target = e.target as HTMLElement;
-    const isInteractive = target.closest('[data-rbd-draggable-id], [data-rbd-droppable-id], button, input, a, [role="button"]');
+    const isInteractive = target.closest('[data-rfd-draggable-id], [data-rfd-droppable-id], button, input, a, [role="button"]');
     if (isInteractive) return;
     
     const container = boardContainerRef.current;

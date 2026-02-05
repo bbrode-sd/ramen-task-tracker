@@ -534,7 +534,10 @@ function ColumnComponent({
     ]
   );
 
-  const useClonePortal = embedded;
+  // Disable clone portal - it was causing positioning issues in embedded mode
+  // because the modal's fixed positioning and scrolling interferes with
+  // the library's position calculations for portaled clones
+  const useClonePortal = false;
 
   return (
     <Draggable draggableId={column.id} index={index}>
