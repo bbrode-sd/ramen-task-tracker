@@ -216,7 +216,8 @@
 html {
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100%;
 }
 
 body {
@@ -230,7 +231,8 @@ body {
               color var(--duration-slow) var(--ease-in-out);
   line-height: 1.6;
   letter-spacing: -0.011em;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Premium selection colors */
@@ -993,24 +995,33 @@ button, a, input, textarea, select {
   animation: haptic-pulse 0.15s ease-in-out;
 }
 
-/* Board container - enhanced scrollbar for horizontal scrolling only */
+/* Board page - no scrollbars on wrapper */
+html:has(#main-content),
+html:has(#main-content) body {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+html:has(#main-content)::-webkit-scrollbar,
+html:has(#main-content) body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Board container - horizontal scrollbar only */
 #main-content {
-  /* Hide vertical scrollbar completely */
+  overflow-x: auto !important;
   overflow-y: hidden !important;
 }
 
 #main-content::-webkit-scrollbar {
   height: 14px;
-  width: 0; /* Hide vertical scrollbar */
-}
-
-#main-content::-webkit-scrollbar:horizontal {
-  height: 14px;
 }
 
 #main-content::-webkit-scrollbar:vertical {
-  width: 0;
   display: none;
+  width: 0;
 }
 
 #main-content::-webkit-scrollbar-track:horizontal {
