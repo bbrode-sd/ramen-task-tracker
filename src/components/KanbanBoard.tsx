@@ -212,11 +212,14 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
         const boardDoc = await getDoc(doc(db, 'boards', boardId));
         if (boardDoc.exists()) {
           const boardData = { id: boardDoc.id, ...boardDoc.data() } as Board;
-          // Check if user is a member of the board
+          // If Firestore allowed the read, the user has access (via memberIds or pending invitation).
+          // However, if the user has a pending invitation that's being processed, they may not be
+          // in memberIds yet. Retry a few times to allow invitation processing to complete,
+          // since subcollection reads (columns, cards) require actual membership.
           if (user && !boardData.memberIds.includes(user.uid)) {
-            // In embedded mode, retry a few times as the board may have just been created
-            if (embedded && retryCount < 3) {
-              setTimeout(() => fetchBoard(retryCount + 1), 500 * (retryCount + 1));
+            if (retryCount < 3) {
+              console.log(`[Board] User not in memberIds yet, retrying (${retryCount + 1}/3)...`);
+              setTimeout(() => fetchBoard(retryCount + 1), 1000 * (retryCount + 1));
               return;
             }
             setAccessError('You do not have access to this board.');
@@ -275,9 +278,11 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
         }
       } catch (error) {
         const firebaseError = error as { code?: string; message?: string };
-        // In embedded mode, retry on permission-denied as the board may have just been created
-        if (embedded && firebaseError.code === 'permission-denied' && retryCount < 3) {
-          setTimeout(() => fetchBoard(retryCount + 1), 500 * (retryCount + 1));
+        // Retry on permission-denied as the user may have a pending invitation being processed
+        // (embedded boards may also have just been created)
+        if (firebaseError.code === 'permission-denied' && retryCount < 3) {
+          console.log(`[Board] Permission denied, retrying (${retryCount + 1}/3)...`);
+          setTimeout(() => fetchBoard(retryCount + 1), 1000 * (retryCount + 1));
           return;
         }
         if (firebaseError.code === 'permission-denied') {
