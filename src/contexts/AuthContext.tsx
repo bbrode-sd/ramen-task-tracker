@@ -23,6 +23,7 @@ function isMobileDevice(): boolean {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signInError: string | null;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signInError, setSignInError] = useState<string | null>(null);
   const anonymousSignInAttempted = useRef(false);
   const redirectResultChecked = useRef(false);
 
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      console.log('[Auth] onAuthStateChanged:', firebaseUser ? `uid=${firebaseUser.uid}, email=${firebaseUser.email}, provider=${firebaseUser.providerData?.[0]?.providerId}` : 'null (signed out)');
       if (firebaseUser) {
         // In skip auth mode, ensure we're using anonymous auth (not a stale session)
         if (skipAuth && !firebaseUser.isAnonymous && !anonymousSignInAttempted.current) {
@@ -141,6 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[Skip Auth] Already logged in as test user');
       return;
     }
+    // Clear any previous sign-in error
+    setSignInError(null);
     try {
       // Use redirect on mobile devices where popups are unreliable
       // This avoids the "missing initial state" error on iOS Safari
@@ -151,7 +156,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signInWithPopup(auth, googleProvider);
       }
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      const firebaseError = error as { code?: string; message?: string };
+      console.error('[Auth] Error signing in with Google:', firebaseError.code, firebaseError.message);
+      
+      // Map Firebase error codes to user-friendly messages
+      let userMessage: string;
+      switch (firebaseError.code) {
+        case 'auth/popup-closed-by-user':
+        case 'auth/cancelled-popup-request':
+          // User cancelled - don't show an error
+          return;
+        case 'auth/unauthorized-domain':
+          userMessage = 'This domain is not authorized for sign-in. Please contact the app administrator.';
+          break;
+        case 'auth/popup-blocked':
+          userMessage = 'Sign-in popup was blocked by your browser. Please allow popups for this site and try again.';
+          break;
+        case 'auth/account-exists-with-different-credential':
+          userMessage = 'An account already exists with the same email but a different sign-in method.';
+          break;
+        case 'auth/network-request-failed':
+          userMessage = 'Network error. Please check your internet connection and try again.';
+          break;
+        case 'auth/internal-error':
+          userMessage = 'An internal authentication error occurred. This may be due to corporate account restrictions. Please try again or contact your IT admin.';
+          break;
+        case 'auth/admin-restricted-operation':
+          userMessage = 'This sign-in method is restricted. Please contact the app administrator.';
+          break;
+        default:
+          userMessage = `Sign-in failed: ${firebaseError.message || firebaseError.code || 'Unknown error'}. Please try again.`;
+          break;
+      }
+      setSignInError(userMessage);
       throw error;
     }
   };
@@ -171,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInError, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
