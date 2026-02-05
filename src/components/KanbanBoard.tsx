@@ -130,6 +130,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
+  const [draggingType, setDraggingType] = useState<string | null>(null);
   const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null);
@@ -600,7 +601,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   // Handle mouse move during drag for edge scrolling
   const handleDragMouseMove = useCallback((e: MouseEvent) => {
     const container = boardContainerRef.current;
-    if (!container || !isDragging) return;
+    if (!container || !isDragging || draggingType === 'card') return;
 
     const rect = container.getBoundingClientRect();
     const mouseX = e.clientX;
@@ -617,7 +618,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     if (edgeScrollRef.current.left || edgeScrollRef.current.right) {
       startEdgeScroll();
     }
-  }, [isDragging, startEdgeScroll]);
+  }, [draggingType, isDragging, startEdgeScroll]);
 
   // Attach/detach edge scroll listener
   useEffect(() => {
@@ -640,6 +641,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   // Handle drag start
   const handleDragStart = useCallback((start: DragStart) => {
     setIsDragging(true);
+    setDraggingType(start.type);
     
     // If we're dragging a card that's not selected, clear selection and select just this one
     if (start.type === 'card' && !selectedCards.has(start.draggableId)) {
@@ -689,6 +691,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
 
   const handleDragEnd = (result: DropResult) => {
     setIsDragging(false);
+    setDraggingType(null);
     stopEdgeScroll();
     
     const { destination, source, draggableId, type } = result;
@@ -703,6 +706,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
+      setSelectedCards(new Set());
       return;
     }
 
@@ -1153,6 +1157,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           onDragStart={handleDragStart}
           onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
+          autoScrollerOptions={{ disabled: true }}
         >
           <Droppable droppableId="board" type="column" direction="horizontal">
             {(provided, boardSnapshot) => (
@@ -1296,6 +1301,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           onDragStart={handleDragStart}
           onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
+          autoScrollerOptions={{ disabled: true }}
         >
           <Droppable droppableId="board" type="column" direction="horizontal">
             {(provided, boardSnapshot) => (

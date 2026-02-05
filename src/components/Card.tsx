@@ -589,19 +589,10 @@ function CardComponent({
             </div>
           )}
           
-          {/* Selection checkmark */}
-          {isSelected && !snapshot.isDragging && (
-            <div className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md z-10">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          )}
-          
           {/* Notification badge for unread activity */}
           {hasUnreadActivity && !isSelected && !snapshot.isDragging && (
             <div 
-              className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-md z-10 animate-pulse"
+              className="absolute top-1 right-1 w-3.5 h-3.5 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-sm ring-2 ring-[var(--surface)] z-10 animate-pulse"
               title="New activity on this card"
               aria-label="New activity"
             >
