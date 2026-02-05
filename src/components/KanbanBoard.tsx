@@ -1156,6 +1156,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           onDragStart={handleDragStart}
           onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
+          autoScrollerOptions={{ disabled: true }}
         >
           <Droppable droppableId="board" type="column" direction="horizontal">
             {(provided, boardSnapshot) => (
@@ -1297,6 +1298,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           onDragStart={handleDragStart}
           onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
+          autoScrollerOptions={{ disabled: true }}
         >
           <Droppable droppableId="board" type="column" direction="horizontal">
             {(provided, boardSnapshot) => (
