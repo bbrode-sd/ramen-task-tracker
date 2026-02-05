@@ -4,7 +4,6 @@
 import {
   collection,
   doc,
-  addDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -21,7 +20,21 @@ import { PendingInvitation } from '@/types';
 // ============================================================================
 
 /**
+ * Generate a predictable document ID for a pending invitation
+ * This allows security rules to look up invitations directly
+ * Format: {boardId}_{normalizedEmail}
+ * 
+ * Note: Firestore document IDs can contain any character except '/'
+ * Emails don't contain '/' per RFC 5321, so we can use them directly
+ */
+export const getPendingInvitationId = (boardId: string, email: string): string => {
+  const normalizedEmail = email.toLowerCase().trim();
+  return `${boardId}_${normalizedEmail}`;
+};
+
+/**
  * Create a pending invitation for a user who hasn't signed up yet
+ * Uses a predictable document ID so security rules can verify invitations
  */
 export const createPendingInvitation = async (
   email: string,
@@ -32,22 +45,35 @@ export const createPendingInvitation = async (
   invitedByEmail: string
 ): Promise<string> => {
   const normalizedEmail = email.toLowerCase().trim();
+  const invitationId = getPendingInvitationId(boardId, normalizedEmail);
   
-  // Check if there's already a pending invitation for this email and board
-  const existingQuery = query(
-    collection(db, 'pendingInvitations'),
-    where('email', '==', normalizedEmail),
-    where('boardId', '==', boardId),
-    where('status', '==', 'pending')
-  );
+  // Check if invitation already exists
+  const invitationRef = doc(db, 'pendingInvitations', invitationId);
+  const { getDoc: getInvitationDoc } = await import('firebase/firestore');
+  const existingDoc = await getInvitationDoc(invitationRef);
   
-  const existingSnapshot = await getDocs(existingQuery);
-  if (!existingSnapshot.empty) {
-    // Return existing invitation ID
-    return existingSnapshot.docs[0].id;
+  if (existingDoc.exists()) {
+    const existingData = existingDoc.data();
+    if (existingData.status === 'pending') {
+      // Already pending, return existing invitation ID
+      return invitationId;
+    }
+    
+    // Invitation exists but is not pending (was accepted or declined)
+    // Update it back to pending status (re-invite)
+    await updateDoc(invitationRef, {
+      status: 'pending',
+      boardName, // Update in case board name changed
+      invitedByName,
+      invitedByEmail,
+      updatedAt: Timestamp.now(),
+    });
+    return invitationId;
   }
   
-  const invitationRef = await addDoc(collection(db, 'pendingInvitations'), {
+  // Create new invitation with the predictable ID
+  const { setDoc } = await import('firebase/firestore');
+  await setDoc(invitationRef, {
     email: normalizedEmail,
     boardId,
     boardName,
@@ -59,7 +85,7 @@ export const createPendingInvitation = async (
     updatedAt: Timestamp.now(),
   });
   
-  return invitationRef.id;
+  return invitationId;
 };
 
 /**

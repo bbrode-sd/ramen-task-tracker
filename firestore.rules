@@ -83,6 +83,34 @@ service cloud.firestore {
       return value in allowedValues;
     }
     
+    // Generate the predictable document ID for a pending invitation
+    // Must match the format used in getPendingInvitationId() in invitations.ts
+    function pendingInvitationId(boardId, email) {
+      return boardId + '_' + email.lower();
+    }
+    
+    // Check if a pending invitation exists for the current user's email and a specific board
+    function hasPendingInvitation(boardId) {
+      let userEmail = request.auth.token.email;
+      let invitationPath = /databases/$(database)/documents/pendingInvitations/$(pendingInvitationId(boardId, userEmail));
+      return userEmail != null && 
+        exists(invitationPath) && 
+        get(invitationPath).data.status == 'pending';
+    }
+    
+    // Check if the memberIds change is ONLY adding the current user (for invitation acceptance)
+    function isOnlyAddingSelf(oldMemberIds, newMemberIds) {
+      // New list should be old list + current user
+      // Size should increase by exactly 1
+      return newMemberIds.size() == oldMemberIds.size() + 1 &&
+        // Current user must be in new list
+        currentUserId() in newMemberIds &&
+        // Current user must NOT be in old list
+        !(currentUserId() in oldMemberIds) &&
+        // All old members must still be in new list (can't remove anyone)
+        oldMemberIds.toSet().intersection(newMemberIds.toSet()) == oldMemberIds.toSet();
+    }
+    
     // ============================================================================
     // USER PROFILES
     // ============================================================================
@@ -162,9 +190,9 @@ service cloud.firestore {
     //   - Board name must be <= 200 chars
     
     match /boards/{boardId} {
-      // Read: must be owner or member
+      // Read: must be owner, member, or have a pending invitation
       allow read: if isAuthenticated() && 
-        currentUserId() in resource.data.memberIds;
+        (currentUserId() in resource.data.memberIds || hasPendingInvitation(boardId));
       
       // Create: authenticated user can create
       // Creator becomes owner and must be in memberIds
@@ -194,9 +222,11 @@ service cloud.firestore {
         // Prevent extra fields
         request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName', 'isTemplate', 'templateForBoardId', 'tags']);
       
-      // Update: different rules for owner vs member
+      // Update: different rules for owner vs member vs invited user
+      // Members can update board fields, invited users can only add themselves to memberIds
       allow update: if isAuthenticated() && 
-        currentUserId() in resource.data.memberIds &&
+        (currentUserId() in resource.data.memberIds || 
+          (hasPendingInvitation(boardId) && isOnlyAddingSelf(resource.data.memberIds, request.resource.data.memberIds))) &&
         // ownerId can NEVER be changed
         request.resource.data.ownerId == resource.data.ownerId &&
         // createdAt can NEVER be changed
@@ -218,9 +248,12 @@ service cloud.firestore {
         // Prevent extra fields
         request.resource.data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'createdAt', 'updatedAt', 'isArchived', 'background', 'parentCardId', 'parentBoardId', 'approvalColumnName', 'isTemplate', 'templateForBoardId', 'tags']) &&
         // PRIVILEGE ESCALATION PREVENTION:
-        // Only owner can modify memberIds
+        // memberIds can only be modified by:
+        // 1. Board owner (can add/remove anyone except themselves)
+        // 2. User with pending invitation (can add only themselves)
         (request.resource.data.memberIds == resource.data.memberIds || 
-          resource.data.ownerId == currentUserId()) &&
+          resource.data.ownerId == currentUserId() ||
+          (hasPendingInvitation(boardId) && isOnlyAddingSelf(resource.data.memberIds, request.resource.data.memberIds))) &&
         // If owner is modifying memberIds, they cannot remove themselves
         (request.resource.data.memberIds == resource.data.memberIds || 
           resource.data.ownerId in request.resource.data.memberIds);
