@@ -48,7 +48,7 @@ interface ColumnProps {
   /** Board tags for displaying tag badges on cards */
   boardTags?: import('@/types').BoardTag[];
   /** Container ref for drag clones in embedded views */
-  dragContainerRef?: RefObject<HTMLElement>;
+  dragContainerRef?: RefObject<HTMLElement | null>;
 }
 
 /**
