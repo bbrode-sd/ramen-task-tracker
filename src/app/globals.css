@@ -993,22 +993,37 @@ button, a, input, textarea, select {
   animation: haptic-pulse 0.15s ease-in-out;
 }
 
-/* Board container - enhanced scrollbar for horizontal scrolling */
+/* Board container - enhanced scrollbar for horizontal scrolling only */
+#main-content {
+  /* Hide vertical scrollbar completely */
+  overflow-y: hidden !important;
+}
+
 #main-content::-webkit-scrollbar {
+  height: 14px;
+  width: 0; /* Hide vertical scrollbar */
+}
+
+#main-content::-webkit-scrollbar:horizontal {
   height: 14px;
 }
 
-#main-content::-webkit-scrollbar-track {
+#main-content::-webkit-scrollbar:vertical {
+  width: 0;
+  display: none;
+}
+
+#main-content::-webkit-scrollbar-track:horizontal {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 7px;
   margin: 0 8px;
 }
 
-.dark #main-content::-webkit-scrollbar-track {
+.dark #main-content::-webkit-scrollbar-track:horizontal {
   background: rgba(255, 255, 255, 0.05);
 }
 
-#main-content::-webkit-scrollbar-thumb {
+#main-content::-webkit-scrollbar-thumb:horizontal {
   background: var(--border-strong);
   border-radius: 7px;
   border: 3px solid transparent;
@@ -1016,13 +1031,13 @@ button, a, input, textarea, select {
   min-width: 60px;
 }
 
-#main-content::-webkit-scrollbar-thumb:hover {
+#main-content::-webkit-scrollbar-thumb:horizontal:hover {
   background: var(--text-tertiary);
   border: 3px solid transparent;
   background-clip: content-box;
 }
 
-#main-content::-webkit-scrollbar-thumb:active {
+#main-content::-webkit-scrollbar-thumb:horizontal:active {
   background: var(--text-secondary);
   border: 3px solid transparent;
   background-clip: content-box;
