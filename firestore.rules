@@ -780,7 +780,11 @@ service cloud.firestore {
     match /pendingInvitations/{invitationId} {
       // Read: board owner/member can read invitations for their board
       // OR user can read invitations for their own email (for processing on sign-up)
+      // NOTE: resource is null for non-existent documents, so we must check that first
       allow read: if isAuthenticated() && (
+        // Allow checking if a document exists (resource is null for non-existent docs)
+        // This is safe because no data is exposed for non-existent documents
+        resource == null ||
         // Board owner/member can read invitations for their board
         isBoardMember(resource.data.boardId) ||
         // User can read invitations sent to their email (case-insensitive)
