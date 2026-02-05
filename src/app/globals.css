@@ -216,6 +216,7 @@
 html {
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body {
@@ -229,6 +230,7 @@ body {
               color var(--duration-slow) var(--ease-in-out);
   line-height: 1.6;
   letter-spacing: -0.011em;
+  overflow-x: hidden;
 }
 
 /* Premium selection colors */

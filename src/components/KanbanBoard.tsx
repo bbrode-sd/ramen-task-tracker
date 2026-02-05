@@ -547,11 +547,19 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     // Only trigger on left mouse button
     if (e.button !== 0) return;
     
-    // Don't trigger if clicking on interactive elements (cards, columns, buttons, inputs)
-    // Note: @hello-pangea/dnd uses data-rfd-* attributes (not data-rbd-* like the original react-beautiful-dnd)
+    // Check if we're clicking on an interactive element that should block drag-to-scroll
     const target = e.target as HTMLElement;
-    const isInteractive = target.closest('[data-rfd-draggable-id], [data-rfd-droppable-id], button, input, a, [role="button"]');
-    if (isInteractive) return;
+    
+    // Block if clicking on: draggable items (cards/columns), buttons, inputs, links
+    // Note: data-rfd-draggable-id is for actual draggable items (cards and columns)
+    const isDraggableItem = target.closest('[data-rfd-draggable-id]');
+    const isButton = target.closest('button, input, textarea, a, [role="button"], select');
+    
+    // Also check if we're inside a column container (the column body where cards are)
+    // Columns have a specific structure - check for the column wrapper
+    const isInsideColumn = target.closest('[data-column-id]');
+    
+    if (isDraggableItem || isButton || isInsideColumn) return;
     
     const container = boardContainerRef.current;
     if (!container) return;
@@ -1251,7 +1259,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
 
   // Full board view
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${background.className}`} style={background.style}>
+    <div className={`min-h-screen overflow-hidden transition-colors duration-500 ${background.className}`} style={background.style}>
       <Header
         boardName={board?.name}
         onBoardNameChange={handleBoardNameChange}
@@ -1283,7 +1291,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       <main 
         id="main-content"
         ref={boardContainerRef}
-        className={`overflow-x-auto overflow-y-hidden p-4 sm:p-6 h-[calc(100vh-64px)] ${isDragScrolling ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+        className={`overflow-x-auto overflow-y-hidden p-4 sm:p-6 h-[calc(100vh-64px)] ${isDragScrolling ? 'cursor-grabbing select-none' : ''}`}
         aria-label={`${board?.name || 'Board'} with ${columns.length} lists and ${cards.length} cards`}
         onMouseDown={handleDragScrollMouseDown}
         onMouseMove={handleDragScrollMouseMove}
