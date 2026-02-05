@@ -243,8 +243,7 @@ export async function POST(request: NextRequest) {
 
 Translate the following ${sourceLanguageName} text to ${targetLanguageName}. 
 Only respond with the translation, nothing else. 
-Maintain the same tone and meaning. 
-If the text is already in ${targetLanguageName}, return it as-is.
+Maintain the same tone and meaning.
 For very short phrases or single words, provide the most natural translation.${pokemonHint}${itemHint}`,
           },
           {
@@ -256,7 +255,22 @@ For very short phrases or single words, provide the most natural translation.${p
         max_tokens: 4096,
       });
 
-      const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
+      const rawTranslation = completion.choices[0]?.message?.content?.trim();
+      
+      // If OpenAI returned empty/null, that's an error - don't fall back to original text
+      if (!rawTranslation) {
+        console.error('Translation returned empty response');
+        return NextResponse.json(
+          { error: 'Translation returned empty response' },
+          { status: 500 }
+        );
+      }
+      
+      // Check if the translation is the same as the input (translation likely failed)
+      if (rawTranslation.toLowerCase().trim() === text.toLowerCase().trim()) {
+        console.warn('Translation returned same text as input:', text);
+      }
+      
       const translation = correctPokemonNames(rawTranslation, translateTo, contextMode as ContextMode, foundPokemonNames);
 
       return NextResponse.json({
@@ -305,8 +319,7 @@ For very short phrases or single words, provide the most natural translation.${p
 
 Translate the following ${sourceLanguage === 'en' ? 'English' : 'Japanese'} text to ${languageName}. 
 Only respond with the translation, nothing else. 
-Maintain the same tone and meaning. 
-If the text is already in ${languageName}, return it as-is.
+Maintain the same tone and meaning.
 For very short phrases or single words, provide the most natural translation.${pokemonHint}${itemHint}`,
         },
         {
@@ -318,7 +331,25 @@ For very short phrases or single words, provide the most natural translation.${p
       max_tokens: 4096,
     });
 
-    const rawTranslation = completion.choices[0]?.message?.content?.trim() || text;
+    const rawTranslation = completion.choices[0]?.message?.content?.trim();
+    
+    // If OpenAI returned empty/null, that's an error - don't fall back to original text
+    if (!rawTranslation) {
+      console.error('Translation returned empty response');
+      return NextResponse.json(
+        { error: 'Translation returned empty response' },
+        { status: 500 }
+      );
+    }
+    
+    // Check if the translation is the same as the input (translation likely failed)
+    // This can happen when the model returns the text unchanged
+    if (rawTranslation.toLowerCase().trim() === text.toLowerCase().trim()) {
+      // For cross-language translation, same text indicates a failure
+      // Return it but mark as potentially problematic
+      console.warn('Translation returned same text as input:', text);
+    }
+    
     const translation = correctPokemonNames(rawTranslation, targetLanguage as 'en' | 'ja', contextMode as ContextMode, foundPokemonNames);
 
     return NextResponse.json({ translation, isPlaceholder: false });
