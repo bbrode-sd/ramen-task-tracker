@@ -771,7 +771,7 @@ service cloud.firestore {
     // Email-based board invitations for users who haven't signed up yet
     //
     // Test cases:
-    //   - Board owner can create invitation for their board
+    //   - Board member can create invitation for their board
     //   - Inviter's info (invitedBy) must match current user
     //   - Anyone authenticated can read invitations for their email
     //   - Board owner can read/cancel invitations for their board
@@ -787,12 +787,12 @@ service cloud.firestore {
         resource.data.email == request.auth.token.email.lower()
       );
       
-      // Create: must be board owner (only owner can invite members)
+      // Create: any board member can invite others
       allow create: if isAuthenticated() &&
         // invitedBy must be current user
         request.resource.data.invitedBy == currentUserId() &&
-        // Must be owner of the board to invite
-        isBoardOwner(request.resource.data.boardId) &&
+        // Must be a member of the board to invite
+        isBoardMember(request.resource.data.boardId) &&
         // Required fields
         request.resource.data.keys().hasAll(['email', 'boardId', 'boardName', 'invitedBy', 'invitedByName', 'invitedByEmail', 'status', 'createdAt', 'updatedAt']) &&
         // Field type validation
