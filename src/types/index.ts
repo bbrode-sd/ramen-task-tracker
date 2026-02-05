@@ -253,7 +253,9 @@ export type ActivityType =
   | 'card_watched'
   | 'card_unwatched'
   | 'checklist_item_assigned'
-  | 'checklist_item_due_date_set';
+  | 'checklist_item_due_date_set'
+  | 'title_changed'
+  | 'description_changed';
 
 export interface Activity {
   id: string;

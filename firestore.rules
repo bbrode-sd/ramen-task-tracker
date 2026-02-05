@@ -542,7 +542,7 @@ service cloud.firestore {
           isOneOf(request.resource.data.type, [
             'card_created', 'card_moved', 'card_updated', 'card_archived',
             'comment_added', 'checklist_completed', 'assignee_added', 'due_date_set',
-            'attachment_added'
+            'attachment_added', 'title_changed', 'description_changed'
           ]) &&
           // Field length limits
           isValidLength(request.resource.data.userName, 100) &&

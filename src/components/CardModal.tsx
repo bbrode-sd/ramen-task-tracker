@@ -597,6 +597,19 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       await updateCard(boardId, cardId, { titleEn: value });
     }
 
+    // Log activity for title change (not for first-time entry)
+    if (!isFirstTitle && user) {
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: value || card?.titleEn || '',
+        type: 'title_changed',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+        metadata: { language: 'en', isManualTranslation: isEditingTranslation },
+      });
+    }
+
     // Auto-translate to Japanese with debouncing (only if editing original or first entry)
     if (value.trim() && (isFirstTitle || isEditingOriginal)) {
       debouncedTranslate(value, 'ja', fieldKeys.titleJa, async (result) => {
@@ -650,6 +663,19 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       }
     } else {
       await updateCard(boardId, cardId, { titleJa: value });
+    }
+
+    // Log activity for title change (not for first-time entry)
+    if (!isFirstTitle && user) {
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: card?.titleEn || value || '',
+        type: 'title_changed',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+        metadata: { language: 'ja', isManualTranslation: isEditingTranslation },
+      });
     }
 
     // Auto-translate to English with debouncing (only if editing original or first entry)
@@ -707,6 +733,19 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       await updateCard(boardId, cardId, { descriptionEn: value });
     }
 
+    // Log activity for description change (not for first-time entry)
+    if (!isFirstDescription && user) {
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: card?.titleEn || '',
+        type: 'description_changed',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+        metadata: { language: 'en', isManualTranslation: isEditingTranslation },
+      });
+    }
+
     if (value.trim() && (isFirstDescription || isEditingOriginal)) {
       debouncedTranslate(value, 'ja', fieldKeys.descriptionJa, async (result) => {
         if (!result.error) {
@@ -758,6 +797,19 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       }
     } else {
       await updateCard(boardId, cardId, { descriptionJa: value });
+    }
+
+    // Log activity for description change (not for first-time entry)
+    if (!isFirstDescription && user) {
+      await logActivity(boardId, {
+        cardId,
+        cardTitle: card?.titleEn || '',
+        type: 'description_changed',
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous',
+        userPhoto: user.photoURL,
+        metadata: { language: 'ja', isManualTranslation: isEditingTranslation },
+      });
     }
 
     if (value.trim() && (isFirstDescription || isEditingOriginal)) {

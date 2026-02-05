@@ -17,6 +17,10 @@ const enTranslations: Record<string, string> = {
   'cardModal.activity.setDueDate': 'set due date to {{dueDate}}',
   'cardModal.activity.attachedFile': 'attached {{attachmentName}}',
   'cardModal.activity.performedAction': 'performed an action',
+  'cardModal.activity.changedTitle': 'changed the title',
+  'cardModal.activity.changedTitleTranslation': 'manually translated the title ({{lang}})',
+  'cardModal.activity.changedDescription': 'changed the description',
+  'cardModal.activity.changedDescriptionTranslation': 'manually translated the description ({{lang}})',
 };
 
 // Japanese translations for activities
@@ -31,6 +35,10 @@ const jaTranslations: Record<string, string> = {
   'cardModal.activity.setDueDate': '期限を{{dueDate}}に設定しました',
   'cardModal.activity.attachedFile': '{{attachmentName}}を添付しました',
   'cardModal.activity.performedAction': 'アクションを実行しました',
+  'cardModal.activity.changedTitle': 'タイトルを変更しました',
+  'cardModal.activity.changedTitleTranslation': 'タイトル({{lang}})を手動翻訳しました',
+  'cardModal.activity.changedDescription': '説明を変更しました',
+  'cardModal.activity.changedDescriptionTranslation': '説明({{lang}})を手動翻訳しました',
 };
 
 // Helper to interpolate translation strings
@@ -68,12 +76,22 @@ export function ActivityItem({ activity }: ActivityItemProps) {
         return 'cardModal.activity.setDueDate';
       case 'attachment_added':
         return 'cardModal.activity.attachedFile';
+      case 'title_changed':
+        return activity.metadata?.isManualTranslation
+          ? 'cardModal.activity.changedTitleTranslation'
+          : 'cardModal.activity.changedTitle';
+      case 'description_changed':
+        return activity.metadata?.isManualTranslation
+          ? 'cardModal.activity.changedDescriptionTranslation'
+          : 'cardModal.activity.changedDescription';
       default:
         return 'cardModal.activity.performedAction';
     }
   };
 
   const getParams = (): Record<string, string> => {
+    const language = String(activity.metadata?.language ?? '');
+    const langLabel = language === 'en' ? 'EN' : language === 'ja' ? 'JP' : '';
     return {
       from: String(activity.metadata?.from ?? ''),
       to: String(activity.metadata?.to ?? ''),
@@ -81,6 +99,7 @@ export function ActivityItem({ activity }: ActivityItemProps) {
       assigneeName: String(activity.metadata?.assigneeName ?? ''),
       dueDate: String(activity.metadata?.dueDate ?? ''),
       attachmentName: String(activity.metadata?.attachmentName ?? ''),
+      lang: langLabel,
     };
   };
 
