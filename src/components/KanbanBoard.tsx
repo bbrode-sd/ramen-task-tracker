@@ -1184,6 +1184,8 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
                     selectedCards={selectedCards}
                     onCardSelectToggle={handleCardSelectToggle}
                     hasUnreadActivity={hasUnreadActivity}
+                    embedded
+                    dragContainerRef={boardContainerRef}
                   />
                 ))}
                 {provided.placeholder}

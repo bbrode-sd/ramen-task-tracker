@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
-import { Draggable, Droppable } from '@hello-pangea/dnd';
+import { useState, useRef, useEffect, useCallback, memo, useMemo, RefObject } from 'react';
+import { Draggable, Droppable, DraggableProvided, DraggableRubric, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Column as ColumnType, Card as CardType, CardTemplate } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useKeyboardShortcuts } from '@/contexts/KeyboardShortcutsContext';
@@ -47,6 +47,8 @@ interface ColumnProps {
   embedded?: boolean;
   /** Board tags for displaying tag badges on cards */
   boardTags?: import('@/types').BoardTag[];
+  /** Container ref for drag clones in embedded views */
+  dragContainerRef?: RefObject<HTMLElement>;
 }
 
 /**
@@ -74,6 +76,7 @@ function ColumnComponent({
   onCardSelectToggle,
   hasUnreadActivity,
   boardTags = [],
+  dragContainerRef,
 }: ColumnProps) {
   const renderStart = process.env.NODE_ENV === 'development' ? performance.now() : 0;
   const { user } = useAuth();
@@ -491,6 +494,48 @@ function ColumnComponent({
     }
   }, [boardId, cards, column.id, column.name, showToast, user]);
 
+  const renderClone = useCallback(
+    (provided: DraggableProvided, snapshot: DraggableStateSnapshot, rubric: DraggableRubric) => {
+      const cloneCard = cards[rubric.source.index];
+      if (!cloneCard) return null;
+
+      return (
+        <Card
+          card={cloneCard}
+          index={rubric.source.index}
+          boardId={boardId}
+          boardTags={boardTags}
+          onClick={() => onCardClick(cloneCard.id)}
+          isDimmed={false}
+          isFocused={false}
+          isSelected={selectedCards.has(cloneCard.id)}
+          selectedCount={selectedCards.size}
+          onSelectToggle={onCardSelectToggle}
+          onArchive={handleArchiveCard}
+          onDuplicate={handleDuplicateCard}
+          commentCount={cloneCard.commentCount || 0}
+          hasUnreadActivity={hasUnreadActivity?.(cloneCard.id)}
+          isClone
+          cloneProvided={provided}
+          cloneSnapshot={snapshot}
+        />
+      );
+    },
+    [
+      boardId,
+      boardTags,
+      cards,
+      handleArchiveCard,
+      handleDuplicateCard,
+      hasUnreadActivity,
+      onCardClick,
+      onCardSelectToggle,
+      selectedCards,
+    ]
+  );
+
+  const useClonePortal = embedded;
+
   return (
     <Draggable draggableId={column.id} index={index}>
       {(provided, snapshot) => (
@@ -718,7 +763,14 @@ function ColumnComponent({
           </div>
 
           {/* Cards */}
-          <Droppable droppableId={column.id} type="card">
+          <Droppable
+            droppableId={column.id}
+            type="card"
+            renderClone={useClonePortal ? renderClone : undefined}
+            getContainerForClone={
+              useClonePortal ? () => dragContainerRef?.current ?? document.body : undefined
+            }
+          >
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
