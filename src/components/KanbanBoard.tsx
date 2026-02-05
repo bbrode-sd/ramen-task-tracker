@@ -1283,7 +1283,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
       <main 
         id="main-content"
         ref={boardContainerRef}
-        className={`overflow-x-auto p-4 sm:p-6 h-[calc(100vh-64px)] ${isDragScrolling ? 'cursor-grabbing select-none' : 'cursor-default'}`}
+        className={`overflow-x-auto overflow-y-hidden p-4 sm:p-6 h-[calc(100vh-64px)] ${isDragScrolling ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
         aria-label={`${board?.name || 'Board'} with ${columns.length} lists and ${cards.length} cards`}
         onMouseDown={handleDragScrollMouseDown}
         onMouseMove={handleDragScrollMouseMove}
@@ -1309,7 +1309,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`flex gap-3 h-full items-start pb-4 transition-all duration-200 ${
+                className={`flex gap-3 min-w-max h-full items-start pb-4 transition-all duration-200 ${
                   boardSnapshot.isDraggingOver ? 'gap-4' : ''
                 }`}
               >

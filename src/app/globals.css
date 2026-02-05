@@ -377,27 +377,30 @@ a:focus-visible {
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--surface-hover);
   border-radius: var(--radius-full);
+  margin: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--text-muted);
   border-radius: var(--radius-full);
-  border: 2px solid transparent;
-  background-clip: content-box;
-  transition: background var(--duration-fast) var(--ease-in-out);
+  border: 3px solid var(--surface-hover);
+  min-height: 40px;
+  min-width: 40px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
-  border: 2px solid transparent;
-  background-clip: content-box;
+  background: var(--text-tertiary);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--text-secondary);
 }
 
 ::-webkit-scrollbar-corner {
@@ -406,8 +409,8 @@ a:focus-visible {
 
 /* Firefox scrollbar */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-width: auto;
+  scrollbar-color: var(--text-muted) var(--surface-hover);
 }
 
 /* ============================================
@@ -986,6 +989,54 @@ button, a, input, textarea, select {
 
 .haptic-feedback {
   animation: haptic-pulse 0.15s ease-in-out;
+}
+
+/* Board container - enhanced scrollbar for horizontal scrolling */
+#main-content::-webkit-scrollbar {
+  height: 14px;
+}
+
+#main-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 7px;
+  margin: 0 8px;
+}
+
+.dark #main-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+#main-content::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 7px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  min-width: 60px;
+}
+
+#main-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+#main-content::-webkit-scrollbar-thumb:active {
+  background: var(--text-secondary);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* Drag-to-scroll cursor states */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+.cursor-grabbing * {
+  cursor: grabbing !important;
 }
 
 /* Edge scroll indicator */
