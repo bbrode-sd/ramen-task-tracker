@@ -555,17 +555,18 @@ function ColumnComponent({
             // IMPORTANT: Do NOT add rotate() or scale() transforms here - they conflict with
             // the library's cursor-based positioning and cause the element to appear offset.
             // Visual effects are handled via the column-dragging CSS class.
+            // Also: do NOT use animate-drop on columns — its CSS keyframe transform
+            // overrides the library's translate() and makes the column snap to the
+            // wrong position during the drop animation.
             transition: snapshot.isDragging 
               ? 'none' 
-              : snapshot.isDropAnimating 
-                ? 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)' 
-                : provided.draggableProps.style?.transition,
+              : provided.draggableProps.style?.transition,
           }}
           className={`flex-shrink-0 w-[280px] sm:w-[300px] max-h-full bg-[var(--surface-column)] rounded-xl flex flex-col ${
             snapshot.isDragging 
               ? 'column-dragging drag-shadow z-50' 
-              : 'shadow-md transition-all duration-300'
-          } ${snapshot.isDropAnimating ? 'animate-drop' : ''} ${
+              : 'shadow-md transition-[box-shadow,opacity] duration-300'
+          } ${
             isFocused && !snapshot.isDragging ? 'ring-2 ring-[var(--primary)] shadow-lg' : ''
           }`}
         >
