@@ -100,6 +100,18 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
     settings: translationSettings,
   } = useTranslation();
   const userTextDisplayMode = translationSettings.userTextDisplayMode;
+
+  // Wrapper for logActivity that catches errors gracefully.
+  // Activity logging should never block or crash the primary operation.
+  const safeLogActivity: typeof logActivity = useCallback(async (...args) => {
+    try {
+      return await logActivity(...args);
+    } catch (error) {
+      console.error('Failed to log activity:', error);
+      return '' as string;
+    }
+  }, []);
+
   const [card, setCard] = useState<Card | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -599,7 +611,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
     // Log activity for title change (not for first-time entry)
     if (!isFirstTitle && user) {
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: value || card?.titleEn || '',
         type: 'title_changed',
@@ -667,7 +679,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
     // Log activity for title change (not for first-time entry)
     if (!isFirstTitle && user) {
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: card?.titleEn || value || '',
         type: 'title_changed',
@@ -735,7 +747,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
     // Log activity for description change (not for first-time entry)
     if (!isFirstDescription && user) {
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: card?.titleEn || '',
         type: 'description_changed',
@@ -801,7 +813,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
     // Log activity for description change (not for first-time entry)
     if (!isFirstDescription && user) {
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: card?.titleEn || '',
         type: 'description_changed',
@@ -975,7 +987,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       
       // Log activity
       if (user) {
-        await logActivity(boardId, {
+        await safeLogActivity(boardId, {
           cardId,
           cardTitle: card?.titleEn || '',
           type: 'due_date_set',
@@ -1023,7 +1035,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
     
     // Log activity
     if (user) {
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: card.titleEn,
         type: 'assignee_added',
@@ -1344,7 +1356,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
     // Log activity if assigning (not unassigning)
     if (assigneeId && user) {
       const assignee = boardMembers.find(m => m.uid === assigneeId);
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: card?.titleEn || '',
         type: 'checklist_item_assigned',
@@ -1523,7 +1535,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
     );
     
     // Log activity
-    await logActivity(boardId, {
+    await safeLogActivity(boardId, {
       cardId,
       cardTitle: card?.titleEn || '',
       type: 'comment_added',
@@ -1566,7 +1578,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
         });
         
         // Log activity for file upload
-        await logActivity(boardId, {
+        await safeLogActivity(boardId, {
           cardId,
           cardTitle: card?.titleEn || '',
           type: 'attachment_added',
@@ -1636,7 +1648,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
               });
               
               // Log activity for image paste
-              await logActivity(boardId, {
+              await safeLogActivity(boardId, {
                 cardId,
                 cardTitle: card?.titleEn || '',
                 type: 'attachment_added',
@@ -1772,7 +1784,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
 
       // Log activity
       if (user) {
-        await logActivity(boardId, {
+        await safeLogActivity(boardId, {
           cardId,
           cardTitle: card.titleEn || card.titleJa || '',
           type: 'card_moved',
@@ -1806,7 +1818,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       
       // Log activity
       if (user) {
-        await logActivity(boardId, {
+        await safeLogActivity(boardId, {
           cardId,
           cardTitle: card?.titleEn || '',
           type: 'card_archived',
@@ -1837,7 +1849,7 @@ export function CardModal({ boardId, cardId, onClose, parentCardInfo }: CardModa
       setIsWatching(nowWatching);
       
       // Log activity
-      await logActivity(boardId, {
+      await safeLogActivity(boardId, {
         cardId,
         cardTitle: card?.titleEn || '',
         type: nowWatching ? 'card_watched' : 'card_unwatched',
