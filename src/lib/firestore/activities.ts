@@ -33,8 +33,8 @@ export const logActivity = async (
     collection(db, 'boards', boardId, 'activities'),
     {
       boardId,
-      cardId: activity.cardId || null,
-      cardTitle: activity.cardTitle || null,
+      cardId: activity.cardId ?? null,
+      cardTitle: activity.cardTitle ?? null,
       type: activity.type,
       userId: activity.userId,
       userName: activity.userName,

@@ -546,7 +546,7 @@ service cloud.firestore {
           ]) &&
           // Field length limits
           isValidLength(request.resource.data.userName, 100) &&
-          (!('cardTitle' in request.resource.data) || isValidLength(request.resource.data.cardTitle, 500)) &&
+          (!('cardTitle' in request.resource.data) || request.resource.data.cardTitle == null || isValidLength(request.resource.data.cardTitle, 500)) &&
           // Prevent extra fields
           request.resource.data.keys().hasOnly(['boardId', 'cardId', 'cardTitle', 'type', 'userId', 'userName', 'userPhoto', 'metadata', 'createdAt']);
         
