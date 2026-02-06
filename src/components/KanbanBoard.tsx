@@ -333,7 +333,21 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
           return col;
         });
         mergedColumns.sort((a, b) => a.order - b.order);
-        setColumns(mergedColumns);
+        
+        // Use functional updater so React can skip the re-render when
+        // the column order hasn't changed.  This prevents a mid-drop-
+        // animation re-render that causes a visible snap/flicker.
+        setColumns(currentColumns => {
+          const currentIds = currentColumns.map(c => c.id);
+          const mergedIds = mergedColumns.map(c => c.id);
+          if (
+            currentIds.length === mergedIds.length &&
+            currentIds.every((id, i) => id === mergedIds[i])
+          ) {
+            return currentColumns;   // same order → keep old references, no re-render
+          }
+          return mergedColumns;
+        });
       },
       (error) => {
         console.error('Error subscribing to columns:', error);
