@@ -156,8 +156,13 @@ const HTML_PRESERVATION_INSTRUCTION = `
 
 IMPORTANT: If the input contains HTML tags (like <p>, <br>, <ul>, <li>, <strong>, <em>, etc.), you MUST preserve the exact HTML structure in your translation. Only translate the text content within the tags, not the tags themselves. Return the HTML with the same structure.`;
 
+// Check if text contains HTML tags
+function containsHtml(text: string): boolean {
+  return /<[a-z][a-z0-9]*(\s[^>]*)?\s*\/?>|<\/[a-z][a-z0-9]*>/i.test(text);
+}
+
 // Get the appropriate translation context based on mode
-function getTranslationContext(contextMode: ContextMode, customContext?: string): string {
+function getTranslationContext(contextMode: ContextMode, customContext?: string, text?: string): string {
   let baseContext: string;
   
   switch (contextMode) {
@@ -176,7 +181,12 @@ function getTranslationContext(contextMode: ContextMode, customContext?: string)
       baseContext = GENERAL_TRANSLATION_CONTEXT;
   }
   
-  return baseContext + HTML_PRESERVATION_INSTRUCTION;
+  // Only include HTML preservation instruction when the input actually contains HTML
+  if (text && containsHtml(text)) {
+    return baseContext + HTML_PRESERVATION_INSTRUCTION;
+  }
+  
+  return baseContext;
 }
 
 // Helper function to detect if text is primarily Japanese
@@ -209,7 +219,7 @@ export async function POST(request: NextRequest) {
       customContext = '',
     } = await request.json();
 
-    const translationContext = getTranslationContext(contextMode as ContextMode, customContext);
+    const translationContext = getTranslationContext(contextMode as ContextMode, customContext, text);
 
     // Auto-detect mode: detect language and translate to the other language
     if (autoDetect) {
