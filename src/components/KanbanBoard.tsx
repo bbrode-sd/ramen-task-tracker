@@ -147,6 +147,7 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
   
   // Track pending optimistic updates to prevent subscription from overwriting them
   const pendingCardUpdatesRef = useRef<Map<string, { order: number; columnId: string; expiresAt: number }>>(new Map());
+  const pendingColumnUpdatesRef = useRef<Map<string, { order: number; expiresAt: number }>>(new Map());
   
   
   // Accessibility: Screen reader announcement state
@@ -306,7 +307,33 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
     const unsubscribe = subscribeToColumns(
       boardId,
       (fetchedColumns) => {
-        setColumns(fetchedColumns);
+        const now = Date.now();
+        const pending = pendingColumnUpdatesRef.current;
+        
+        // Clean up expired pending updates
+        for (const [colId, update] of pending.entries()) {
+          if (now >= update.expiresAt) {
+            pending.delete(colId);
+          }
+        }
+        
+        // If no pending updates, use server data directly
+        if (pending.size === 0) {
+          setColumns(fetchedColumns);
+          return;
+        }
+        
+        // Merge server data with pending optimistic updates
+        // Pending updates take priority to prevent snap-back
+        const mergedColumns = fetchedColumns.map(col => {
+          const pendingUpdate = pending.get(col.id);
+          if (pendingUpdate) {
+            return { ...col, order: pendingUpdate.order };
+          }
+          return col;
+        });
+        mergedColumns.sort((a, b) => a.order - b.order);
+        setColumns(mergedColumns);
       },
       (error) => {
         console.error('Error subscribing to columns:', error);
@@ -735,10 +762,28 @@ export function KanbanBoard({ boardId, selectedCardId, embedded = false, maxHeig
         order: index,
       }));
 
+      // Register pending updates BEFORE optimistic update
+      // This prevents the Firestore subscription from overwriting our changes
+      const expiresAt = Date.now() + 10000;
+      columnUpdates.forEach(({ id, order }) => {
+        pendingColumnUpdatesRef.current.set(id, { order, expiresAt });
+      });
+
       flushSync(() => {
         setColumns(newColumns.map((col, index) => ({ ...col, order: index })));
       });
-      reorderColumns(boardId, columnUpdates).catch(console.error);
+      reorderColumns(boardId, columnUpdates)
+        .then(() => {
+          columnUpdates.forEach(({ id }) => {
+            pendingColumnUpdatesRef.current.delete(id);
+          });
+        })
+        .catch((error) => {
+          console.error('Failed to save column reorder:', error);
+          columnUpdates.forEach(({ id }) => {
+            pendingColumnUpdatesRef.current.delete(id);
+          });
+        });
       announceToScreenReader(`List ${removed.name} moved to position ${destination.index + 1}.`);
       return;
     }
